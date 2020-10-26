@@ -272,3 +272,8 @@ function moneyRemainingThisTurn() {
             + gameState.teams[team].optionsAllocated.c
             + gameState.teams[team].optionsAllocated.d);
 }
+
+setInterval(() => {
+    console.log('Sending ping');
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+}, 5000);

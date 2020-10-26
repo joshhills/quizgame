@@ -69,7 +69,7 @@ function updateUI() {
 
     let inumPlayers = gameState.teams.x.members.length + gameState.teams.y.members.length;
 
-    if ((gameState.scene === GAME_STATE.PREGAME && inumPlayers > 1)
+    if ((gameState.scene === GAME_STATE.PREGAME && gameState.teams.x.members.length > 0 && gameState.teams.y.members.length > 0)
         || (gameState.scene === GAME_STATE.GAME && gameState.teams.x.lockedIn && gameState.teams.y.lockedIn)
         || gameState.scene === GAME_STATE.ANSWER) {
         progressState.disabled = false;
@@ -97,3 +97,8 @@ function updateUI() {
         });
     }
 };
+
+setInterval(() => {
+    console.log('Sending ping');
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+}, 5000);
