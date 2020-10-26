@@ -204,7 +204,7 @@ function handleProgressState() {
         teams.y.remainingMoney = teams.y.optionsAllocated[answer];
 
     } else if (state === GAME_STATE.ANSWER) {
-        if (activeQuestion.number === questions.length || teams.x.remainingMoney === 0 || teams.y.remainingMoney) {
+        if (activeQuestion.number === questions.length || teams.x.remainingMoney === 0 || teams.y.remainingMoney === 0) {
             state = GAME_STATE.FINISH;
             
             if (teams.x.remainingMoney === 0 && teams.y.remainingMoney === 0) {
