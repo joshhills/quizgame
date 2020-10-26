@@ -19,12 +19,52 @@ const wss = new Server({ server });
 const questions = [
     {
         number: 1,
-        text: 'Question lorem ipsum dolor est',
+        text: 'What was the name of the band Lionel Richie was a part of?',
         options: {
-            a: 'Option A',
-            b: 'Option B',
-            c: 'Option C',
-            d: 'Option D'
+            a: 'King Harvest',
+            b: 'Spectrums',
+            c: 'Commodores',
+            d: 'The Marshall Tucker Band'
+        }
+    },
+    {
+        number: 2,
+        text: 'Who was the only U.S. President to resign?',
+        options: {
+            a: 'Herbert Hoover',
+            b: 'Richard Nixon',
+            c: 'George W. Bush',
+            d: 'Barack Obama'
+        }
+    },
+    {
+        number: 3,
+        text: 'In which city can you find the Liberty Bell?',
+        options: {
+            a: 'Washington, D.C.',
+            b: 'Boston',
+            c: 'Philadelphia',
+            d: 'Manhattan'
+        }
+    },
+    {
+        number: 4,
+        text: 'According to Forrest Gump, "life was like..."',
+        options: {
+            a: 'A bag of lemons',
+            b: 'A handful of roses',
+            c: 'A lollipop',
+            d: 'A box of chocolates'
+        }
+    },
+    {
+        number: 5,
+        text: 'In The Wizard of Oz, the Tin Man wanted to see the Wizard about getting...',
+        options: {
+            a: 'A brain',
+            b: 'An oil can',
+            c: 'A dog',
+            d: 'A heart'
         }
     }
 ];
