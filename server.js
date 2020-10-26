@@ -234,6 +234,8 @@ function handleProgressState() {
     
             teams.x.lockedIn = false;
             teams.y.lockedIn = false;
+
+            state = GAME_STATE.GAME;
         }
     }
 
