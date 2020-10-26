@@ -10,7 +10,8 @@ export const MESSAGE_TYPE = {
         STATE_CHANGE: 'stateChange',
         ACKNOWLEDGE_NAME: 'ackname',
         PONG: 'pong',
-        RESET: 'reset'
+        RESET: 'reset',
+        LOG: 'log'
     },
     CLIENT: {
         PING: 'ping',

@@ -43,7 +43,8 @@ var pregameContainer = document.getElementById('pregame'),
     answerText = document.getElementById('answertext'),
     remainingAfter = document.getElementById('remainingafter'),
     finish = document.getElementById('finish'),
-    winnerText = document.getElementById('winnertext');
+    winnerText = document.getElementById('winnertext'),
+    log = document.getElementById('log');
 
 // Register event listeners
 join.addEventListener('click', () => joinGame());
@@ -95,13 +96,41 @@ function handleReset() {
     team = null;
 }
 
+function handleLog(data) {
+    
+    let p = null;
+    for (let tm of gameState.teams[team].members) {
+        if (tm.id === data.id) {
+            p = tm.name;
+        }
+    }
+
+    if (p === null) {
+        return;
+    }
+
+    let logText;
+    if (data.type === 'add') {
+        logText = `${p} added money to option ${data.option}`;
+    } else if (data.type === 'minus') {
+        logText = `${p} subtracted money from option ${data.option}`;
+    } else if (data.type === 'resetAllocation') {
+        logText = `${p} reset all money allocations`;
+    } else if (data.type === 'lock') {
+        logText = `${p} locked us in`;
+    }
+
+    log.innerHTML = logText + '\n' + log.innerHTML;
+}
+
 // Register event handlers
 ws.onmessage = (msg) => handleMessage(msg.data, {
     [MESSAGE_TYPE.SERVER.PONG]: handlePong,
     [MESSAGE_TYPE.SERVER.CONNECTION_ID]: handleConnectionId,
     [MESSAGE_TYPE.SERVER.STATE_CHANGE]: handleStateChange,
     [MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME]: handleAcknowledgeName,
-    [MESSAGE_TYPE.SERVER.RESET]: handleReset
+    [MESSAGE_TYPE.SERVER.RESET]: handleReset,
+    [MESSAGE_TYPE.SERVER.LOG]: handleLog
 }, updateUI);
 
 /* === End Handler Functions === */

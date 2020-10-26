@@ -244,6 +244,12 @@ function handleProgressState() {
 
 function handleLockIn(data) {
     teams[data.team].lockedIn = true;
+    
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: 'lock'
+    });
+
     broadcastGameState();
 }
 
@@ -254,6 +260,12 @@ function handleResetAllocation(data) {
         c: 0,
         d: 0
     };
+
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: 'resetAllocation'
+    });
+
     broadcastGameState();
 }
 
@@ -262,6 +274,13 @@ function handleAddOption(data) {
     if (moneyRemainingThisTurn(data.team) >= step) {
         teams[data.team].optionsAllocated[data.option] += step;
     }
+
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: 'add',
+        option: data.option
+    });
+
     broadcastGameState();
 }
 
@@ -270,6 +289,13 @@ function handleMinusOption(data) {
     if (teams[data.team].optionsAllocated[data.option] != 0) {
         teams[data.team].optionsAllocated[data.option] -= step;
     }
+    
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: 'minus',
+        option: data.option
+    });
+
     broadcastGameState();
 }
 
