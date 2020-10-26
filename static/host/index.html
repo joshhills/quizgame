@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <title>Escape from Hotel Limbo</title>
+    </head>
+    <body>
+        <h1>Host</h1>
+        
+        <div>
+            <button id="progressstate">Progress State</button>
+            <button id="reset">Reset</button>
+        </div>
+        
+        <div>
+            <h3>
+                Players <span id="numplayers"></span>
+            </h3>
+            <table id="players">
+                <tr><th>Name</th><th>Id</th><th>Control</th></tr>
+            </table>
+        </div>
+
+        <label for="rawgamestate">Debug Data</label>
+        <textarea name="rawgamestate" rows="30" style="width: 100%;" id="rawgamestate" readonly></textarea>
+
+        <script type="module" src="./script.js"></script>
+    </body>
+</html>

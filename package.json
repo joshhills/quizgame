@@ -1,0 +1,19 @@
+{
+  "name": "escape-from-hotel-limbo",
+  "version": "1.0.0",
+  "description": "spooky interactive game show",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.6",
+    "utf-8-validate": "^5.0.2",
+    "uuid": "^8.3.1",
+    "ws": "^7.3.1"
+  },
+  "type": "module"
+}

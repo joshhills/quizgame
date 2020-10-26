@@ -1,0 +1,70 @@
+<html>
+    <head>
+        <title>
+            Escape from Hotel Limbo
+        </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <div id="pregame">
+            <h4 id="enternameprompt">Enter your name:</h4>
+            <input type="text" maxlength="16" id="name" />
+            <button id="join">Join</button>
+            <p id="pregamestatus"></p>
+        </div>
+        <div id="game" hidden>
+            <div>
+                <h1 id="teamname"></h1>
+            </div>
+            <div>
+                <h2>Question <span id="questionnumber"></span></h2>
+                <p id="questiontext"></p>
+            </div>
+            <div>
+                <h3>Remaining Money: £<span id="remaining"></span></h3>
+            </div>
+            <div>
+                <div>
+                    <p>A</p>
+                    <p id="optiona"></p>
+                    <p>£<span id="allocateda">0</span></p>
+                    <button id="minusa">-</button>
+                    <button id="adda">+</button>
+                </div>
+                <div>
+                    <p>B</p>
+                    <p id="optionb"></p>
+                    <p>£<span id="allocatedb">0</span></p>
+                    <button id="minusb">-</button>
+                    <button id="addb">+</button>
+                </div>
+                <div>
+                    <p>C</p>
+                    <p id="optionc"></p>
+                    <p>£<span id="allocatedc">0</span></p>
+                    <button id="minusc">-</button>
+                    <button id="addc">+</button>
+                </div>
+                <div>
+                    <p>D</p>
+                    <p id="optiond"></p>
+                    <p>£<span id="allocatedd">0</span></p>
+                    <button id="minusd">-</button>
+                    <button id="addd">+</button>
+                </div>
+            </div>
+            <button id="reset">Reset</button>
+            <button id="lockin">Lock In</button>
+            <p id="help"></p>
+        </div>
+        <div id="answer" hidden>
+            <h2>The answer was...</h2>
+            <h2><span id="answertext"></span></h2>
+            <p>Your team's remaining money: £<span id="remainingafter"></span></p>
+        </div>
+        <div id="finish" hidden>
+            <h2 id="winnertext"></h2>
+        </div>
+        <script type="module" src="./script.js"></script>
+    </body>
+</html>
