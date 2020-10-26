@@ -70,7 +70,11 @@ const questions = [
 ];
 
 const answers = [
-    'a'
+    'c',
+    'b',
+    'c',
+    'd',
+    'd'
 ];
 
 let state = GAME_STATE.PREGAME,
@@ -279,7 +283,7 @@ function handleClose() {
 }
   
 function handlePing(data) {
-    let tws = getClientById(wss, id);
+    let tws = getClientById(wss, data.id.id);
     sendMessage(tws, MESSAGE_TYPE.SERVER.PONG, {});
 }
 

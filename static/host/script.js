@@ -44,7 +44,13 @@ function handlePong() {
 }
 
 function handleConnectionId(data) {
-    id = data.id;
+    id = data;
+
+    setInterval(() => {
+        console.log('Sending ping');
+
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+    }, 5000);
 }
 
 // Handle the state of the game changing
@@ -97,8 +103,3 @@ function updateUI() {
         });
     }
 };
-
-setInterval(() => {
-    console.log('Sending ping');
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
-}, 5000);

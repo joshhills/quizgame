@@ -275,5 +275,6 @@ function moneyRemainingThisTurn() {
 
 setInterval(() => {
     console.log('Sending ping');
+
     sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
 }, 5000);
