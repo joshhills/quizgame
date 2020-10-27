@@ -40,6 +40,10 @@ var pregameContainer = document.getElementById('pregame'),
     addC = document.getElementById('addc'),
     minusD = document.getElementById('minusd'),
     addD = document.getElementById('addd'),
+    addRemainingA = document.getElementById('addremaininga'),
+    addRemainingB = document.getElementById('addremainingb'),
+    addRemainingC = document.getElementById('addremainingc'),
+    addRemainingD = document.getElementById('addremainingd'),
     reset = document.getElementById('reset'),
     lockIn = document.getElementById('lockin'),
     help = document.getElementById('help'),
@@ -68,6 +72,11 @@ addD.addEventListener('click', () => addOption('d'));
 
 reset.addEventListener('click', () => resetState());
 lockIn.addEventListener('click', () => setLockedIn());
+
+addRemainingA.addEventListener('click', () => addRemaining('a'));
+addRemainingB.addEventListener('click', () => addRemaining('b'));
+addRemainingC.addEventListener('click', () => addRemaining('c'));
+addRemainingD.addEventListener('click', () => addRemaining('d'));
 
 // Game State
 var id = null,
@@ -175,6 +184,10 @@ function minusOption(optionChar) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.MINUS_OPTION, { team: team, option: optionChar }, id);
 }
 
+function addRemaining(optionChar) {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.ADD_REMAINING, { team: team, option: optionChar }, id);
+}
+
 /* === End Sender Functions === */
 
 function updateUI() {
@@ -217,17 +230,17 @@ function updateUI() {
         }
         teamMembers.innerHTML = teamMembersHTML;
 
-        remaining.innerHTML = moneyRemainingThisTurn();
+        remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
 
         optionA.innerHTML = gameState.activeQuestion.options.a;
         optionB.innerHTML = gameState.activeQuestion.options.b;
         optionC.innerHTML = gameState.activeQuestion.options.c;
         optionD.innerHTML = gameState.activeQuestion.options.d;
 
-        allocatedA.innerHTML = gameState.teams[team].optionsAllocated['a'];
-        allocatedB.innerHTML = gameState.teams[team].optionsAllocated['b'];
-        allocatedC.innerHTML = gameState.teams[team].optionsAllocated['c'];
-        allocatedD.innerHTML = gameState.teams[team].optionsAllocated['d'];
+        allocatedA.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['a']);
+        allocatedB.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['b']);
+        allocatedC.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['c']);
+        allocatedD.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['d']);
 
         if (moneyRemainingThisTurn() !== 0) {
             lockIn.disabled = true;
@@ -242,11 +255,19 @@ function updateUI() {
             addB.disabled = true;
             addC.disabled = true;
             addD.disabled = true;
+            addRemainingA.disabled = true;
+            addRemainingB.disabled = true;
+            addRemainingC.disabled = true;
+            addRemainingD.disabled = true;
         } else {
             addA.disabled = false;
             addB.disabled = false;
             addC.disabled = false;
             addD.disabled = false;
+            addRemainingA.disabled = false;
+            addRemainingB.disabled = false;
+            addRemainingC.disabled = false;
+            addRemainingD.disabled = false;
         }
 
         minusA.disabled = gameState.teams[team].optionsAllocated['a'] === 0;
@@ -334,3 +355,7 @@ setInterval(() => {
 
     sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
 }, 5000);
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}

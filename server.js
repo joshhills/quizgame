@@ -284,6 +284,20 @@ function handleAddOption(data) {
     broadcastGameState();
 }
 
+function handleAddRemaining(data) {
+    if (moneyRemainingThisTurn(data.team) > 0) {
+        teams[data.team].optionsAllocated[data.option] += moneyRemainingThisTurn(data.team);
+    }
+
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: 'add',
+        option: data.option
+    });
+
+    broadcastGameState();
+}
+
 function handleMinusOption(data) {
     let step = getDenomination(data.team);
     if (teams[data.team].optionsAllocated[data.option] != 0) {
@@ -389,6 +403,13 @@ wss.on('connection', (ws, req) => {
     } else {
         ws.id = uuid.v4();
     }
+
+    if (state !== GAME_STATE.PREGAME) {
+        handleJoin({
+            name: "Tardy",
+            id: ws.id
+        });
+    }
   
     ws.on('close', handleClose);
     ws.on('message', (msg) => handleMessage(msg, {
@@ -399,6 +420,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: handleLockIn,
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: handleResetAllocation,
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: handleAddOption,
+        [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: handleAddRemaining,
         [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: handleMinusOption,
         [MESSAGE_TYPE.CLIENT.RESET]: handleReset,
         [MESSAGE_TYPE.CLIENT.KICK]: handleKick

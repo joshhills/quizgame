@@ -21,6 +21,7 @@ export const MESSAGE_TYPE = {
         LOCK_IN: 'lockIn',
         RESET_ALLOCATION: 'resetAllocation',
         ADD_OPTION: 'addOption',
+        ADD_REMAINING: 'addRemaining',
         MINUS_OPTION: 'minusOption',
         RESET: 'reset',
         KICK: 'kick'
