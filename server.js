@@ -5,6 +5,7 @@ import pkg from 'ws';
 const { Server } = pkg;
 import * as uuid from 'uuid';
 import e from 'express';
+import url from 'url';
 
 const PORT = process.env.PORT || 3000;
 
@@ -136,7 +137,6 @@ function broadcastGameState() {
 }
 
 function handleJoin(data) {
-    console.log(data);
 
     let player = {
         name: data.as,
@@ -305,6 +305,48 @@ function handleReset() {
     broadcastGameState();
 }
 
+function handleKick(data) {
+    let idToSwap = data.kick;
+    let ix = null;
+    let team = null;
+    let member = null;
+    for (let i = 0; i < teams.x.members.length; i++) {
+        if (teams.x.members[i].id === idToSwap) {
+            ix = i;
+            team = 'x';
+            member = teams.x.members[i];
+            break;
+        }
+    }
+    if (ix === null) {
+        for (let i = 0; i < teams.y.members.length; i++) {
+            if (teams.y.members[i].id === idToSwap) {
+                ix = i;
+                team = 'y';
+                member = teams.y.members[i];
+                break;
+            }
+        }
+    }
+
+    if (team === 'x') {
+        teams.x.members.splice(ix, 1);
+    } else {
+        teams.y.members.splice(ix, 1);
+    }
+
+    let tws;
+    wss.clients.forEach(c => {
+        if (c.id === idToSwap) {
+            tws = c;
+        }
+    });
+
+    sendMessage(tws, MESSAGE_TYPE.SERVER.RESET, {});
+
+    broadcastGameState();
+}
+
 // Handle disconnection
 function handleClose() {
     console.log(`Client ${this.id} disconnected`);
@@ -316,9 +358,37 @@ function handlePing(data) {
 }
 
 // Handle connection and register listeners
-wss.on('connection', (ws) => {
-    ws.id = uuid.v4();
-    console.log(`Client ${ws.id} connected`);
+wss.on('connection', (ws, req) => {
+    
+    let preId = url.parse(req.url, true).query.id;
+    let found = false;
+    let player = null;
+    if (preId !== null) {
+        for (let tm of teams.x.members) {
+            if (tm.id === preId) {
+                found = true;
+                player = tm;
+                break;
+            }
+        }
+        if (!found) {
+            for (let tm of teams.y.members) {
+                if (tm.id === preId) {
+                    found = true;
+                    player = tm;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (found) {
+        ws.id = preId;
+
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: player.name });
+    } else {
+        ws.id = uuid.v4();
+    }
   
     ws.on('close', handleClose);
     ws.on('message', (msg) => handleMessage(msg, {
@@ -330,7 +400,8 @@ wss.on('connection', (ws) => {
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: handleResetAllocation,
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: handleAddOption,
         [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: handleMinusOption,
-        [MESSAGE_TYPE.CLIENT.RESET]: handleReset
+        [MESSAGE_TYPE.CLIENT.RESET]: handleReset,
+        [MESSAGE_TYPE.CLIENT.KICK]: handleKick
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });

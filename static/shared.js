@@ -22,7 +22,8 @@ export const MESSAGE_TYPE = {
         RESET_ALLOCATION: 'resetAllocation',
         ADD_OPTION: 'addOption',
         MINUS_OPTION: 'minusOption',
-        RESET: 'reset'
+        RESET: 'reset',
+        KICK: 'kick'
     }
 };
 

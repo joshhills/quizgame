@@ -5,7 +5,14 @@ import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage } from './shared.j
 let ws;
 
 function connect() {
-    ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+    id = JSON.parse(window.localStorage.getItem('id'));
+    console.log(id);
+
+    if (id !== null) {
+        ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `?id=${id.id}`);
+    } else {
+        ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+    }
 }
 
 connect();
@@ -44,7 +51,8 @@ var pregameContainer = document.getElementById('pregame'),
     remainingAfter = document.getElementById('remainingafter'),
     finish = document.getElementById('finish'),
     winnerText = document.getElementById('winnertext'),
-    log = document.getElementById('log');
+    log = document.getElementById('log'),
+    teamMembers = document.getElementById('teammembers');
 
 // Register event listeners
 join.addEventListener('click', () => joinGame());
@@ -79,10 +87,16 @@ function handlePong() {
 // Handle receiving an Id
 function handleConnectionId(data) {
     id = data;
+
+    window.localStorage.setItem('id', JSON.stringify(id));
 }
 
 // Handle the state of the game changing
 function handleStateChange(data) {
+    if (gameState.state === GAME_STATE.ANSWER && data.state === GAME_STATE.GAME) {
+        log.innerHTML = '';
+    }
+    
     gameState = data.state;
     team = assertTeam();
 }
@@ -94,6 +108,7 @@ function handleAcknowledgeName(data) {
 function handleReset() {
     playerName = null;
     team = null;
+    log.innerHTML = '';
 }
 
 function handleLog(data) {
@@ -187,8 +202,20 @@ function updateUI() {
         answer.hidden = true;
 
         teamName.innerHTML = gameState.teams[team].teamName;
+        if (team === 'x') {
+            teamName.className = 'yellow';
+        } else {
+            teamName.className = 'purple';
+        }
+
         questionNumber.innerHTML = gameState.activeQuestion.number;
         questionText.innerHTML = gameState.activeQuestion.text;
+
+        let teamMembersHTML = '';
+        for (let tm of gameState.teams[team].members) {
+            teamMembersHTML += `<li>${tm.name}</li>`;
+        }
+        teamMembers.innerHTML = teamMembersHTML;
 
         remaining.innerHTML = moneyRemainingThisTurn();
 

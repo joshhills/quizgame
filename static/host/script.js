@@ -25,6 +25,10 @@ function swapTeam(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.SWAP_TEAM, { swap: theId }, id);
 }
 
+function kick(theId) {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
+}
+
 progressState.addEventListener('click', () => {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.PROGRESS_STATE, {}, id);
 });
@@ -89,10 +93,10 @@ function updateUI() {
     // Players table
     let playersTableHTML = '<tr><th>Name</th><th>Id</th><th>Team</th><th>Control</th></tr>';
     for (let tm of gameState.teams.x.members) {
-        playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>x</td><td><button class="swap-team" data-id="${tm.id}">Swap Team</button></td>`
+        playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>x</td><td><button class="swap-team" data-id="${tm.id}">Swap Team</button><button class="kick" data-id="${tm.id}">Kick</button></td>`
     }
     for (let tm of gameState.teams.y.members) {
-        playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>y</td><td><button class="swap-team" data-id="${tm.id}">Swap Team</button></td>`
+        playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>y</td><td><button class="swap-team" data-id="${tm.id}">Swap Team</button><button class="kick" data-id="${tm.id}">Kick</button></td>`
     }
     playersTable.innerHTML = playersTableHTML;
     let swapTeamButtons = document.getElementsByClassName('swap-team');
@@ -100,6 +104,14 @@ function updateUI() {
         b.addEventListener('click', () => {
             let playerId = b.getAttribute('data-id');
             swapTeam(playerId);
+        });
+    }
+
+    let kickButtons = document.getElementsByClassName('kick');
+    for (let b of kickButtons) {
+        b.addEventListener('click', () => {
+            let playerId = b.getAttribute('data-id');
+            kick(playerId);
         });
     }
 };

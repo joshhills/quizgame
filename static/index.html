@@ -3,68 +3,149 @@
         <title>
             Escape from Hotel Limbo
         </title>
+        <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            @font-face {
+                font-family: 'Deutsch Gothic';
+                src: URL('./deutsch-gothic.ttf') format('truetype');
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: black;
+
+                color: white;
+                font-family: 'Syne Tactile', cursive;
+                font-size: 20px;
+
+                text-align: center;
+            }
+
+            .container {
+                background-color: #1c1d1f;
+                max-width: 640px;
+                margin: 0 auto;
+                padding: 20px;
+                min-height: calc(100vh - 40px);
+            }
+
+            ul {
+                list-style: none;
+                padding: 0;
+                margin-right: 10px;
+                font-size: 20px;
+            }
+            
+            li {
+                display: inline;
+            }
+
+            .options {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                grid-column-gap: 20px;
+                grid-row-gap: 20px;
+                align-items: center;
+                max-width: 640px;
+                margin: 0 auto;
+            }
+
+            .option {
+                padding: 10px;
+                border: 2px solid white;
+            }
+
+            #teamname {
+                font-family: 'Deutsch Gothic';
+                font-size: 50px;
+            }
+
+            .yellow {
+                color: yellow;
+            }
+
+            .purple {
+                color: #8f27a9;
+            }
+            
+            .welcome {
+                font-weight: 200;
+                font-family: 'Deutsch Gothic';
+            }
+
+            .red {
+                color: #ea3c3b;
+            }
+        </style>
     </head>
     <body>
-        <div id="pregame">
-            <h4 id="enternameprompt">Enter your name:</h4>
-            <input type="text" maxlength="16" id="name" />
-            <button id="join">Join</button>
-            <p id="pregamestatus"></p>
-        </div>
-        <div id="game" hidden>
-            <div>
-                <h1 id="teamname"></h1>
+        <div class="container">
+            <div id="pregame">
+                <h1 class="welcome">Welcome to <span class="red">Hotel Limbo</span></h1>
+                <h4 id="enternameprompt">Enter your name:</h4>
+                <input type="text" maxlength="16" id="name" />
+                <button id="join">Join</button>
+                <p id="pregamestatus"></p>
             </div>
-            <div>
-                <h2>Question <span id="questionnumber"></span></h2>
-                <p id="questiontext"></p>
-            </div>
-            <div>
-                <h3>Remaining Money: £<span id="remaining"></span></h3>
-            </div>
-            <div>
+            <div id="game" hidden>
                 <div>
-                    <p>A</p>
-                    <p id="optiona"></p>
-                    <p>£<span id="allocateda">0</span></p>
-                    <button id="minusa">-</button>
-                    <button id="adda">+</button>
+                    <h1 id="teamname"></h1>
+                    <ul id="teammembers"></ul>
                 </div>
                 <div>
-                    <p>B</p>
-                    <p id="optionb"></p>
-                    <p>£<span id="allocatedb">0</span></p>
-                    <button id="minusb">-</button>
-                    <button id="addb">+</button>
+                    <h2>Question <span id="questionnumber"></span></h2>
+                    <p id="questiontext"></p>
                 </div>
                 <div>
-                    <p>C</p>
-                    <p id="optionc"></p>
-                    <p>£<span id="allocatedc">0</span></p>
-                    <button id="minusc">-</button>
-                    <button id="addc">+</button>
+                    <h3 style="display: inline;">Remaining Money: £<span id="remaining"></span></h3>
+                    <button id="reset">Reset</button>
+                    <button id="lockin">Lock In</button>
+                    <br/><br/>
                 </div>
-                <div>
-                    <p>D</p>
-                    <p id="optiond"></p>
-                    <p>£<span id="allocatedd">0</span></p>
-                    <button id="minusd">-</button>
-                    <button id="addd">+</button>
+                <div class="options">
+                    <div class="option">
+                        <p>A</p>
+                        <p id="optiona"></p>
+                        <p>£<span id="allocateda">0</span></p>
+                        <button id="minusa">-</button>
+                        <button id="adda">+</button>
+                    </div>
+                    <div class="option">
+                        <p>B</p>
+                        <p id="optionb"></p>
+                        <p>£<span id="allocatedb">0</span></p>
+                        <button id="minusb">-</button>
+                        <button id="addb">+</button>
+                    </div>
+                    <div class="option">
+                        <p>C</p>
+                        <p id="optionc"></p>
+                        <p>£<span id="allocatedc">0</span></p>
+                        <button id="minusc">-</button>
+                        <button id="addc">+</button>
+                    </div>
+                    <div class="option">
+                        <p>D</p>
+                        <p id="optiond"></p>
+                        <p>£<span id="allocatedd">0</span></p>
+                        <button id="minusd">-</button>
+                        <button id="addd">+</button>
+                    </div>
                 </div>
+                <p id="help"></p>
+                <textarea readonly id="log" style="width: 100%;" rows="10"></textarea>
             </div>
-            <button id="reset">Reset</button>
-            <button id="lockin">Lock In</button>
-            <p id="help"></p>
-            <textarea readonly id="log" style="width: 100%;" rows="10"></textarea>
-        </div>
-        <div id="answer" hidden>
-            <h2>The answer was...</h2>
-            <h2><span id="answertext"></span></h2>
-            <p>Your team's remaining money: £<span id="remainingafter"></span></p>
-        </div>
-        <div id="finish" hidden>
-            <h2 id="winnertext"></h2>
+            <div id="answer" hidden>
+                <h2>The answer was...</h2>
+                <h2><span id="answertext"></span></h2>
+                <p>Your team's remaining money: £<span id="remainingafter"></span></p>
+            </div>
+            <div id="finish" hidden>
+                <h2 id="winnertext"></h2>
+            </div>
         </div>
         <script type="module" src="./script.js"></script>
     </body>
