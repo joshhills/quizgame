@@ -56,7 +56,8 @@ var pregameContainer = document.getElementById('pregame'),
     finish = document.getElementById('finish'),
     winnerText = document.getElementById('winnertext'),
     log = document.getElementById('log'),
-    teamMembers = document.getElementById('teammembers');
+    teamMembers = document.getElementById('teammembers'),
+    containerino = document.getElementById('containerino');
 
 // Register event listeners
 join.addEventListener('click', () => joinGame());
@@ -102,6 +103,12 @@ function handleConnectionId(data) {
 
 // Handle the state of the game changing
 function handleStateChange(data) {
+    if (gameState === null && data.gameState !== GAME_STATE.PREGAME) {
+        // Game already in progress
+        containerino.innerHTML = 'The concierge is busy...';
+        ws.close();
+    }
+
     if (gameState.state === GAME_STATE.ANSWER && data.state === GAME_STATE.GAME) {
         log.innerHTML = '';
     }

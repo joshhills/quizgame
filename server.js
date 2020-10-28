@@ -403,13 +403,6 @@ wss.on('connection', (ws, req) => {
     } else {
         ws.id = uuid.v4();
     }
-
-    if (state !== GAME_STATE.PREGAME) {
-        handleJoin({
-            name: "Tardy",
-            id: ws.id
-        });
-    }
   
     ws.on('close', handleClose);
     ws.on('message', (msg) => handleMessage(msg, {
