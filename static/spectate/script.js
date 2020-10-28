@@ -209,27 +209,43 @@ function updateUI() {
     
             if (gameState.teams.x.optionsAllocated.a != 0) {
                 team1option1allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.a);
+            } else {
+                team1option1allocation.innerHTML = '';
             }
             if (gameState.teams.x.optionsAllocated.b != 0) {
                 team1option2allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.b);
+            } else {
+                team1option2allocation.innerHTML = '';
             }
             if (gameState.teams.x.optionsAllocated.c != 0) {
                 team1option3allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.c);
+            } else {
+                team1option3allocation.innerHTML = '';
             }
             if (gameState.teams.x.optionsAllocated.d != 0) {
                 team1option4allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.d);
+            } else {
+                team1option4allocation.innerHTML = '';
             }
             if (gameState.teams.y.optionsAllocated.a != 0) {
                 team2option1allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.a);
+            } else {
+                team2option1allocation.innerHTML = '';
             }
             if (gameState.teams.y.optionsAllocated.b != 0) {
                 team2option2allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.b);
+            } else {
+                team2option2allocation.innerHTML = '';
             }
             if (gameState.teams.y.optionsAllocated.c != 0) {
                 team2option3allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.c);
+            } else {
+                team2option3allocation.innerHTML = '';
             }
             if (gameState.teams.y.optionsAllocated.d != 0) {
                 team2option4allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.d);
+            } else {
+                team2option4allocation.innerHTML = '';
             }
 
         } else {
@@ -260,6 +276,8 @@ function updateUI() {
             } else if (gameState.winner === 'both') {
                 question.innerHTML = `both ${gameState.teams.x.teamName} and ${gameState.teams.y.teamName}`;
             }
+
+            options.hidden = true;
         }
     }
 }

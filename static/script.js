@@ -6,7 +6,6 @@ let ws;
 
 function connect() {
     id = JSON.parse(window.localStorage.getItem('id'));
-    console.log(id);
 
     if (id !== null) {
         ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `?id=${id.id}`);
@@ -85,7 +84,8 @@ var id = null,
     playerName = null,
     gameState = {
         scene: GAME_STATE.PREGAME
-    };
+    },
+    killswitch = true;
 
 /* === Begin Handler functions === */
 
@@ -103,10 +103,12 @@ function handleConnectionId(data) {
 
 // Handle the state of the game changing
 function handleStateChange(data) {
-    if (gameState === null && data.gameState !== GAME_STATE.PREGAME) {
+    if (killswitch && data.scene !== GAME_STATE.PREGAME) {
         // Game already in progress
         containerino.innerHTML = 'The concierge is busy...';
         ws.close();
+    } else {
+        killswitch = false;
     }
 
     if (gameState.state === GAME_STATE.ANSWER && data.state === GAME_STATE.GAME) {

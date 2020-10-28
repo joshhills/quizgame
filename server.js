@@ -94,7 +94,7 @@ function reset() {
     activeQuestion = null;
     teams = {
         x: {
-            teamName: 'Lingering Lades',
+            teamName: 'The Lingering Lades',
             members: [],
             remainingMoney: 100000,
             optionsAllocated: {
@@ -106,7 +106,7 @@ function reset() {
             lockedIn: false
         },
         y: {
-            teamName: 'Marauding Mentlegen',
+            teamName: 'The Marauding Mentlegen',
             members: [],
             remainingMoney: 100000,
             optionsAllocated: {
