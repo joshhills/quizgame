@@ -103,7 +103,8 @@ function handleConnectionId(data) {
 
 // Handle the state of the game changing
 function handleStateChange(data) {
-    if (killswitch && data.scene !== GAME_STATE.PREGAME) {
+
+    if (killswitch === true && data.state.scene !== GAME_STATE.PREGAME) {
         // Game already in progress
         containerino.innerHTML = 'The concierge is busy...';
         ws.close();
@@ -201,132 +202,134 @@ function addRemaining(optionChar) {
 /* === End Sender Functions === */
 
 function updateUI() {
-    if (gameState.scene === 'pregame') {
-        pregameContainer.hidden = false;
-        gameContainer.hidden = true;
-        answer.hidden = true;
-        finish.hidden = true;
-
-        if (playerName !== null) {
-            document.getElementById('name').hidden = true;
-            join.hidden = true;
-            pregameStatus.innerHTML = "Waiting...";
-            enterNamePrompt.hidden = true;
-        } else {
-            document.getElementById('name').hidden = false;
-            join.hidden = false;
-            pregameStatus.innerHTML = "";
-            enterNamePrompt.hidden = false;
-        }
-    }
-
-    if (gameState.scene === 'game') {
-        pregameContainer.hidden = true;
-        answer.hidden = true;
-
-        teamName.innerHTML = gameState.teams[team].teamName;
-        if (team === 'x') {
-            teamName.className = 'yellow';
-        } else {
-            teamName.className = 'purple';
-        }
-
-        questionNumber.innerHTML = gameState.activeQuestion.number;
-        questionText.innerHTML = gameState.activeQuestion.text;
-
-        let teamMembersHTML = '';
-        for (let tm of gameState.teams[team].members) {
-            teamMembersHTML += `<li>${tm.name}</li>`;
-        }
-        teamMembers.innerHTML = teamMembersHTML;
-
-        remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
-
-        optionA.innerHTML = gameState.activeQuestion.options.a;
-        optionB.innerHTML = gameState.activeQuestion.options.b;
-        optionC.innerHTML = gameState.activeQuestion.options.c;
-        optionD.innerHTML = gameState.activeQuestion.options.d;
-
-        allocatedA.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['a']);
-        allocatedB.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['b']);
-        allocatedC.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['c']);
-        allocatedD.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['d']);
-
-        if (moneyRemainingThisTurn() !== 0) {
-            lockIn.disabled = true;
-            help.innerHTML = 'You need to allocate all of your money!';
-        } else {
-            lockIn.disabled = false;
-            help.innerHTML = '';
-        }
-
-        if (moneyRemainingThisTurn() === 0) {
-            addA.disabled = true;
-            addB.disabled = true;
-            addC.disabled = true;
-            addD.disabled = true;
-            addRemainingA.disabled = true;
-            addRemainingB.disabled = true;
-            addRemainingC.disabled = true;
-            addRemainingD.disabled = true;
-        } else {
-            addA.disabled = false;
-            addB.disabled = false;
-            addC.disabled = false;
-            addD.disabled = false;
-            addRemainingA.disabled = false;
-            addRemainingB.disabled = false;
-            addRemainingC.disabled = false;
-            addRemainingD.disabled = false;
-        }
-
-        minusA.disabled = gameState.teams[team].optionsAllocated['a'] === 0;
-        minusB.disabled = gameState.teams[team].optionsAllocated['b'] === 0;
-        minusC.disabled = gameState.teams[team].optionsAllocated['c'] === 0;
-        minusD.disabled = gameState.teams[team].optionsAllocated['d'] === 0;
-
-        reset.disabled = moneyRemainingThisTurn() === gameState.teams[team].remainingMoney;
-
-        if (gameState.teams[team].lockedIn) {
-            addA.disabled = true;
-            addB.disabled = true;
-            addC.disabled = true;
-            addD.disabled = true;
-            minusA.disabled = true;
-            minusB.disabled = true;
-            minusC.disabled = true;
-            minusD.disabled = true;
-            reset.disabled = true;
-            lockIn.disabled = true;
-            
-            help.innerHTML = 'You\'re locked in!';
-        }
-
-        gameContainer.hidden = false;
-    }
+    if (!killswitch) {
+        if (gameState.scene === 'pregame') {
+            pregameContainer.hidden = false;
+            gameContainer.hidden = true;
+            answer.hidden = true;
+            finish.hidden = true;
     
-    if (gameState.scene === 'answer') {
-        pregameContainer.hidden = true;
-        gameContainer.hidden = true;
-        finish.hidden = true;
-        answer.hidden = false;
-
-        answerText.innerHTML = gameState.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.answer];
-        remainingafter.innerHTML = gameState.teams[team].remainingMoney;
-    }
-
-    if (gameState.scene === 'finish') {
-        pregameContainer.hidden = true;
-        gameContainer.hidden = true;
-        answer.hidden = true;
-        finish.hidden = false;
-
-        if (gameState.winner === 'nobody') {
-            winnerText.innerHTML = 'Nobody won';
-        } else if (gameState.winner === 'both') {
-            winnerText.innerHTML = 'You both won';
-        } else {
-            winnerText.innerHTML = gameState.winner === team ? 'You won!' : 'You lost!';
+            if (playerName !== null) {
+                document.getElementById('name').hidden = true;
+                join.hidden = true;
+                pregameStatus.innerHTML = "Waiting...";
+                enterNamePrompt.hidden = true;
+            } else {
+                document.getElementById('name').hidden = false;
+                join.hidden = false;
+                pregameStatus.innerHTML = "";
+                enterNamePrompt.hidden = false;
+            }
+        }
+    
+        if (gameState.scene === 'game') {
+            pregameContainer.hidden = true;
+            answer.hidden = true;
+    
+            teamName.innerHTML = gameState.teams[team].teamName;
+            if (team === 'x') {
+                teamName.className = 'yellow';
+            } else {
+                teamName.className = 'purple';
+            }
+    
+            questionNumber.innerHTML = gameState.activeQuestion.number;
+            questionText.innerHTML = gameState.activeQuestion.text;
+    
+            let teamMembersHTML = '';
+            for (let tm of gameState.teams[team].members) {
+                teamMembersHTML += `<li>${tm.name}</li>`;
+            }
+            teamMembers.innerHTML = teamMembersHTML;
+    
+            remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
+    
+            optionA.innerHTML = gameState.activeQuestion.options.a;
+            optionB.innerHTML = gameState.activeQuestion.options.b;
+            optionC.innerHTML = gameState.activeQuestion.options.c;
+            optionD.innerHTML = gameState.activeQuestion.options.d;
+    
+            allocatedA.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['a']);
+            allocatedB.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['b']);
+            allocatedC.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['c']);
+            allocatedD.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['d']);
+    
+            if (moneyRemainingThisTurn() !== 0) {
+                lockIn.disabled = true;
+                help.innerHTML = 'You need to allocate all of your money!';
+            } else {
+                lockIn.disabled = false;
+                help.innerHTML = '';
+            }
+    
+            if (moneyRemainingThisTurn() === 0) {
+                addA.disabled = true;
+                addB.disabled = true;
+                addC.disabled = true;
+                addD.disabled = true;
+                addRemainingA.disabled = true;
+                addRemainingB.disabled = true;
+                addRemainingC.disabled = true;
+                addRemainingD.disabled = true;
+            } else {
+                addA.disabled = false;
+                addB.disabled = false;
+                addC.disabled = false;
+                addD.disabled = false;
+                addRemainingA.disabled = false;
+                addRemainingB.disabled = false;
+                addRemainingC.disabled = false;
+                addRemainingD.disabled = false;
+            }
+    
+            minusA.disabled = gameState.teams[team].optionsAllocated['a'] === 0;
+            minusB.disabled = gameState.teams[team].optionsAllocated['b'] === 0;
+            minusC.disabled = gameState.teams[team].optionsAllocated['c'] === 0;
+            minusD.disabled = gameState.teams[team].optionsAllocated['d'] === 0;
+    
+            reset.disabled = moneyRemainingThisTurn() === gameState.teams[team].remainingMoney;
+    
+            if (gameState.teams[team].lockedIn) {
+                addA.disabled = true;
+                addB.disabled = true;
+                addC.disabled = true;
+                addD.disabled = true;
+                minusA.disabled = true;
+                minusB.disabled = true;
+                minusC.disabled = true;
+                minusD.disabled = true;
+                reset.disabled = true;
+                lockIn.disabled = true;
+                
+                help.innerHTML = 'You\'re locked in!';
+            }
+    
+            gameContainer.hidden = false;
+        }
+        
+        if (gameState.scene === 'answer') {
+            pregameContainer.hidden = true;
+            gameContainer.hidden = true;
+            finish.hidden = true;
+            answer.hidden = false;
+    
+            answerText.innerHTML = gameState.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.answer];
+            remainingafter.innerHTML = gameState.teams[team].remainingMoney;
+        }
+    
+        if (gameState.scene === 'finish') {
+            pregameContainer.hidden = true;
+            gameContainer.hidden = true;
+            answer.hidden = true;
+            finish.hidden = false;
+    
+            if (gameState.winner === 'nobody') {
+                winnerText.innerHTML = 'Nobody won';
+            } else if (gameState.winner === 'both') {
+                winnerText.innerHTML = 'You both won';
+            } else {
+                winnerText.innerHTML = gameState.winner === team ? 'You won!' : 'You lost!';
+            }
         }
     }
 }
