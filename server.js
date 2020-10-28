@@ -20,61 +20,127 @@ const wss = new Server({ server });
 const questions = [
     {
         number: 1,
-        text: 'What was the name of the band Lionel Richie was a part of?',
+        text: 'Which of the following is NOT a ghost from the original Pac-Man?',
         options: {
-            a: 'King Harvest',
-            b: 'Spectrums',
-            c: 'Commodores',
-            d: 'The Marshall Tucker Band'
+            a: 'Winky',
+            b: 'Clyde',
+            c: 'Blinky',
+            d: 'Inky'
         }
     },
     {
         number: 2,
-        text: 'Who was the only U.S. President to resign?',
+        text: 'Which of the following Scrabble tiles has the highest value?',
         options: {
-            a: 'Herbert Hoover',
-            b: 'Richard Nixon',
-            c: 'George W. Bush',
-            d: 'Barack Obama'
+            a: 'K',
+            b: 'Q',
+            c: 'J',
+            d: 'X'
         }
     },
     {
         number: 3,
-        text: 'In which city can you find the Liberty Bell?',
+        text: 'Which of the following is a genuine Pokémon type?',
         options: {
-            a: 'Washington, D.C.',
-            b: 'Boston',
-            c: 'Philadelphia',
-            d: 'Manhattan'
+            a: 'Earth',
+            b: 'Dark',
+            c: 'Air',
+            d: 'Light'
         }
     },
     {
         number: 4,
-        text: 'According to Forrest Gump, "life was like..."',
+        text: 'Under what name did Mario debut in 1981\'s Donkey Kong?',
         options: {
-            a: 'A bag of lemons',
-            b: 'A handful of roses',
-            c: 'A lollipop',
-            d: 'A box of chocolates'
+            a: 'Luigi',
+            b: 'Jumpman',
+            c: 'Plumberman',
+            d: 'Mario'
         }
     },
     {
         number: 5,
-        text: 'In The Wizard of Oz, the Tin Man wanted to see the Wizard about getting...',
+        text: 'Which Nintendo console was part of the sixth generation of video game consoles along with the Sony Playstation 2 and the Microsoft Xbox?',
         options: {
-            a: 'A brain',
-            b: 'An oil can',
-            c: 'A dog',
-            d: 'A heart'
+            a: 'Wii',
+            b: 'SNES',
+            c: 'Gamecube',
+            d: 'Nintendo 64'
+        }
+    },
+    {
+        number: 6,
+        text: 'What genre of video game is League of Legends?',
+        options: {
+            a: 'MOBA',
+            b: 'MMOFPS',
+            c: 'MMORPG',
+            d: 'MMORTS'
+        }
+    },
+    {
+        number: 7,
+        text: 'Which of the following is NOT a game mode in Minecraft?',
+        options: {
+            a: 'Hardcore',
+            b: 'Spectator',
+            c: 'Adventure',
+            d: 'Explorer'
+        }
+    },
+    {
+        number: 8,
+        text: 'Which game in the Final Fantasy franchise was the first to spawn a direct sequel?',
+        options: {
+            a: 'FFVII',
+            b: 'FFX',
+            c: 'FFV',
+            d: 'FFXII'
+        }
+    },
+    {
+        number: 9,
+        text: 'Which of the following consoles was released by Sega?',
+        options: {
+            a: 'Gamecube',
+            b: 'Zodiac',
+            c: 'Dreamcast',
+            d: 'Jaguar'
+        }
+    },
+    {
+        number: 10,
+        text: 'Which of the following model building toys was developed in Denmark?',
+        options: {
+            a: 'K\'NEX',
+            b: 'Lego',
+            c: 'Fischertechnik',
+            d: 'Meccano'
+        }
+    },
+    {
+        number: 11,
+        text: 'Which is NOT a dungeon in The Legend of Zelda: Ocarina of Time?',
+        options: {
+            a: 'Spirit Temple',
+            b: 'Fire Temple',
+            c: 'Shadow Temple',
+            d: 'Light Temple'
         }
     }
 ];
 
 const answers = [
-    'c',
+    'a',
+    'b',
+    'b',
     'b',
     'c',
+    'a',
     'd',
+    'b',
+    'c',
+    'b',
     'd'
 ];
 

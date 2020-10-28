@@ -127,6 +127,7 @@ function handleReset() {
     playerName = null;
     team = null;
     log.innerHTML = '';
+    killswitch = true;
 }
 
 function handleLog(data) {
