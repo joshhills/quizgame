@@ -262,6 +262,15 @@ function updateUI() {
             team2option2allocation.hidden = true;
             team2option3allocation.hidden = true;
             team2option4allocation.hidden = true;
+
+            team1option1allocation.innerHTML = '';
+            team1option2allocation.innerHTML = '';
+            team1option3allocation.innerHTML = '';
+            team1option4allocation.innerHTML = '';
+            team2option1allocation.innerHTML = '';
+            team2option2allocation.innerHTML = '';
+            team2option3allocation.innerHTML = '';
+            team2option4allocation.innerHTML = '';
         }
     
         if (gameState.scene === GAME_STATE.FINISH) {
