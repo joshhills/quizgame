@@ -32,15 +32,28 @@
                 background-color: orange;
             }
 
+            #notification {
+                padding: 1rem;
+                background-color: white;
+                color: black;
+            }
+
+            #solos, #teams > table {
+                display: inline-block;
+            }
+
             ul {
                 list-style: none;
                 padding: 0;
-                margin-right: 10px;
                 font-size: 20px;
             }
             
             li {
                 display: inline;
+            }
+
+            li:not(:last-child) {
+                margin-right: 10px;
             }
 
             .options {
@@ -80,15 +93,21 @@
             .red {
                 color: #ea3c3b;
             }
+
+            .active {
+                background-color: green;
+            }
         </style>
     </head>
     <body>
         <div id="containerino" class="container">
             <div id="errormessage"></div>
+            <div id="notification"></div>
             <div id="pregame">
                 <h1 class="welcome">Welcome to the <span class="red">Video Game Quiz</span></h1>
                 <div id="pregamestatuswidget">
-                    Waiting as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
+                    <span id="pregamestatuswidgetready"></span> as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
+                    <button id="pregamestatuswidgetreadybutton"></button>
                     <button id="pregamestatuswidgetleave">Leave team</button>
                 </div>
                 <h4 id="enternameprompt">Enter your player name:</h4>
@@ -153,6 +172,10 @@
                 </div>
                 <p id="help"></p>
                 <textarea readonly id="log" style="width: 100%;" rows="10"></textarea>
+            </div>
+            <div id="scores" hidden>
+                <h2>Scores</h2>
+                <table id="scorestable"></table>
             </div>
             <div id="answer" hidden>
                 <h2>The answer was...</h2>

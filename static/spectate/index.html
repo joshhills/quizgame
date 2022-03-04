@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>
-            Escape from Hotel Limbo
+            Video Game Quiz
         </title>
         <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
         <style>
@@ -12,7 +12,7 @@
                 background-color: #1c1d1f;
 
                 color: white;
-                font-family: 'Syne Tactile', cursive;
+                font-family: 'Arial';
 
                 text-align: center;
             }
@@ -35,8 +35,8 @@
                 overflow: hidden;
 
                 display: grid;
-                grid-template-columns: 1fr 3fr 1fr;
-                grid-template-rows: 1fr;
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 5fr;
                 grid-column-gap: 0px;
                 grid-row-gap: 0px;
             }
@@ -128,54 +128,8 @@
                 color: yellow;
             }
 
-            #t2o1allocation, #t2o2allocation, #t2o3allocation, #t2o4allocation {
-                color: #8f27a9;
-            }
-
-            .teamcol {
-                display: grid;
-                grid-template-columns: 1fr;
-                grid-template-rows: 190px 70px 40px 200px 30px 210px;
-                align-items: center;
-                grid-column-gap: 0px;
-                grid-row-gap: 0px;
-            }
-
-            #teamcol1 {
-                color: yellow;
-                padding-left: 30px;
-                text-align: left;
-            }
-
-            #teamcol2 {
-                padding-right: 30px;
-                text-align: right;
-                color: #8f27a9;
-            }
-
-            .lockedin {
-                color: grey;
-                text-transform: uppercase;
-            }
-
-            .lockedin > * {
-                display: inline;
-                padding: 5px;
-                border: 1px dotted grey;
-            }
-
             .active {
                 border-style: solid;
-            }
-
-            #team1lockedin.active {
-                color: yellow !important;
-                border-color: yellow !important;
-            }
-
-            #team2lockedin.active {
-                color: #8f27a9 !important;
-                border-color: #8f27a9 !important;
             }
 
             .moneyr {
@@ -189,24 +143,17 @@
             .false {
                 background-color: #ea3c3b;
             }
+
+            #notification {
+                padding: 1rem;
+                background-color: white;
+                color: black;
+            }
         </style>
     </head>
     <body>
         <div class="container">
-            <div class="teamcol" id="teamcol1">
-                <div></div>
-                <p id="team1name"></p>
-                <div class="moneyr">
-                    <p>£<span id="team1remainingmoney"></span></p>
-                </div>
-                <ul id="team1members">
-                </ul>
-                <div class="lockedin">
-                    <p id="team1lockedin">Locked In</p>
-                </div>
-                <div></div>
-            </div>
-            
+            <div id="notification"></div>
             <div class="game">
                 <div class="empty-1"></div>
                 <div class="q-num">
@@ -246,20 +193,6 @@
                     </div>
                 </div>
                 <div class="empty-2"></div>
-            </div>
-            
-            <div class="teamcol" id="teamcol2">
-                <div></div>
-                <p id="team2name"></p>
-                <div class="moneyr">
-                    <p>£<span id="team2remainingmoney"></span></p>
-                </div>
-                <ul id="team2members">
-                </ul>
-                <div class="lockedin">
-                    <p id="team2lockedin">Locked In</p>
-                </div>
-                <div></div>
             </div>
         </div>
         <script type="module" src="./script.js"></script>

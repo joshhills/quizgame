@@ -9,10 +9,13 @@ export const MESSAGE_TYPE = {
         CONNECTION_ID: 'id',
         STATE_CHANGE: 'stateChange',
         ACKNOWLEDGE_NAME: 'ackname',
+        ACKNOWLEDGE_READY: 'ackready',
         PONG: 'pong',
         RESET: 'reset',
         LOG: 'log',
-        ERROR_MESSAGE: 'errorMessage'
+        ERROR_MESSAGE: 'errorMessage',
+        NOTIFY: 'notify',
+        REMOVE_NOTIFY: 'removeNotify'
     },
     CLIENT: {
         PING: 'ping',
@@ -20,7 +23,7 @@ export const MESSAGE_TYPE = {
         JOIN_TEAM: 'joinTeam',
         LEAVE_TEAM: 'leaveTeam',
         CREATE_TEAM: 'createTeam',
-        SWAP_TEAM: 'swapTeam',
+        TOGGLE_READY: 'toggleReady',
         PROGRESS_STATE: 'progressState',
         LOCK_IN: 'lockIn',
         RESET_ALLOCATION: 'resetAllocation',
@@ -28,7 +31,9 @@ export const MESSAGE_TYPE = {
         ADD_REMAINING: 'addRemaining',
         MINUS_OPTION: 'minusOption',
         RESET: 'reset',
-        KICK: 'kick'
+        KICK: 'kick',
+        NOTIFY: 'notify',
+        REMOVE_NOTIFY: 'removeNotify'
     }
 };
 

@@ -1,7 +1,7 @@
 {
-  "name": "escape-from-hotel-limbo",
+  "name": "quiz-game",
   "version": "1.0.0",
-  "description": "spooky interactive game show",
+  "description": "A framework for an interactive multiple-choice quiz game with host controls and spectator view",
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js"

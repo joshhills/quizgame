@@ -30,7 +30,7 @@ const questions = [
         }
     },
     {
-        number: 1,
+        number: 2,
         text: 'This is a test question 2, the answer is b',
         options: {
             a: '270',
@@ -40,7 +40,7 @@ const questions = [
         }
     },
     {
-        number: 1,
+        number: 3,
         text: 'This is a test question 3, the answer is c',
         options: {
             a: '270',
@@ -61,7 +61,7 @@ let state = GAME_STATE.PREGAME,
     activeQuestion = null,
     answer = null,
     teams = null,
-    winner = null;
+    winners = null;
 
 reset();
 
@@ -73,7 +73,7 @@ function reset() {
     activeQuestion = null;
     teams = [];
     answer = null,
-    winner = null;
+    winners = null;
 }
 
 function broadcastGameState() {
@@ -83,7 +83,7 @@ function broadcastGameState() {
         activeQuestion: activeQuestion,
         answer: answer,
         teams: teams,
-        winner: winner
+        winners: winners
     };
 
     wss.clients.forEach((c) => {
@@ -105,23 +105,16 @@ function handleProgressState() {
             team.remainingMoney = team.optionsAllocated[answer];
         }
     } else if (state === GAME_STATE.ANSWER) {
-
-        // TODO: Progress to scores screen
+        state = GAME_STATE.SCORES;
     } else if (state === GAME_STATE.SCORES) {
         const _allTeamsBankrupt = allTeamsBankrupt();
-        if (activeQuestion.number === questions.length || _allTeamsBankrupt /* TODO: Make this function! */) {
+        if (activeQuestion.number === questions.length || _allTeamsBankrupt) {
             state = GAME_STATE.FINISH;
             
             if (_allTeamsBankrupt) {
-                winner = 'nobody';
+                winners = [];
             } else {
-                const winners = getTeamsWithMostMoney();
-
-                if (winners.length > 1) {
-                    winner = 'tie';
-                } else {
-                    winner = winners[0].teamName;
-                }
+                winners = getTeamsWithMostMoney();
             }
         } else {
             answer = null;
@@ -224,7 +217,8 @@ function handleCreateTeam(data) {
             members: [
                 {
                     name: playerName,
-                    id: data.id.id
+                    id: data.id.id,
+                    ready: false
                 }
             ],
             remainingMoney: STARTING_MONEY,
@@ -243,7 +237,23 @@ function handleCreateTeam(data) {
     broadcastGameState();
 }
 
+function handleNotify(data) {
+    const message = data.message;
+
+    wss.clients.forEach((c) => {
+        sendMessage(c, MESSAGE_TYPE.SERVER.NOTIFY, { message: message });
+    });
+}
+
+function handleRemoveNotify() {
+    wss.clients.forEach((c) => {
+        sendMessage(c, MESSAGE_TYPE.SERVER.REMOVE_NOTIFY, {});
+    });
+}
+
 function handleJoinTeam(data) {
+
+    let tws = getClientById(wss, data.id.id);
     
     let teamName = data.team;
     let playerName = data.as;
@@ -280,10 +290,10 @@ function handleJoinTeam(data) {
         if (teamName === team.teamName) {
             team.members.push({
                 name: playerName,
-                id: data.id.id
+                id: data.id.id,
+                ready: false
             });
 
-            let tws = getClientById(wss, data.id.id);
             sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: data.as });
             broadcastGameState();
             return;
@@ -307,14 +317,20 @@ function handleJoinSolo(data) {
     let attempts = 0;
     let didRename = false;
     let checkingForDuplicates = true;
+    let originalTeamName = teamName;
     while (checkingForDuplicates) {
         attempts++;
+        let skip = false;
         for (let team of teams) {
             if (team.teamName === teamName) {
-                teamName = `${teamName} (${attempts})`;
+                teamName = `${originalTeamName} (${attempts})`;
                 didRename = true;
-                continue;
+                skip = true;
+                break;
             }
+        }
+        if (skip) {
+            continue;
         }
         checkingForDuplicates = false;
     }
@@ -325,7 +341,8 @@ function handleJoinSolo(data) {
             members: [
                 {
                     name: data.as,
-                    id: data.id.id
+                    id: data.id.id,
+                    ready: false
                 }
             ],
             remainingMoney: STARTING_MONEY,
@@ -350,7 +367,6 @@ function handleJoinSolo(data) {
 function handleLeaveTeam(data) {
 
     let tws = getClientById(wss, data.id.id);
-    console.log(data.id.id);
 
     // Find the team the player is on...
     let team = null;
@@ -395,6 +411,37 @@ function handleLeaveTeam(data) {
     return;
 }
 
+function handleToggleReady(data) {
+
+    let tws = getClientById(wss, data.id.id);
+
+    // Find team of player
+    let found = false;
+    let newReady = null;
+    for (let team of teams) {
+        for (let tm of team.members) {
+            if (tm.id === data.id.id) {
+                tm.ready = !tm.ready;
+                newReady = tm.ready;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    
+    
+    if (!found) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to ready up in" });
+        return;
+    }
+
+    sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_READY, { ready: newReady });
+    broadcastGameState();
+}
+
 function handleAddRemaining(data) {
     if (moneyRemainingThisTurn(data.team) > 0) {
         let team = getTeamByName(data.team); 
@@ -434,22 +481,29 @@ function handleReset() {
 
 function handleKick(data) {
     let idToSwap = data.kick;
+    let teamIx = null;
     let ix = null;
     let team = null;
 
     // Find the person who's being kicked
-    for (let _team of teams) {
-        for (let i = 0; i < _team.members.length; i++) {
-            if (_team.members[i].id === idToSwap) {
-                ix = i;
-                team = _team;
+    for (var i = 0; i < teams.length; i++) {
+        for (let j = 0; j < teams[j].members.length; j++) {
+            if (teams[i].members[j].id === idToSwap) {
+                teamIx = i;
+                ix = j;
+                team = teams[i];
                 break;
             }
         }
     }
 
     if (team !== null) {
-        team.members.splice(ix, 1);
+        if (team.members.length === 1) {
+            // Remove team...
+            teams.splice(teamIx, 1);
+        } else {
+            team.members.splice(ix, 1);
+        }
     }
 
     // Find the person that's been kicked
@@ -509,6 +563,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.JOIN_TEAM]: handleJoinTeam,
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: handleCreateTeam,
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: handleLeaveTeam,
+        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: handleToggleReady,
         [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: handleProgressState,
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: handleLockIn,
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: handleResetAllocation,
@@ -516,7 +571,9 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: handleAddRemaining,
         [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: handleMinusOption,
         [MESSAGE_TYPE.CLIENT.RESET]: handleReset,
-        [MESSAGE_TYPE.CLIENT.KICK]: handleKick
+        [MESSAGE_TYPE.CLIENT.KICK]: handleKick,
+        [MESSAGE_TYPE.CLIENT.NOTIFY]: handleNotify,
+        [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: handleRemoveNotify,
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });
@@ -574,7 +631,7 @@ function moneyRemainingThisTurn(teamName) {
 function getTeamByName(teamName) {
 
     for (let team of teams) {
-        if (team.name === teamName) {
+        if (team.teamName === teamName) {
             return team;
         }
     }
@@ -598,9 +655,10 @@ function getTeamsWithMostMoney() {
     let highestSoFar = -1;
     for (let team of teams) {
         if (team.remainingMoney > highestSoFar) {
-            teamsWithMostMoney = [team];
+            teamsWithMostMoney = [team.teamName];
+            highestSoFar = team.remainingMoney;
         } else if (team.remainingMoney === highestSoFar) {
-            teamsWithMostMoney.push(team);
+            teamsWithMostMoney.push(team.teamName);
         }
     }
 

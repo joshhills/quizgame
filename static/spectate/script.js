@@ -11,11 +11,13 @@ function connect() {
 connect();
 
 let id = null,
-    gameState = null;
+    gameState = null,
+    currentNotification = null;
 
 // Get element references
 
-let questionnumber = document.getElementById('questionnumber'),
+let notification = document.getElementById('notification'),
+    questionnumber = document.getElementById('questionnumber'),
     question = document.getElementById('question'),
     team1name = document.getElementById('team1name'),
     team1members = document.getElementById('team1members'),
@@ -96,11 +98,25 @@ function handleReset() {
     option4.className = '';
 }
 
+function handleNotify(data) {
+    currentNotification = data.message;
+    notification.innerHTML = currentNotification;
+    notification.hidden = false;
+}
+
+function handleRemoveNotify() {
+    currentNotification = null;
+    notification.innerHTML = '';
+    notification.hidden = true;
+}
+
 // Register event handlers
 ws.onmessage = (msg) => handleMessage(msg.data, {
     [MESSAGE_TYPE.SERVER.PONG]: handlePong,
     [MESSAGE_TYPE.SERVER.CONNECTION_ID]: handleConnectionId,
     [MESSAGE_TYPE.SERVER.STATE_CHANGE]: handleStateChange,
+    [MESSAGE_TYPE.SERVER.NOTIFY]: handleNotify,
+    [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: handleRemoveNotify,
     [MESSAGE_TYPE.SERVER.RESET]: handleReset
 }, updateUI);
 

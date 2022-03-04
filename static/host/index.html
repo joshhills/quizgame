@@ -7,13 +7,25 @@
         
         <div>
             <button id="progressstate">Progress State</button>
-            <button id="pressfortime">Press for time</button>
             <button id="reset">Reset</button>
         </div>
         
+        <br />
+
+        <div>
+            <select name="notifypresets" id="notifypresets">
+                <option value="Game starting soon - remember to ready up!">Game starting soon - remember to ready up!</option>
+                <option value="Hold on, we're having technical issues...">Hold on, we're having technical issues...</option>
+            </select>
+            <button id="notifypreset">Notify Using Preset</button>
+
+            <input type="text" id="notification" placeholder="Type a custom notification..." size="32" name="notification"/>
+            <button id="notify">Notify Custom</button> <button id="removenotify">Remove Notification</button>
+        </div>
+
         <div>
             <h3>
-                Players <span id="numplayers"></span>
+                Players (<span id="numplayers"></span>)
             </h3>
             <table id="players">
                 <tr><th>Name</th><th>Id</th><th>Control</th></tr>

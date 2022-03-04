@@ -17,13 +17,13 @@ let id = null,
 let rawGameState = document.getElementById('rawgamestate'),
     progressState = document.getElementById('progressstate'),
     numPlayers = document.getElementById('numplayers'),
+    notification = document.getElementById('notification'),
+    notifyButton = document.getElementById('notify'),
+    removeNotificationButton = document.getElementById('removenotify'),
+    notifyPreset = document.getElementById('notifypreset'),
+    notifyPresets = document.getElementById('notifypresets'),
     playersTable = document.getElementById('players'),
     reset = document.getElementById('reset');
-
-// Register event listeners
-function swapTeam(theId) {
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.SWAP_TEAM, { swap: theId }, id);
-}
 
 function kick(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
@@ -38,6 +38,18 @@ reset.addEventListener('click', () => {
     if (r) {
         sendMessage(ws, MESSAGE_TYPE.CLIENT.RESET, {}, id);
     }
+});
+
+notifyButton.addEventListener('click', () => {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.NOTIFY, { message: notification.value }, id);
+});
+
+removeNotificationButton.addEventListener('click', () => {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY, {}, id);
+});
+
+notifyPreset.addEventListener('click', () => {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.NOTIFY, { message: notifyPresets.value }, id);
 });
 
 /* === Begin Handler functions === */
@@ -77,7 +89,7 @@ function updateUI() {
         return;
     }
 
-    let inumPlayers = gameState.teams.reduce((p, t) => p + t.members.length);
+    let inumPlayers = gameState.teams.reduce((p, t) => p + t.members.length, 0);
 
     // Number players
     numPlayers.innerHTML = inumPlayers;
@@ -86,7 +98,6 @@ function updateUI() {
     let playersTableHTML = '<tr><th>Name</th><th>Id</th><th>Team</th><th>Control</th></tr>';
 
     for (let team of gameState.teams) {
-        console.log(team);
         for (let tm of team.members) {
             playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>${team.name}</td><td><button class="kick" data-id="${tm.id}">Kick</button></td>`
         }
