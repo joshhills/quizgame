@@ -108,38 +108,6 @@ ws.onmessage = (msg) => handleMessage(msg.data, {
 
 function updateUI() {
     if (gameState !== null) {
-        team1name.innerHTML = gameState.teams.x.teamName;
-        team2name.innerHTML = gameState.teams.y.teamName;
-    
-        let team1membersHTML = '';
-        for (let tm of gameState.teams.x.members) {
-            team1membersHTML += `<li>${tm.name}</li>`;
-        }
-        team1members.innerHTML = team1membersHTML;
-    
-        let team2membersHTML = '';
-        for (let tm of gameState.teams.y.members) {
-            team2membersHTML += `<li>${tm.name}</li>`;
-        }
-        team2members.innerHTML = team2membersHTML;
-    
-        if (gameState.scene === GAME_STATE.GAME) {
-            team1lockedin.hidden = false;
-            team2lockedin.hidden = false;
-            if (gameState.teams.x.lockedIn) {
-                team1lockedin.className = 'active';
-            } else {
-                team1lockedin.className = '';
-            }
-            if (gameState.teams.y.lockedIn) {
-                team2lockedin.className = 'active';
-            } else {
-                team2lockedin.className = '';
-            }
-        } else {
-            team1lockedin.hidden = true;
-            team2lockedin.hidden = true;
-        }
     
         if (gameState.activeQuestion !== null) {
             questionnumber.hidden = false;
@@ -171,9 +139,6 @@ function updateUI() {
             document.getElementsByClassName('lockedin')[0].hidden = true;
             document.getElementsByClassName('lockedin')[1].hidden = true;
         }
-    
-        team1remainingmoney.innerHTML = numberWithCommas(gameState.teams.x.remainingMoney);
-        team2remainingmoney.innerHTML = numberWithCommas(gameState.teams.y.remainingMoney);
 
         if (gameState.scene === GAME_STATE.PREGAME) {
             options.hidden = true;
@@ -184,14 +149,6 @@ function updateUI() {
         }
     
         if (gameState.scene === GAME_STATE.ANSWER) {
-            team1option1allocation.hidden = false;
-            team1option2allocation.hidden = false;
-            team1option3allocation.hidden = false;
-            team1option4allocation.hidden = false;
-            team2option1allocation.hidden = false;
-            team2option2allocation.hidden = false;
-            team2option3allocation.hidden = false;
-            team2option4allocation.hidden = false;
 
             option1.className = 'false';
             option2.className = 'false';
@@ -206,71 +163,12 @@ function updateUI() {
             } else if (gameState.answer === 'd') {
                 option4.className = 'correct';
             }
-    
-            if (gameState.teams.x.optionsAllocated.a != 0) {
-                team1option1allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.a);
-            } else {
-                team1option1allocation.innerHTML = '';
-            }
-            if (gameState.teams.x.optionsAllocated.b != 0) {
-                team1option2allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.b);
-            } else {
-                team1option2allocation.innerHTML = '';
-            }
-            if (gameState.teams.x.optionsAllocated.c != 0) {
-                team1option3allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.c);
-            } else {
-                team1option3allocation.innerHTML = '';
-            }
-            if (gameState.teams.x.optionsAllocated.d != 0) {
-                team1option4allocation.innerHTML = '£' + numberWithCommas(gameState.teams.x.optionsAllocated.d);
-            } else {
-                team1option4allocation.innerHTML = '';
-            }
-            if (gameState.teams.y.optionsAllocated.a != 0) {
-                team2option1allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.a);
-            } else {
-                team2option1allocation.innerHTML = '';
-            }
-            if (gameState.teams.y.optionsAllocated.b != 0) {
-                team2option2allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.b);
-            } else {
-                team2option2allocation.innerHTML = '';
-            }
-            if (gameState.teams.y.optionsAllocated.c != 0) {
-                team2option3allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.c);
-            } else {
-                team2option3allocation.innerHTML = '';
-            }
-            if (gameState.teams.y.optionsAllocated.d != 0) {
-                team2option4allocation.innerHTML = '£' + numberWithCommas(gameState.teams.y.optionsAllocated.d);
-            } else {
-                team2option4allocation.innerHTML = '';
-            }
 
         } else {
             option1.className = '';
             option2.className = '';
             option3.className = '';
             option4.className = '';
-
-            team1option1allocation.hidden = true;
-            team1option2allocation.hidden = true;
-            team1option3allocation.hidden = true;
-            team1option4allocation.hidden = true;
-            team2option1allocation.hidden = true;
-            team2option2allocation.hidden = true;
-            team2option3allocation.hidden = true;
-            team2option4allocation.hidden = true;
-
-            team1option1allocation.innerHTML = '';
-            team1option2allocation.innerHTML = '';
-            team1option3allocation.innerHTML = '';
-            team1option4allocation.innerHTML = '';
-            team2option1allocation.innerHTML = '';
-            team2option2allocation.innerHTML = '';
-            team2option3allocation.innerHTML = '';
-            team2option4allocation.innerHTML = '';
         }
     
         if (gameState.scene === GAME_STATE.FINISH) {

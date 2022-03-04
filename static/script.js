@@ -16,9 +16,13 @@ function connect() {
 
 connect();
 
+// Constants
+const ERROR_TIMEOUT_MS = 5000;
+
 // Get elements
 var pregameContainer = document.getElementById('pregame'),
     gameContainer = document.getElementById('game'),
+    errorMessage = document.getElementById('errormessage'),
     teamName = document.getElementById('teamname'),
     questionNumber = document.getElementById('questionnumber'),
     questionText = document.getElementById('questiontext'),
@@ -46,9 +50,21 @@ var pregameContainer = document.getElementById('pregame'),
     reset = document.getElementById('reset'),
     lockIn = document.getElementById('lockin'),
     help = document.getElementById('help'),
-    join = document.getElementById('join'),
-    pregameStatus = document.getElementById('pregamestatus'),
+    joinSoloButton = document.getElementById('joinsolo'),
+    createTeamButton = document.getElementById('createteam'),
+    teamsTitle = document.getElementById('teamstitle'),
+    teams = document.getElementById('teams'),
+    solosTitle = document.getElementById('solostitle'),
+    solos = document.getElementById('solos'),
+    soloPlayerCount = document.getElementById('soloplayercount'),
+    teamCount = document.getElementById('teamcount'),
+    pregameStatusWidget = document.getElementById('pregamestatuswidget'),
+    pregameStatusWidgetName = document.getElementById('pregamestatuswidgetname'),
+    pregameStatusWidgetSolo = document.getElementById('pregamestatuswidgetsolo'),
+    pregameStatusWidgetTeam = document.getElementById('pregamestatuswidgetteam'),
+    pregameStatusWidgetLeave = document.getElementById('pregamestatuswidgetleave'),
     enterNamePrompt = document.getElementById('enternameprompt'),
+    enterTeamNamePrompt = document.getElementById('enterteamnameprompt'),
     answer = document.getElementById('answer'),
     answerText = document.getElementById('answertext'),
     remainingAfter = document.getElementById('remainingafter'),
@@ -59,7 +75,9 @@ var pregameContainer = document.getElementById('pregame'),
     containerino = document.getElementById('containerino');
 
 // Register event listeners
-join.addEventListener('click', () => joinGame());
+joinSoloButton.addEventListener('click', () => joinGameSolo());
+createTeamButton.addEventListener('click', () => createTeam());
+pregameStatusWidgetLeave.addEventListener('click', () => leaveTeam());
 
 minusA.addEventListener('click', () => minusOption('a'));
 addA.addEventListener('click', () => addOption('a'));
@@ -82,10 +100,13 @@ addRemainingD.addEventListener('click', () => addRemaining('d'));
 var id = null,
     team = null,
     playerName = null,
+    solo = null,
     gameState = {
         scene: GAME_STATE.PREGAME
     },
-    killswitch = true;
+    killswitch = true,
+    currentErrorMessage = null,
+    currentErrorMessageTimeout = null;
 
 /* === Begin Handler functions === */
 
@@ -106,7 +127,7 @@ function handleStateChange(data) {
 
     if (killswitch === true && data.state.scene !== GAME_STATE.PREGAME) {
         // Game already in progress
-        containerino.innerHTML = 'The concierge is busy...';
+        containerino.innerHTML = 'The game is already in progress!';
         ws.close();
     } else {
         killswitch = false;
@@ -122,19 +143,40 @@ function handleStateChange(data) {
 
 function handleAcknowledgeName(data) {
     playerName = data.name;
+    solo = data.solo ? true : false;
 }
 
 function handleReset() {
     playerName = null;
     team = null;
+    solo = null;
     log.innerHTML = '';
     killswitch = true;
+    currentErrorMessage = '';
+    currentErrorMessageTimeout = null;
+}
+
+function handleErrorMessage(data) {
+    currentErrorMessage = data.message;
+    errorMessage.innerHTML = currentErrorMessage;
+    errorMessage.hidden = false;
+
+    if (currentErrorMessageTimeout !== null) {
+        clearTimeout(currentErrorMessageTimeout);
+    }
+
+    currentErrorMessageTimeout = setTimeout(() => {
+        errorMessage.hidden = true;
+        currentErrorMessageTimeout = null;
+    }, ERROR_TIMEOUT_MS);
 }
 
 function handleLog(data) {
     
+    const _team = getTeamByName(team);
+
     let p = null;
-    for (let tm of gameState.teams[team].members) {
+    for (let tm of _team.members) {
         if (tm.id === data.id) {
             p = tm.name;
         }
@@ -158,6 +200,16 @@ function handleLog(data) {
     log.innerHTML = logText + '\n' + log.innerHTML;
 }
 
+function getTeamByName(teamName) {
+    for (let team of gameState.teams) {
+        if (team.name === teamName) {
+            return team;
+        }
+    }
+
+    console.error('Attempted to find a non-existent team!');
+}
+
 // Register event handlers
 ws.onmessage = (msg) => handleMessage(msg.data, {
     [MESSAGE_TYPE.SERVER.PONG]: handlePong,
@@ -165,18 +217,42 @@ ws.onmessage = (msg) => handleMessage(msg.data, {
     [MESSAGE_TYPE.SERVER.STATE_CHANGE]: handleStateChange,
     [MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME]: handleAcknowledgeName,
     [MESSAGE_TYPE.SERVER.RESET]: handleReset,
-    [MESSAGE_TYPE.SERVER.LOG]: handleLog
+    [MESSAGE_TYPE.SERVER.LOG]: handleLog,
+    [MESSAGE_TYPE.SERVER.ERROR_MESSAGE]: handleErrorMessage
 }, updateUI);
 
 /* === End Handler Functions === */
 
 /* === Begin Sender functions === */
 
-function joinGame() {
+function joinGameSolo() {
+    // TODO: Check for null/empty values
     let playerName = document.getElementById('name').value;
-    console.log(`Joining as ${playerName}`);
+    console.log(`Joining as solo player ${playerName}`);
     
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.JOIN, { as: playerName }, id);
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.JOIN_SOLO, { as: playerName }, id);
+}
+
+function createTeam() {
+    // TODO: Check for null/empty values
+    let playerName = document.getElementById('name').value;
+    let teamName = document.getElementById('team').value;
+    console.log(`Creating a team ${teamName} as ${playerName}`);
+
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.CREATE_TEAM, { as: playerName, team: teamName }, id);
+}
+
+function joinTeam(teamName) {
+    // TODO: Check for null/empty values
+    let playerName = document.getElementById('name').value;
+    console.log(`Joining team ${teamName} as ${playerName}`);
+
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.JOIN_TEAM, { as: playerName, team: teamName }, id);
+}
+
+function leaveTeam() {
+    console.log(`Leaving team ${team} as ${playerName}`);
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.LEAVE_TEAM, { as: playerName, team: team }, id);
 }
 
 function setLockedIn() {
@@ -202,6 +278,11 @@ function addRemaining(optionChar) {
 /* === End Sender Functions === */
 
 function updateUI() {
+
+    if (!currentErrorMessageTimeout) {
+        errorMessage.hidden = true;
+    }
+
     if (!killswitch) {
         if (gameState.scene === 'pregame') {
             pregameContainer.hidden = false;
@@ -211,33 +292,95 @@ function updateUI() {
     
             if (playerName !== null) {
                 document.getElementById('name').hidden = true;
-                join.hidden = true;
-                pregameStatus.innerHTML = "Waiting...";
+                document.getElementById('team').hidden = true;
+                joinSoloButton.hidden = true;
+                createTeamButton.hidden = true;
+                pregameStatusWidgetName.innerHTML = playerName;
+                pregameStatusWidgetSolo.innerHTML = solo ? 'solo ' : '';
+                pregameStatusWidgetTeam.innerHTML = team;
+                pregameStatusWidget.hidden = false;
                 enterNamePrompt.hidden = true;
+                enterTeamNamePrompt.hidden = true;
             } else {
                 document.getElementById('name').hidden = false;
-                join.hidden = false;
-                pregameStatus.innerHTML = "";
+                document.getElementById('team').hidden = false;
+                joinSoloButton.hidden = false;
+                createTeamButton.hidden = false;
+                pregameStatusWidget.hidden = true;
                 enterNamePrompt.hidden = false;
+                enterTeamNamePrompt.hidden = false;
+            }
+
+            let solosHTML = '';
+            let numSolos = 0;
+            let teamsHTML = '';
+            let numTeams = 0;
+            for (let team of gameState.teams) {
+                if (team.solo) {
+                    solosHTML += `<tr><td>${team.teamName}</td></tr>`;
+                    numSolos++;
+                } else {
+                    let joinButtonHTML = `<button class="teambutton" data-team="${team.teamName}">Join Team</button>`;
+                    let leaveButtonHTML = '<button class="leavebutton">Leave Team</button>';
+                    let membersHTML = '';
+                    let isAlreadyInTeam = false;
+                    for (let tm of team.members) {
+                        membersHTML += `<tr><td>${tm.name}</td></tr>`;
+                        if (tm.name === playerName) {
+                            isAlreadyInTeam = true;
+                        }
+                    }
+                    
+                    teamsHTML += `<table><tr><th>${`${team.teamName} (${team.members.length})`}</th><th>${isAlreadyInTeam ? leaveButtonHTML : joinButtonHTML}</th></tr>${membersHTML}`;
+                    teamsHTML += `</table>`;
+                    numTeams++;
+                }
+            }
+            solos.innerHTML = solosHTML;
+            teams.innerHTML = teamsHTML;
+
+            soloPlayerCount.innerHTML = numSolos;
+            teamCount.innerHTML = numTeams;
+
+            for (let element of document.getElementsByClassName('teambutton')) {
+                
+                const teamName = element.getAttribute('data-team');
+                
+                if (teamName) {
+                    element.addEventListener('click', () => joinTeam(teamName));
+                }
+            }
+
+            for (let element of document.getElementsByClassName('leavebutton')) {
+                element.addEventListener('click', () => leaveTeam());
+            }
+
+            if (numSolos === 0) {
+                solosTitle.hidden = true;
+            } else {
+                solosTitle.hidden = false;
+            }
+
+            if (numTeams === 0) {
+                teamsTitle.hidden = true;
+            } else {
+                teamsTitle.hidden = false;
             }
         }
     
         if (gameState.scene === 'game') {
+            let _team = getTeamByName(team);
+
             pregameContainer.hidden = true;
             answer.hidden = true;
     
-            teamName.innerHTML = gameState.teams[team].teamName;
-            if (team === 'x') {
-                teamName.className = 'yellow';
-            } else {
-                teamName.className = 'purple';
-            }
-    
+            teamName.innerHTML = _team.teamName;
+            
             questionNumber.innerHTML = gameState.activeQuestion.number;
             questionText.innerHTML = gameState.activeQuestion.text;
     
             let teamMembersHTML = '';
-            for (let tm of gameState.teams[team].members) {
+            for (let tm of _team.members) {
                 teamMembersHTML += `<li>${tm.name}</li>`;
             }
             teamMembers.innerHTML = teamMembersHTML;
@@ -249,10 +392,10 @@ function updateUI() {
             optionC.innerHTML = gameState.activeQuestion.options.c;
             optionD.innerHTML = gameState.activeQuestion.options.d;
     
-            allocatedA.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['a']);
-            allocatedB.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['b']);
-            allocatedC.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['c']);
-            allocatedD.innerHTML = numberWithCommas(gameState.teams[team].optionsAllocated['d']);
+            allocatedA.innerHTML = numberWithCommas(_team.optionsAllocated['a']);
+            allocatedB.innerHTML = numberWithCommas(_team.optionsAllocated['b']);
+            allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c']);
+            allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d']);
     
             if (moneyRemainingThisTurn() !== 0) {
                 lockIn.disabled = true;
@@ -282,14 +425,14 @@ function updateUI() {
                 addRemainingD.disabled = false;
             }
     
-            minusA.disabled = gameState.teams[team].optionsAllocated['a'] === 0;
-            minusB.disabled = gameState.teams[team].optionsAllocated['b'] === 0;
-            minusC.disabled = gameState.teams[team].optionsAllocated['c'] === 0;
-            minusD.disabled = gameState.teams[team].optionsAllocated['d'] === 0;
+            minusA.disabled = _team.optionsAllocated['a'] === 0;
+            minusB.disabled = _team.optionsAllocated['b'] === 0;
+            minusC.disabled = _team.optionsAllocated['c'] === 0;
+            minusD.disabled = _team.optionsAllocated['d'] === 0;
     
-            reset.disabled = moneyRemainingThisTurn() === gameState.teams[team].remainingMoney;
+            reset.disabled = moneyRemainingThisTurn() === _team.remainingMoney;
     
-            if (gameState.teams[team].lockedIn) {
+            if (_team.lockedIn) {
                 addA.disabled = true;
                 addB.disabled = true;
                 addC.disabled = true;
@@ -308,13 +451,15 @@ function updateUI() {
         }
         
         if (gameState.scene === 'answer') {
+            let _team = getTeamByName(team);
+
             pregameContainer.hidden = true;
             gameContainer.hidden = true;
             finish.hidden = true;
             answer.hidden = false;
     
             answerText.innerHTML = gameState.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.answer];
-            remainingafter.innerHTML = gameState.teams[team].remainingMoney;
+            remainingafter.innerHTML = _team.remainingMoney;
         }
     
         if (gameState.scene === 'finish') {
@@ -324,9 +469,9 @@ function updateUI() {
             finish.hidden = false;
     
             if (gameState.winner === 'nobody') {
-                winnerText.innerHTML = 'Nobody won';
-            } else if (gameState.winner === 'both') {
-                winnerText.innerHTML = 'You both won';
+                winnerText.innerHTML = 'Nobody won x-(';
+            } else if (gameState.winner === 'tie') {
+                winnerText.innerHTML = 'You were one of multiple winners!';
             } else {
                 winnerText.innerHTML = gameState.winner === team ? 'You won!' : 'You lost!';
             }
@@ -335,38 +480,36 @@ function updateUI() {
 }
 
 function assertTeam() {
-    let team = null;
-    for (let tm of gameState.teams.x.members) {
-        if (tm.id === id.id) {
-            team = 'x';
-            break;
+    for (let team of gameState.teams) {
+        for (let tm of team.members) {
+            if (tm.id === id.id) {
+                return team.teamName;
+            }
         }
     }
-    if (team === null) {
-        team = 'y';
-    }
-    return team;
 }
 
 // Utility method for money remaining per turn
 function moneyRemainingThisTurn() {
-    console.log(`Remaining money: ${gameState.teams[team].remainingMoney}`);
-    console.log(`Allocated money: ${(gameState.teams[team].optionsAllocated.a
-        + gameState.teams[team].optionsAllocated.b
-        + gameState.teams[team].optionsAllocated.c
-        + gameState.teams[team].optionsAllocated.d)}`)
+    const _team = getTeamByName(team);
 
-    return gameState.teams[team].remainingMoney
-        - (gameState.teams[team].optionsAllocated.a
-            + gameState.teams[team].optionsAllocated.b
-            + gameState.teams[team].optionsAllocated.c
-            + gameState.teams[team].optionsAllocated.d);
+    console.log(`Remaining money: ${_team.remainingMoney}`);
+    console.log(`Allocated money: ${(_team.optionsAllocated.a
+        + _team.optionsAllocated.b
+        + _team.optionsAllocated.c
+        + _team.optionsAllocated.d)}`)
+
+    return _team.remainingMoney
+        - (_team.optionsAllocated.a
+            + _team.optionsAllocated.b
+            + _team.optionsAllocated.c
+            + _team.optionsAllocated.d);
 }
 
 setInterval(() => {
     console.log('Sending ping');
 
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
 }, 5000);
 
 function numberWithCommas(x) {

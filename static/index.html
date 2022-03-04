@@ -1,15 +1,11 @@
 <html>
     <head>
         <title>
-            Escape from Hotel Limbo
+            Video Game Quiz
         </title>
         <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            @font-face {
-                font-family: 'Deutsch Gothic';
-                src: URL('./deutsch-gothic.ttf') format('truetype');
-            }
 
             body {
                 margin: 0;
@@ -17,7 +13,7 @@
                 background-color: black;
 
                 color: white;
-                font-family: 'Syne Tactile', cursive;
+                font-family: 'Arial';
                 font-size: 20px;
 
                 text-align: center;
@@ -29,6 +25,11 @@
                 margin: 0 auto;
                 padding: 20px;
                 min-height: calc(100vh - 40px);
+            }
+
+            #errormessage {
+                padding: 1rem;
+                background-color: orange;
             }
 
             ul {
@@ -59,7 +60,7 @@
             }
 
             #teamname {
-                font-family: 'Deutsch Gothic';
+                font-family: 'Arial';
                 font-size: 50px;
             }
 
@@ -73,7 +74,7 @@
             
             .welcome {
                 font-weight: 200;
-                font-family: 'Deutsch Gothic';
+                font-family: 'Arial';
             }
 
             .red {
@@ -83,12 +84,23 @@
     </head>
     <body>
         <div id="containerino" class="container">
+            <div id="errormessage"></div>
             <div id="pregame">
-                <h1 class="welcome">Welcome to <span class="red">Hotel Limbo</span></h1>
-                <h4 id="enternameprompt">Enter your name:</h4>
+                <h1 class="welcome">Welcome to the <span class="red">Video Game Quiz</span></h1>
+                <div id="pregamestatuswidget">
+                    Waiting as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
+                    <button id="pregamestatuswidgetleave">Leave team</button>
+                </div>
+                <h4 id="enternameprompt">Enter your player name:</h4>
                 <input type="text" maxlength="16" id="name" />
-                <button id="join">Join</button>
-                <p id="pregamestatus"></p>
+                <button id="joinsolo">Play Solo</button>
+                <h4 id="enterteamnameprompt">Enter a team name:</h4>
+                <input type="text" maxlength="16" id="team" />
+                <button id="createteam">Create Team</button>
+                <h3 id="teamstitle">Teams (<span id="teamcount"></span>)</h3>
+                <div id="teams"></div>
+                <h3 id="solostitle">Solo Players (<span id="soloplayercount"></span>)</h3>
+                <table id="solos"></table>
             </div>
             <div id="game" hidden>
                 <div>

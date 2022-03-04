@@ -77,35 +77,22 @@ function updateUI() {
         return;
     }
 
-    let inumPlayers = gameState.teams.x.members.length + gameState.teams.y.members.length;
-
-    if ((gameState.scene === GAME_STATE.PREGAME && gameState.teams.x.members.length > 0 && gameState.teams.y.members.length > 0)
-        || (gameState.scene === GAME_STATE.GAME && gameState.teams.x.lockedIn && gameState.teams.y.lockedIn)
-        || gameState.scene === GAME_STATE.ANSWER) {
-        progressState.disabled = false;
-    } else {
-        progressState.disabled = true;
-    }
+    let inumPlayers = gameState.teams.reduce((p, t) => p + t.members.length);
 
     // Number players
     numPlayers.innerHTML = inumPlayers;
 
     // Players table
     let playersTableHTML = '<tr><th>Name</th><th>Id</th><th>Team</th><th>Control</th></tr>';
-    for (let tm of gameState.teams.x.members) {
-        playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>x</td><td><button class="swap-team" data-id="${tm.id}">Swap Team</button><button class="kick" data-id="${tm.id}">Kick</button></td>`
+
+    for (let team of gameState.teams) {
+        console.log(team);
+        for (let tm of team.members) {
+            playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>${team.name}</td><td><button class="kick" data-id="${tm.id}">Kick</button></td>`
+        }
     }
-    for (let tm of gameState.teams.y.members) {
-        playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>y</td><td><button class="swap-team" data-id="${tm.id}">Swap Team</button><button class="kick" data-id="${tm.id}">Kick</button></td>`
-    }
+
     playersTable.innerHTML = playersTableHTML;
-    let swapTeamButtons = document.getElementsByClassName('swap-team');
-    for (let b of swapTeamButtons) {
-        b.addEventListener('click', () => {
-            let playerId = b.getAttribute('data-id');
-            swapTeam(playerId);
-        });
-    }
 
     let kickButtons = document.getElementsByClassName('kick');
     for (let b of kickButtons) {

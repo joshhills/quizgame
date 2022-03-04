@@ -11,11 +11,15 @@ export const MESSAGE_TYPE = {
         ACKNOWLEDGE_NAME: 'ackname',
         PONG: 'pong',
         RESET: 'reset',
-        LOG: 'log'
+        LOG: 'log',
+        ERROR_MESSAGE: 'errorMessage'
     },
     CLIENT: {
         PING: 'ping',
-        JOIN: 'join',
+        JOIN_SOLO: 'joinSolo',
+        JOIN_TEAM: 'joinTeam',
+        LEAVE_TEAM: 'leaveTeam',
+        CREATE_TEAM: 'createTeam',
         SWAP_TEAM: 'swapTeam',
         PROGRESS_STATE: 'progressState',
         LOCK_IN: 'lockIn',
@@ -33,6 +37,7 @@ export const GAME_STATE = {
     PREGAME: 'pregame',
     GAME: 'game',
     ANSWER: 'answer',
+    SCORES: 'scores',
     FINISH: 'finish'
 };
 
@@ -43,9 +48,17 @@ export const GAME_STATE = {
  * @param {MESSAGE_TYPE} type to inject into message 
  * @param {object} obj to encode and send 
  * @param {string} id to optionally inject into message 
+ * @param {function} onError callback if unable to send message
+ * 
  */
-export function sendMessage(ws, type, obj, id) {
+export function sendMessage(ws, type, obj, id, onError) {
     let blobStr = formatMessage(type, obj, id);
+
+    if (onError && ws.readyState !== 1) {
+        onError('Lost connection to server, try refreshing the page');
+        return;
+    }
+
     ws.send(blobStr);
 }
 
