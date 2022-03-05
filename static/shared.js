@@ -15,7 +15,8 @@ export const MESSAGE_TYPE = {
         LOG: 'log',
         ERROR_MESSAGE: 'errorMessage',
         NOTIFY: 'notify',
-        REMOVE_NOTIFY: 'removeNotify'
+        REMOVE_NOTIFY: 'removeNotify',
+        TEAM_CHAT: 'teamChat'
     },
     CLIENT: {
         PING: 'ping',
@@ -33,7 +34,8 @@ export const MESSAGE_TYPE = {
         RESET: 'reset',
         KICK: 'kick',
         NOTIFY: 'notify',
-        REMOVE_NOTIFY: 'removeNotify'
+        REMOVE_NOTIFY: 'removeNotify',
+        TEAM_CHAT: 'teamChat'
     }
 };
 

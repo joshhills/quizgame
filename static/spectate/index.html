@@ -23,6 +23,10 @@
                 font-size: 20px;
             }
 
+            .hidden {
+                display: none !important;
+            }
+
             .container {
                 width: 1280px;
                 height: 720px;
@@ -41,18 +45,13 @@
                 grid-row-gap: 0px;
             }
 
-            #team1name, #team2name {
-                font-family: 'Arial';
-                font-size: 2rem;
-            }
-
             .q-num, .q, .options {
                 position: relative;
                 overflow: hidden;
             }
 
             .questionnumber {
-                font-family: 'Syne Tactile', cursive;
+                font-family: 'Arial';
                 font-size: 30px;
                 margin: 0;
             }
@@ -111,7 +110,7 @@
                 width: 100%;
                 display: grid;
                 font-weight: bolder;
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(1, 1fr);
                 grid-template-rows: 1fr;
                 grid-column-gap: 0px;
                 grid-row-gap: 0px;
@@ -132,11 +131,6 @@
                 border-style: solid;
             }
 
-            .moneyr {
-                font-size: 35px;
-                font-weight: bolder;
-            }
-
             .correct {
                 background-color: green;
             }
@@ -154,7 +148,7 @@
     <body>
         <div class="container">
             <div id="notification"></div>
-            <div class="game">
+            <div class="game" id="game">
                 <div class="empty-1"></div>
                 <div class="q-num">
                     <p class="questionnumber"><span id="questionnumber">1</span></p>
@@ -162,33 +156,32 @@
                 <div class="q">
                     <p id="question"></p>
                 </div>
+                <div id="scores">
+                    <table id="scorestable"></table>
+                </div>
                 <div class="options" id="options">
                     <div id="option1" class="option">
                         <p class="optiontext">A: <span id="option1text"></span></p>
                         <div class="allocationcontainer">
                             <p><span id="t1o1allocation"></span></p>
-                            <p><span id="t2o1allocation"></span></p>
                         </div>
                     </div>
                     <div id="option2" class="option">
                         <p class="optiontext">B: <span id="option2text"></span></p>
                         <div class="allocationcontainer">
                             <p><span id="t1o2allocation"></span></p>
-                            <p><span id="t2o2allocation"></span></p>
                         </div>
                     </div>
                     <div id="option3" class="option">
                         <p class="optiontext">C: <span id="option3text"></span></p>
                         <div class="allocationcontainer">
                             <p><span id="t1o3allocation"></span></p>
-                            <p><span id="t2o3allocation"></span></p>
                         </div>
                     </div>
                     <div id="option4" class="option">
                         <p class="optiontext">D: <span id="option4text"></span></p>
                         <div class="allocationcontainer">
                             <p><span id="t1o4allocation"></span></p>
-                            <p><span id="t2o4allocation"></span></p>
                         </div>
                     </div>
                 </div>

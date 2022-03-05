@@ -77,7 +77,9 @@ var pregameContainer = document.getElementById('pregame'),
     winnerText = document.getElementById('winnertext'),
     log = document.getElementById('log'),
     teamMembers = document.getElementById('teammembers'),
-    containerino = document.getElementById('containerino');
+    containerino = document.getElementById('containerino'),
+    chatMessage = document.getElementById('chatmessage'),
+    sendChatMessage = document.getElementById('sendchatmessage');
 
 // Register event listeners
 joinSoloButton.addEventListener('click', () => joinGameSolo());
@@ -102,6 +104,11 @@ addRemainingB.addEventListener('click', () => addRemaining('b'));
 addRemainingC.addEventListener('click', () => addRemaining('c'));
 addRemainingD.addEventListener('click', () => addRemaining('d'));
 
+sendChatMessage.addEventListener('click', () => {
+    const msg = chatMessage.value;
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.TEAM_CHAT, { message: msg }, id);
+});
+
 // Game State
 var id = null,
     team = null,
@@ -109,9 +116,9 @@ var id = null,
     ready = false,
     solo = null,
     gameState = {
-        scene: GAME_STATE.PREGAME
+        scene: GAME_STATE.PREGAME,
+        init: true
     },
-    killswitch = true,
     currentErrorMessage = null,
     currentErrorMessageTimeout = null,
     currentNotification = null;
@@ -132,16 +139,6 @@ function handleConnectionId(data) {
 
 // Handle the state of the game changing
 function handleStateChange(data) {
-
-    if (killswitch === true && data.state.scene !== GAME_STATE.PREGAME) {
-        // Game already in progress
-        // TODO: Handle late join
-        // TODO: Show redirect to spectate mode...
-        containerino.innerHTML = 'The game is already in progress!';
-        ws.close();
-    } else {
-        killswitch = false;
-    }
 
     if (gameState.scene === GAME_STATE.SCORES && data.state.scene === GAME_STATE.GAME) {
         log.innerHTML = '';
@@ -166,7 +163,6 @@ function handleReset() {
     solo = null;
     ready = false;
     log.innerHTML = '';
-    killswitch = true;
     currentErrorMessage = '';
     currentErrorMessageTimeout = null;
     currentNotification = null;
@@ -197,6 +193,10 @@ function handleRemoveNotify() {
     currentNotification = null;
     notification.innerHTML = '';
     notification.hidden = true;
+}
+
+function handleChatMessage(data) {
+    log.innerHTML = `${data.name} said: ${data.message}\n` + log.innerHTML;
 }
 
 function handleLog(data) {
@@ -249,7 +249,8 @@ ws.onmessage = (msg) => handleMessage(msg.data, {
     [MESSAGE_TYPE.SERVER.LOG]: handleLog,
     [MESSAGE_TYPE.SERVER.ERROR_MESSAGE]: handleErrorMessage,
     [MESSAGE_TYPE.SERVER.NOTIFY]: handleNotify,
-    [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: handleRemoveNotify
+    [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: handleRemoveNotify,
+    [MESSAGE_TYPE.SERVER.TEAM_CHAT]: handleChatMessage
 }, updateUI);
 
 /* === End Handler Functions === */
@@ -313,6 +314,10 @@ function addRemaining(optionChar) {
 
 function updateUI() {
 
+    if (gameState.init) {
+        return;
+    }
+    
     if (!currentErrorMessageTimeout) {
         errorMessage.hidden = true;
     }
@@ -321,212 +326,211 @@ function updateUI() {
         notification.hidden = true;
     }
 
-    if (!killswitch) {
-        if (gameState.scene === 'pregame' || playerName === null) {
-            pregameContainer.hidden = false;
-            gameContainer.hidden = true;
-            answer.hidden = true;
-            scores.hidden = true;
-            finish.hidden = true;
-    
-            if (playerName !== null) {
-                document.getElementById('name').hidden = true;
-                document.getElementById('team').hidden = true;
-                joinSoloButton.hidden = true;
-                createTeamButton.hidden = true;
-                pregameStatusWidgetReady.innerHTML = ready ? 'Ready' : 'Waiting';
-                pregameStatusWidgetName.innerHTML = playerName;
-                pregameStatusWidgetSolo.innerHTML = solo ? 'solo ' : '';
-                pregameStatusWidgetTeam.innerHTML = team;
-                pregameStatusWidget.hidden = false;
-                enterNamePrompt.hidden = true;
-                enterTeamNamePrompt.hidden = true;
-                pregameStatusWidgetReadyButton.innerHTML = ready ? 'I\'m not ready' : 'I\'m ready';
-            } else {
-                document.getElementById('name').hidden = false;
-                document.getElementById('team').hidden = false;
-                joinSoloButton.hidden = false;
-                createTeamButton.hidden = false;
-                pregameStatusWidget.hidden = true;
-                enterNamePrompt.hidden = false;
-                enterTeamNamePrompt.hidden = false;
-            }
+    if (gameState.scene === 'pregame' || playerName === null) {
+        
+        pregameContainer.hidden = false;
+        gameContainer.hidden = true;
+        answer.hidden = true;
+        scores.hidden = true;
+        finish.hidden = true;
 
-            let solosHTML = '';
-            let numSolos = 0;
-            let teamsHTML = '';
-            let numTeams = 0;
-            for (let _team of gameState.teams) {
-                if (_team.solo) {
-                    solosHTML += `<tr class="${_team.teamName === team ? 'active' : ''}"><td>${_team.teamName}</td><td>${_team.members[0].ready ? '✅' : '…'}</td></tr></tr>`;
-                    numSolos++;
-                } else {
-                    let joinButtonHTML = `<button class="teambutton" data-team="${_team.teamName}">Join Team</button>`;
-                    let leaveButtonHTML = '<button class="leavebutton">Leave Team</button>';
-                    let membersHTML = '';
-                    let isAlreadyInTeam = false;
-                    for (let tm of _team.members) {
-                        membersHTML += `<tr><td>${tm.name}</td><td>${tm.ready ? '✅' : '…'}</td></tr>`;
-                        if (tm.name === playerName) {
-                            isAlreadyInTeam = true;
-                        }
+        if (playerName !== null) {
+            document.getElementById('name').hidden = true;
+            document.getElementById('team').hidden = true;
+            joinSoloButton.hidden = true;
+            createTeamButton.hidden = true;
+            pregameStatusWidgetReady.innerHTML = ready ? 'Ready' : 'Waiting';
+            pregameStatusWidgetName.innerHTML = playerName;
+            pregameStatusWidgetSolo.innerHTML = solo ? 'solo ' : '';
+            pregameStatusWidgetTeam.innerHTML = team;
+            pregameStatusWidget.hidden = false;
+            enterNamePrompt.hidden = true;
+            enterTeamNamePrompt.hidden = true;
+            pregameStatusWidgetReadyButton.innerHTML = ready ? 'I\'m not ready' : 'I\'m ready';
+        } else {
+            document.getElementById('name').hidden = false;
+            document.getElementById('team').hidden = false;
+            joinSoloButton.hidden = false;
+            createTeamButton.hidden = false;
+            pregameStatusWidget.hidden = true;
+            enterNamePrompt.hidden = false;
+            enterTeamNamePrompt.hidden = false;
+        }
+
+        let solosHTML = '';
+        let numSolos = 0;
+        let teamsHTML = '';
+        let numTeams = 0;
+        for (let _team of gameState.teams) {
+            if (_team.solo) {
+                solosHTML += `<tr class="${_team.teamName === team ? 'active' : ''}"><td>${_team.teamName}</td><td>${_team.members[0].ready ? '✅' : '…'}</td></tr></tr>`;
+                numSolos++;
+            } else {
+                let joinButtonHTML = `<button class="teambutton" data-team="${_team.teamName}">Join Team</button>`;
+                let leaveButtonHTML = '<button class="leavebutton">Leave Team</button>';
+                let membersHTML = '';
+                let isAlreadyInTeam = false;
+                for (let tm of _team.members) {
+                    membersHTML += `<tr><td>${tm.name}</td><td>${tm.ready ? '✅' : '…'}</td></tr>`;
+                    if (tm.name === playerName) {
+                        isAlreadyInTeam = true;
                     }
-                    
-                    teamsHTML += `<table class="${isAlreadyInTeam ? 'active' : ''}"><tr><th>${`${_team.teamName} (${_team.members.length})`}</th><th>${isAlreadyInTeam ? leaveButtonHTML : joinButtonHTML}</th></tr>${membersHTML}`;
-                    teamsHTML += `</table>`;
-                    numTeams++;
                 }
-            }
-            solos.innerHTML = solosHTML;
-            teams.innerHTML = teamsHTML;
-
-            soloPlayerCount.innerHTML = numSolos;
-            teamCount.innerHTML = numTeams;
-
-            for (let element of document.getElementsByClassName('teambutton')) {
                 
-                const teamName = element.getAttribute('data-team');
-                
-                if (teamName) {
-                    element.addEventListener('click', () => joinTeam(teamName));
-                }
+                teamsHTML += `<table class="${isAlreadyInTeam ? 'active' : ''}"><tr><th>${`${_team.teamName} (${_team.members.length})`}</th><th>${isAlreadyInTeam ? leaveButtonHTML : joinButtonHTML}</th></tr>${membersHTML}`;
+                teamsHTML += `</table>`;
+                numTeams++;
             }
+        }
+        solos.innerHTML = solosHTML;
+        teams.innerHTML = teamsHTML;
 
-            for (let element of document.getElementsByClassName('leavebutton')) {
-                element.addEventListener('click', () => leaveTeam());
-            }
+        soloPlayerCount.innerHTML = numSolos;
+        teamCount.innerHTML = numTeams;
 
-            if (numSolos === 0) {
-                solosTitle.hidden = true;
-            } else {
-                solosTitle.hidden = false;
-            }
-
-            if (numTeams === 0) {
-                teamsTitle.hidden = true;
-            } else {
-                teamsTitle.hidden = false;
-            }
-        } else if (gameState.scene === 'game') {
-            let _team = getTeamByName(team);
-
-            pregameContainer.hidden = true;
-            gameContainer.hidden = false;
-            finish.hidden = true;
-            answer.hidden = true;
-            scores.hidden = true;
-            log.hidden = teamMembers.hidden = solo || _team.members.length === 1;
-    
-            teamName.innerHTML = _team.teamName;
+        for (let element of document.getElementsByClassName('teambutton')) {
             
-            questionNumber.innerHTML = gameState.activeQuestion.number;
-            questionText.innerHTML = gameState.activeQuestion.text;
-    
-            let teamMembersHTML = '';
-            for (let tm of _team.members) {
-                teamMembersHTML += `<li>${tm.name}</li>`;
+            const teamName = element.getAttribute('data-team');
+            
+            if (teamName) {
+                element.addEventListener('click', () => joinTeam(teamName));
             }
-            teamMembers.innerHTML = teamMembersHTML;
-    
-            remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
-    
-            optionA.innerHTML = gameState.activeQuestion.options.a;
-            optionB.innerHTML = gameState.activeQuestion.options.b;
-            optionC.innerHTML = gameState.activeQuestion.options.c;
-            optionD.innerHTML = gameState.activeQuestion.options.d;
-    
-            allocatedA.innerHTML = numberWithCommas(_team.optionsAllocated['a']);
-            allocatedB.innerHTML = numberWithCommas(_team.optionsAllocated['b']);
-            allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c']);
-            allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d']);
-    
-            if (moneyRemainingThisTurn() !== 0) {
-                lockIn.disabled = true;
-                help.innerHTML = 'You need to allocate all of your money!';
-            } else {
-                lockIn.disabled = false;
-                help.innerHTML = '';
-            }
-    
-            if (moneyRemainingThisTurn() === 0) {
-                addA.disabled = true;
-                addB.disabled = true;
-                addC.disabled = true;
-                addD.disabled = true;
-                addRemainingA.disabled = true;
-                addRemainingB.disabled = true;
-                addRemainingC.disabled = true;
-                addRemainingD.disabled = true;
-            } else {
-                addA.disabled = false;
-                addB.disabled = false;
-                addC.disabled = false;
-                addD.disabled = false;
-                addRemainingA.disabled = false;
-                addRemainingB.disabled = false;
-                addRemainingC.disabled = false;
-                addRemainingD.disabled = false;
-            }
-    
-            minusA.disabled = _team.optionsAllocated['a'] === 0;
-            minusB.disabled = _team.optionsAllocated['b'] === 0;
-            minusC.disabled = _team.optionsAllocated['c'] === 0;
-            minusD.disabled = _team.optionsAllocated['d'] === 0;
-    
-            reset.disabled = moneyRemainingThisTurn() === _team.remainingMoney;
-    
-            if (_team.lockedIn) {
-                addA.disabled = true;
-                addB.disabled = true;
-                addC.disabled = true;
-                addD.disabled = true;
-                minusA.disabled = true;
-                minusB.disabled = true;
-                minusC.disabled = true;
-                minusD.disabled = true;
-                reset.disabled = true;
-                lockIn.disabled = true;
-                
-                help.innerHTML = 'You\'re locked in!';
-            }
-        } else if (gameState.scene === 'answer') {
-            let _team = getTeamByName(team);
+        }
 
-            pregameContainer.hidden = true;
-            gameContainer.hidden = true;
-            finish.hidden = true;
-            answer.hidden = false;
-            scores.hidden = true;
+        for (let element of document.getElementsByClassName('leavebutton')) {
+            element.addEventListener('click', () => leaveTeam());
+        }
 
-            answerText.innerHTML = gameState.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.answer];
-            remainingAfter.innerHTML = numberWithCommas(_team.remainingMoney);
-        } else if (gameState.scene === 'scores') {
-            pregameContainer.hidden = true;
-            gameContainer.hidden = true;
-            answer.hidden = true;
-            scores.hidden = false;
-            finish.hidden = true;
+        if (numSolos === 0) {
+            solosTitle.hidden = true;
+        } else {
+            solosTitle.hidden = false;
+        }
 
-            let scoresTableHtml = '<tr><th>Team</th><th>Remaining Money</th></tr>';
-            gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
-            for (let _team of gameState.teams) {
-                scoresTableHtml += `<tr><td>${_team.teamName}</td><td>${numberWithCommas(_team.remainingMoney)}</td></tr>`;
-            }
-            scoresTable.innerHTML = scoresTableHtml;
-        } else if (gameState.scene === 'finish') {
-            pregameContainer.hidden = true;
-            gameContainer.hidden = true;
-            answer.hidden = true;
-            scores.hidden = true;
-            finish.hidden = false;
-    
-            if (gameState.winners.length === 0) {
-                winnerText.innerHTML = 'Nobody won x-(';
-            } else if (gameState.winners.length > 1) {
-                winnerText.innerHTML = 'You were one of multiple winners!';
-            } else {
-                winnerText.innerHTML = gameState.winners[0] === team ? 'You won!' : 'You lost!';
-            }
+        if (numTeams === 0) {
+            teamsTitle.hidden = true;
+        } else {
+            teamsTitle.hidden = false;
+        }
+    } else if (gameState.scene === 'game') {
+        let _team = getTeamByName(team);
+
+        pregameContainer.hidden = true;
+        gameContainer.hidden = false;
+        finish.hidden = true;
+        answer.hidden = true;
+        scores.hidden = true;
+        log.hidden = chatMessage.hidden = sendChatMessage.hidden = teamMembers.hidden = solo || _team.members.length === 1;
+
+        teamName.innerHTML = _team.teamName;
+        
+        questionNumber.innerHTML = gameState.activeQuestionIndex + 1;
+        questionText.innerHTML = gameState.activeQuestion.text;
+
+        let teamMembersHTML = '';
+        for (let tm of _team.members) {
+            teamMembersHTML += `<li>${tm.name}</li>`;
+        }
+        teamMembers.innerHTML = teamMembersHTML;
+
+        remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
+
+        optionA.innerHTML = gameState.activeQuestion.options.a;
+        optionB.innerHTML = gameState.activeQuestion.options.b;
+        optionC.innerHTML = gameState.activeQuestion.options.c;
+        optionD.innerHTML = gameState.activeQuestion.options.d;
+
+        allocatedA.innerHTML = numberWithCommas(_team.optionsAllocated['a']);
+        allocatedB.innerHTML = numberWithCommas(_team.optionsAllocated['b']);
+        allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c']);
+        allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d']);
+
+        if (moneyRemainingThisTurn() !== 0) {
+            lockIn.disabled = true;
+            help.innerHTML = 'You haven\'t allocated all of your money - use it or lose it!';
+        } else {
+            lockIn.disabled = false;
+            help.innerHTML = '';
+        }
+
+        if (moneyRemainingThisTurn() === 0) {
+            addA.disabled = true;
+            addB.disabled = true;
+            addC.disabled = true;
+            addD.disabled = true;
+            addRemainingA.disabled = true;
+            addRemainingB.disabled = true;
+            addRemainingC.disabled = true;
+            addRemainingD.disabled = true;
+        } else {
+            addA.disabled = false;
+            addB.disabled = false;
+            addC.disabled = false;
+            addD.disabled = false;
+            addRemainingA.disabled = false;
+            addRemainingB.disabled = false;
+            addRemainingC.disabled = false;
+            addRemainingD.disabled = false;
+        }
+
+        minusA.disabled = _team.optionsAllocated['a'] === 0;
+        minusB.disabled = _team.optionsAllocated['b'] === 0;
+        minusC.disabled = _team.optionsAllocated['c'] === 0;
+        minusD.disabled = _team.optionsAllocated['d'] === 0;
+
+        reset.disabled = moneyRemainingThisTurn() === _team.remainingMoney;
+
+        if (_team.lockedIn) {
+            addA.disabled = true;
+            addB.disabled = true;
+            addC.disabled = true;
+            addD.disabled = true;
+            minusA.disabled = true;
+            minusB.disabled = true;
+            minusC.disabled = true;
+            minusD.disabled = true;
+            reset.disabled = true;
+            lockIn.disabled = true;
+            
+            help.innerHTML = 'You\'re locked in!';
+        }
+    } else if (gameState.scene === 'answer') {
+        let _team = getTeamByName(team);
+
+        pregameContainer.hidden = true;
+        gameContainer.hidden = true;
+        finish.hidden = true;
+        answer.hidden = false;
+        scores.hidden = true;
+
+        answerText.innerHTML = gameState.activeQuestion.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.activeQuestion.answer];
+        remainingAfter.innerHTML = numberWithCommas(_team.remainingMoney);
+    } else if (gameState.scene === 'scores') {
+        pregameContainer.hidden = true;
+        gameContainer.hidden = true;
+        answer.hidden = true;
+        scores.hidden = false;
+        finish.hidden = true;
+
+        let scoresTableHtml = '<tr><th>Team</th><th>Remaining Money</th></tr>';
+        gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
+        for (let _team of gameState.teams) {
+            scoresTableHtml += `<tr><td>${_team.teamName}</td><td>£${numberWithCommas(_team.remainingMoney)}</td></tr>`;
+        }
+        scoresTable.innerHTML = scoresTableHtml;
+    } else if (gameState.scene === 'finish') {
+        pregameContainer.hidden = true;
+        gameContainer.hidden = true;
+        answer.hidden = true;
+        scores.hidden = true;
+        finish.hidden = false;
+
+        if (gameState.winners.length === 0) {
+            winnerText.innerHTML = 'Nobody won x-(';
+        } else if (gameState.winners.length > 1) {
+            winnerText.innerHTML = 'You were one of multiple winners!';
+        } else {
+            winnerText.innerHTML = gameState.winners[0] === team ? 'You won!' : 'You lost!';
         }
     }
 }

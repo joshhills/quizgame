@@ -95,11 +95,11 @@ function updateUI() {
     numPlayers.innerHTML = inumPlayers;
 
     // Players table
-    let playersTableHTML = '<tr><th>Name</th><th>Id</th><th>Team</th><th>Control</th></tr>';
+    let playersTableHTML = '<tr><th>Name</th><th>Id</th><th>Team</th><th>Solo</th><th>Control</th></tr>';
 
     for (let team of gameState.teams) {
         for (let tm of team.members) {
-            playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>${team.name}</td><td><button class="kick" data-id="${tm.id}">Kick</button></td>`
+            playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>${team.teamName}</td><td>${team.solo ? '✅' : ''}</td><td><button class="kick" data-id="${tm.id}">Kick</button></td>`
         }
     }
 
