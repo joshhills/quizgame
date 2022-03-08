@@ -82,7 +82,7 @@ var pregameContainer = document.getElementById('pregame'),
     sendChatMessage = document.getElementById('sendchatmessage');
 
 // Register event listeners
-joinSoloButton.addEventListener('click', () => joinGameSolo());
+joinSoloButton.addEventListener('click', () => { joinGameSolo(); joinGameSolo(); });
 createTeamButton.addEventListener('click', () => createTeam());
 pregameStatusWidgetLeave.addEventListener('click', () => leaveTeam());
 pregameStatusWidgetReadyButton.addEventListener('click', () => toggleReady());
@@ -239,18 +239,18 @@ function getTeamByName(teamName) {
 }
 
 // Register event handlers
-ws.onmessage = (msg) => handleMessage(msg.data, {
-    [MESSAGE_TYPE.SERVER.PONG]: handlePong,
-    [MESSAGE_TYPE.SERVER.CONNECTION_ID]: handleConnectionId,
-    [MESSAGE_TYPE.SERVER.STATE_CHANGE]: handleStateChange,
-    [MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME]: handleAcknowledgeName,
-    [MESSAGE_TYPE.SERVER.ACKNOWLEDGE_READY]: handleAcknowledgeReady,
-    [MESSAGE_TYPE.SERVER.RESET]: handleReset,
-    [MESSAGE_TYPE.SERVER.LOG]: handleLog,
-    [MESSAGE_TYPE.SERVER.ERROR_MESSAGE]: handleErrorMessage,
-    [MESSAGE_TYPE.SERVER.NOTIFY]: handleNotify,
-    [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: handleRemoveNotify,
-    [MESSAGE_TYPE.SERVER.TEAM_CHAT]: handleChatMessage
+ws.onmessage = (msg) => handleMessage(ws, msg.data, {
+    [MESSAGE_TYPE.SERVER.PONG]: { handler: handlePong },
+    [MESSAGE_TYPE.SERVER.CONNECTION_ID]: { handler: handleConnectionId },
+    [MESSAGE_TYPE.SERVER.STATE_CHANGE]: { handler: handleStateChange },
+    [MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME]: { handler: handleAcknowledgeName },
+    [MESSAGE_TYPE.SERVER.ACKNOWLEDGE_READY]: { handler: handleAcknowledgeReady },
+    [MESSAGE_TYPE.SERVER.RESET]: { handler: handleReset },
+    [MESSAGE_TYPE.SERVER.LOG]: { handler: handleLog },
+    [MESSAGE_TYPE.SERVER.ERROR_MESSAGE]: { handler: handleErrorMessage },
+    [MESSAGE_TYPE.SERVER.NOTIFY]: { handler: handleNotify },
+    [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
+    [MESSAGE_TYPE.SERVER.TEAM_CHAT]: { handler: handleChatMessage }
 }, updateUI);
 
 /* === End Handler Functions === */

@@ -21,6 +21,7 @@ const STARTING_MONEY = 100000;
 const questions = [
     {
         text: 'This is a test question 1, the answer is a',
+        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Intelligent-Systems-Nintendo-DS-Nitro-Burner.jpg',
         options: {
             a: '270',
             b: '206',
@@ -31,6 +32,7 @@ const questions = [
     },
     {
         text: 'This is a test question 2, the answer is b',
+        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Sony_CRX310S-Internal-PC-DVD-Drive-Opened.jpg/800px-Sony_CRX310S-Internal-PC-DVD-Drive-Opened.jpg',
         options: {
             a: '270',
             b: '206',
@@ -41,6 +43,7 @@ const questions = [
     },
     {
         text: 'This is a test question 3, the answer is c',
+        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Apple-USB-SuperDrive.jpg',
         options: {
             a: '270',
             b: '206',
@@ -339,6 +342,11 @@ function handleJoinTeam(data) {
 
 function handleJoinSolo(data) {
 
+    // let foo = 10000000000;
+    // while (foo > 0) {
+    //     foo--;
+    // }
+
     let tws = getClientById(wss, data.id.id);
     let teamName = data.as;
 
@@ -593,24 +601,24 @@ wss.on('connection', (ws, req) => {
     }
   
     ws.on('close', handleClose);
-    ws.on('message', (msg) => handleMessage(msg, {
-        [MESSAGE_TYPE.CLIENT.PING]: handlePing,        
-        [MESSAGE_TYPE.CLIENT.JOIN_SOLO]: handleJoinSolo,
-        [MESSAGE_TYPE.CLIENT.JOIN_TEAM]: handleJoinTeam,
-        [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: handleCreateTeam,
-        [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: handleLeaveTeam,
-        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: handleToggleReady,
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: handleProgressState,
-        [MESSAGE_TYPE.CLIENT.LOCK_IN]: handleLockIn,
-        [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: handleResetAllocation,
-        [MESSAGE_TYPE.CLIENT.ADD_OPTION]: handleAddOption,
-        [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: handleAddRemaining,
-        [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: handleMinusOption,
-        [MESSAGE_TYPE.CLIENT.RESET]: handleReset,
-        [MESSAGE_TYPE.CLIENT.KICK]: handleKick,
-        [MESSAGE_TYPE.CLIENT.NOTIFY]: handleNotify,
-        [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: handleRemoveNotify,
-        [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: handleTeamChat
+    ws.on('message', (msg) => handleMessage(ws, msg, {
+        [MESSAGE_TYPE.CLIENT.PING]: { handler: handlePing },
+        [MESSAGE_TYPE.CLIENT.JOIN_SOLO]: { handler: handleJoinSolo, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.JOIN_TEAM]: { handler: handleJoinTeam },
+        [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam },
+        [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState },
+        [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
+        [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
+        [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
+        [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: { handler: handleAddRemaining },
+        [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: { handler: handleMinusOption },
+        [MESSAGE_TYPE.CLIENT.RESET]: { handler: handleReset },
+        [MESSAGE_TYPE.CLIENT.KICK]: { handler: handleKick },
+        [MESSAGE_TYPE.CLIENT.NOTIFY]: { handler: handleNotify },
+        [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
+        [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat }
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });

@@ -76,10 +76,10 @@ function handleStateChange(data) {
 }
 
 // Register event handlers
-ws.onmessage = (msg) => handleMessage(msg.data, {
-    [MESSAGE_TYPE.SERVER.PONG]: handlePong,
-    [MESSAGE_TYPE.SERVER.CONNECTION_ID]: handleConnectionId,
-    [MESSAGE_TYPE.SERVER.STATE_CHANGE]: handleStateChange
+ws.onmessage = (msg) => handleMessage(ws, msg.data, {
+    [MESSAGE_TYPE.SERVER.PONG]: { handler: handlePong },
+    [MESSAGE_TYPE.SERVER.CONNECTION_ID]: { handler: handleConnectionId },
+    [MESSAGE_TYPE.SERVER.STATE_CHANGE]: { handler: handleStateChange }
 }, updateUI);
 
 /* === End Handler Functions === */

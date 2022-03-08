@@ -3,6 +3,8 @@
  * to ensure parity.
  */
 
+import e from "express";
+
 // Message types of custom protocol
 export const MESSAGE_TYPE = {
     SERVER: {
@@ -38,6 +40,8 @@ export const MESSAGE_TYPE = {
         TEAM_CHAT: 'teamChat'
     }
 };
+
+export const RateLimitCache = {};
 
 // State machine of game
 export const GAME_STATE = {
@@ -89,23 +93,69 @@ export function formatMessage(type, obj, id) {
  * Handle a message received on a websocket by parsing and checking for errors
  * 
  * @param {*} ws                on which to handle message 
+ * @param {any} data            The data to pass
  * @param {any} typeMap         mapping of MESSAGE_TYPE to function that takes
  *                              a JSON decoded data blob as first argument
  * @param {function} callback   on-complete handler
  */
-export function handleMessage(data, typeMap, callback) {
+export function handleMessage(ws, data, typeMap, callback) {
 
     let parsedData = JSON.parse(data);
 
     console.info(`Received a message of type: ${parsedData.messageType}`);
     
     if (parsedData.messageType) {
-        let handler = typeMap[parsedData.messageType];
+        
+        let config = typeMap[parsedData.messageType];
+        let handler = config.handler;
+        let rateLimited = false;
 
-        if (handler) {
-            handler(parsedData);
-        } else {
+        // TODO: Simplify logic here
+        const rateLimitKey = `${ws.id}_${handler.name}`;
+        if (handler && config.rateLimit && config.rateLimit.rate) {
+            let lastTimeStamp = RateLimitCache[rateLimitKey];
+
+            if (!lastTimeStamp) {
+                RateLimitCache[rateLimitKey] = Date.now();
+            } else if (lastTimeStamp && Date.now() < lastTimeStamp + config.rateLimit.rate) {
+                rateLimited = true;
+                RateLimitCache[rateLimitKey] = Date.now();
+            }
+        }
+
+        if (handler && !rateLimited) {
+            
+            let wasAtomic = false;
+
+            // If we're treating this function as atomic...
+            if (config.rateLimit && config.rateLimit.atomic) {
+                wasAtomic = true;
+
+                // If it's currently locked, skip
+                if (RateLimitCache[rateLimitKey]) {
+                    rateLimited = true;
+                    console.log('Attempted to call atomic locked function');
+                }
+                // Otherwise, lock it and call the handler
+                else {
+                    RateLimitCache[rateLimitKey] = Date.now();
+                    handler(parsedData);
+                }
+            } else {
+                handler(parsedData);
+            }
+
+            // Release the lock
+            if (wasAtomic) {
+                RateLimitCache[rateLimitKey] = null;
+            }
+        } else if (!handler) {
             console.warn(`No callback registered for message type: ${parsedData.messageType}`);
+        }
+
+        if (rateLimited) {
+            // TODO: Make rate limiting its own thing
+            sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Rate limited" });
         }
     } else {
         console.warn('No message in payload');
