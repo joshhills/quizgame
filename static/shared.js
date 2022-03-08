@@ -3,8 +3,6 @@
  * to ensure parity.
  */
 
-import e from "express";
-
 // Message types of custom protocol
 export const MESSAGE_TYPE = {
     SERVER: {
@@ -134,7 +132,6 @@ export function handleMessage(ws, data, typeMap, callback) {
                 // If it's currently locked, skip
                 if (RateLimitCache[rateLimitKey]) {
                     rateLimited = true;
-                    console.log('Attempted to call atomic locked function');
                 }
                 // Otherwise, lock it and call the handler
                 else {

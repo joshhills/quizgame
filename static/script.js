@@ -82,7 +82,7 @@ var pregameContainer = document.getElementById('pregame'),
     sendChatMessage = document.getElementById('sendchatmessage');
 
 // Register event listeners
-joinSoloButton.addEventListener('click', () => { joinGameSolo(); joinGameSolo(); });
+joinSoloButton.addEventListener('click', () => { joinGameSolo(); });
 createTeamButton.addEventListener('click', () => createTeam());
 pregameStatusWidgetLeave.addEventListener('click', () => leaveTeam());
 pregameStatusWidgetReadyButton.addEventListener('click', () => toggleReady());

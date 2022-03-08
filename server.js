@@ -342,17 +342,22 @@ function handleJoinTeam(data) {
 
 function handleJoinSolo(data) {
 
-    // let foo = 10000000000;
-    // while (foo > 0) {
-    //     foo--;
-    // }
-
     let tws = getClientById(wss, data.id.id);
     let teamName = data.as;
 
     if (!teamName || /^\s*$/.test(teamName)) {
         sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot play solo with an empty player name!" });
         return;
+    }
+
+    // Ensure this person isn't already in a solo team already
+    for (let team of teams) {
+        for (let tm of team.members) {
+            if (tm.id === data.id.id) {
+                sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join your own solo team twice!" });
+                return;
+            }
+        }
     }
 
     // As we're using the player's name as their team name, prevent conflicts
