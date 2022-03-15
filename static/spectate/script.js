@@ -12,7 +12,8 @@ connect();
 
 let id = null,
     gameState = null,
-    currentNotification = null;
+    currentNotification = null,
+    showImage = false;
 
 // Get element references
 
@@ -33,7 +34,9 @@ let notification = document.getElementById('notification'),
     t1o3allocation = document.getElementById('t1o3allocation'),
     t1o4allocation = document.getElementById('t1o4allocation'),
     scoresContainer = document.getElementById('scores'),
-    scoresTable = document.getElementById('scorestable');
+    scoresTable = document.getElementById('scorestable'),
+    imageOverlay = document.getElementById('imageoverlay'),
+    activeImage = document.getElementById('activeimage');
 
 /* === Begin Handler functions === */
 
@@ -54,6 +57,12 @@ function handleConnectionId(data) {
 
 // Handle the state of the game changing
 function handleStateChange(data) {
+
+    // If we've just changed scene, close the context image
+    if ((gameState === null && data !== null) || data.scene !== gameState.scene) {
+        showImage = false;
+    }
+
     gameState = data.state;
 }
 
@@ -91,7 +100,8 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
     [MESSAGE_TYPE.SERVER.STATE_CHANGE]: { handler: handleStateChange },
     [MESSAGE_TYPE.SERVER.NOTIFY]: { handler: handleNotify },
     [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
-    [MESSAGE_TYPE.SERVER.RESET]: { handler: handleReset }
+    [MESSAGE_TYPE.SERVER.RESET]: { handler: handleReset },
+    [MESSAGE_TYPE.SERVER.TOGGLE_IMAGE]: { handler: handleToggleImage }
 }, updateUI);
 
 /* === End Handler Functions === */
@@ -103,6 +113,15 @@ function updateUI() {
     }
 
     if (gameState !== null) {
+
+        if (showImage && gameState.activeQuestion && gameState.activeQuestion.imageUrl) {
+            imageOverlay.hidden = false;
+            activeImage.src = gameState.activeQuestion.imageUrl;
+        } else {
+            imageOverlay.hidden = true;
+            activeImage.src = '';
+        }
+
         scoresContainer.hidden = true;
 
         t1o1allocation.hidden = true;
@@ -233,6 +252,10 @@ function updateUI() {
             scoresTable.innerHTML = scoresTableHtml;
         }
     }
+}
+
+function handleToggleImage() {
+    showImage = !showImage;
 }
 
 function numberWithCommas(x) {

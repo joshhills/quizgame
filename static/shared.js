@@ -16,7 +16,8 @@ export const MESSAGE_TYPE = {
         ERROR_MESSAGE: 'errorMessage',
         NOTIFY: 'notify',
         REMOVE_NOTIFY: 'removeNotify',
-        TEAM_CHAT: 'teamChat'
+        TEAM_CHAT: 'teamChat',
+        TOGGLE_IMAGE: 'toggleImage'
     },
     CLIENT: {
         PING: 'ping',
@@ -35,7 +36,8 @@ export const MESSAGE_TYPE = {
         KICK: 'kick',
         NOTIFY: 'notify',
         REMOVE_NOTIFY: 'removeNotify',
-        TEAM_CHAT: 'teamChat'
+        TEAM_CHAT: 'teamChat',
+        TOGGLE_IMAGE: 'toggleImage'
     }
 };
 
@@ -105,6 +107,15 @@ export function handleMessage(ws, data, typeMap, callback) {
     if (parsedData.messageType) {
         
         let config = typeMap[parsedData.messageType];
+
+        if (!config) {
+            console.warn(`No config registered for message type: ${parsedData.messageType}`);
+
+            if (callback) {
+                return callback();
+            }
+        }
+
         let handler = config.handler;
         let rateLimited = false;
 

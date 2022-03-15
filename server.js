@@ -28,11 +28,12 @@ const questions = [
             c: '20',
             d: '1'
         },
-        answer: 'a'
+        answer: 'a',
+        preImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/NES-Console-Set.jpg/2880px-NES-Console-Set.jpg',
+        postImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Nintendo-Famicom-Console-Set-FL.jpg/2880px-Nintendo-Famicom-Console-Set-FL.jpg'
     },
     {
         text: 'This is a test question 2, the answer is b',
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Sony_CRX310S-Internal-PC-DVD-Drive-Opened.jpg/800px-Sony_CRX310S-Internal-PC-DVD-Drive-Opened.jpg',
         options: {
             a: '270',
             b: '206',
@@ -81,7 +82,8 @@ function broadcastGameState() {
             text: activeQuestion.text,
             options: activeQuestion.options,
             // Don't send answer to clients if they're mid-guessing!
-            answer: state === GAME_STATE.GAME ? null : activeQuestion.answer
+            answer: state === GAME_STATE.GAME ? null : activeQuestion.answer,
+            imageUrl: state === GAME_STATE.GAME ? activeQuestion.preImageUrl : activeQuestion.postImageUrl
         };
     }
 
@@ -93,9 +95,7 @@ function broadcastGameState() {
         winners: winners
     };
 
-    wss.clients.forEach((c) => {
-        sendMessage(c, MESSAGE_TYPE.SERVER.STATE_CHANGE, {state: gameState});
-    });
+    broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, {state: gameState});
 }
 
 function handleProgressState() {
@@ -245,15 +245,11 @@ function handleCreateTeam(data) {
 function handleNotify(data) {
     const message = data.message;
 
-    wss.clients.forEach((c) => {
-        sendMessage(c, MESSAGE_TYPE.SERVER.NOTIFY, { message: message });
-    });
+    broadcast(MESSAGE_TYPE.SERVER.NOTIFY, { message: message });
 }
 
 function handleRemoveNotify() {
-    wss.clients.forEach((c) => {
-        sendMessage(c, MESSAGE_TYPE.SERVER.REMOVE_NOTIFY, {});
-    });
+    broadcast(MESSAGE_TYPE.SERVER.REMOVE_NOTIFY, {});
 }
 
 function handleTeamChat(data) {
@@ -569,6 +565,12 @@ function handleKick(data) {
     broadcastGameState();
 }
 
+function handleToggleImage() {
+
+    // TODO: Isolate the spectator websockets...
+    broadcast(MESSAGE_TYPE.SERVER.TOGGLE_IMAGE, {});
+}
+
 // Handle disconnection
 function handleClose() {
     console.log(`Client ${this.id} disconnected`);
@@ -623,7 +625,8 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.KICK]: { handler: handleKick },
         [MESSAGE_TYPE.CLIENT.NOTIFY]: { handler: handleNotify },
         [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
-        [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat }
+        [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage }
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });
@@ -637,7 +640,7 @@ wss.on('connection', (ws, req) => {
  * @param {MESSAGE_TYPE} type to inject into message 
  * @param {any} obj to encode and send 
  */
-function broadcast(type, obj) {
+function broadcast(type, obj = {}) {
     let blobStr = formatMessage(type, obj);
     wss.clients.forEach((c) => c.send(blobStr));
 }

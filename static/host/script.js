@@ -23,7 +23,8 @@ let rawGameState = document.getElementById('rawgamestate'),
     notifyPreset = document.getElementById('notifypreset'),
     notifyPresets = document.getElementById('notifypresets'),
     playersTable = document.getElementById('players'),
-    reset = document.getElementById('reset');
+    reset = document.getElementById('reset'),
+    toggleImage = document.getElementById('toggleimage');
 
 function kick(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
@@ -50,6 +51,11 @@ removeNotificationButton.addEventListener('click', () => {
 
 notifyPreset.addEventListener('click', () => {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.NOTIFY, { message: notifyPresets.value }, id);
+});
+
+toggleImage.addEventListener('click', () => {
+    // TODO: Add data payload to say whether it should be toggled on/off
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE);
 });
 
 /* === Begin Handler functions === */
