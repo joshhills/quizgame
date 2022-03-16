@@ -20,38 +20,38 @@ const STARTING_MONEY = 100000;
 
 const questions = [
     {
-        text: 'This is a test question 1, the answer is a',
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Intelligent-Systems-Nintendo-DS-Nitro-Burner.jpg',
+        text: "What is the surname of the current president of Nintendo America?",
         options: {
-            a: '270',
-            b: '206',
-            c: '20',
-            d: '1'
+            a: 'Mario',
+            b: 'Bowser',
+            c: 'Toad',
+            d: 'Yoshi'
+        },
+        answer: 'b',
+        preImageUrl: 'https://mario.wiki.gallery/images/thumb/2/21/DougBowser.jpg/1200px-DougBowser.jpg',
+        postImageUrl: 'https://gbatemp.net/attachments/doug-bowser-original-jpg.258904/'
+    },
+    {
+        text: "What prompted the first 'Easter Egg' in a video game?",
+        options: {
+            a: 'An accidental bug',
+            b: 'A developer\'s birthday',
+            c: 'A dispute over credits',
+            d: 'A crazed fan'
+        },
+        answer: 'c',
+        postImageUrl: 'https://csanyk.com/rants/wp-content/uploads/2015/09/tumblr_lyq4oaXr2M1qzmhdko1_5001.gif'
+    },
+    {
+        text: "Which of these was accidentally included in 'The Last of Us'?",
+        options: {
+            a: 'The number to a real-world phone sex hotline',
+            b: 'A Nazi flag',
+            c: 'Candid audio of the developers getting drunk',
+            d: 'A giraffe with 8 legs'
         },
         answer: 'a',
-        preImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/NES-Console-Set.jpg/2880px-NES-Console-Set.jpg',
-        postImageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Nintendo-Famicom-Console-Set-FL.jpg/2880px-Nintendo-Famicom-Console-Set-FL.jpg'
-    },
-    {
-        text: 'This is a test question 2, the answer is b',
-        options: {
-            a: '270',
-            b: '206',
-            c: '20',
-            d: '1'
-        },
-        answer: 'b'
-    },
-    {
-        text: 'This is a test question 3, the answer is c',
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Apple-USB-SuperDrive.jpg',
-        options: {
-            a: '270',
-            b: '206',
-            c: '20',
-            d: '1'
-        },
-        answer: 'c'
+        postImageUrl: 'https://cdn.vox-cdn.com/assets/2855671/last_of_us.jpg'
     }
 ];
 
@@ -59,7 +59,16 @@ let state = GAME_STATE.PREGAME,
     activeQuestion = null,
     activeQuestionIndex = 0,
     teams = null,
-    winners = null;
+    winners = null,
+    showImage = false,
+    showAllocations = false,
+    optionATotalAllocationThisRound = 0,
+    optionBTotalAllocationThisRound = 0,
+    optionCTotalAllocationThisRound = 0,
+    optionDTotalAllocationThisRound = 0,
+    totalLostThisRound = 0,
+    teamsKnockedOutThisRound = [],
+    totalAllocationAllThisRound = 0;
 
 reset();
 
@@ -72,6 +81,15 @@ function reset() {
     activeQuestionIndex = 0;
     teams = [];
     winners = null;
+    showImage = false;
+    showAllocations = false;
+    optionATotalAllocationThisRound = 0;
+    optionBTotalAllocationThisRound = 0;
+    optionCTotalAllocationThisRound = 0;
+    optionDTotalAllocationThisRound = 0;
+    totalLostThisRound = 0;
+    teamsKnockedOutThisRound = [];
+    totalAllocationAllThisRound = 0;
 }
 
 function broadcastGameState() {
@@ -92,7 +110,16 @@ function broadcastGameState() {
         activeQuestion: _activeQuestion,
         activeQuestionIndex: activeQuestionIndex,
         teams: teams,
-        winners: winners
+        winners: winners,
+        showImage: showImage,
+        showAllocations: showAllocations,
+        optionATotalAllocationThisRound: optionATotalAllocationThisRound,
+        optionBTotalAllocationThisRound: optionBTotalAllocationThisRound,
+        optionCTotalAllocationThisRound: optionCTotalAllocationThisRound,
+        optionDTotalAllocationThisRound: optionDTotalAllocationThisRound,
+        totalLostThisRound: totalLostThisRound,
+        teamsKnockedOutThisRound: teamsKnockedOutThisRound,
+        totalAllocationAllThisRound: totalAllocationAllThisRound
     };
 
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, {state: gameState});
@@ -105,14 +132,55 @@ function handleProgressState() {
         activeQuestion = questions[0];
     } else if (state === GAME_STATE.GAME) {
         state = GAME_STATE.ANSWER;
+        showImage = false;
         
-        // Compute new totals
+        // Compute total allocations for this round
+        optionATotalAllocationThisRound = 0;
+        optionBTotalAllocationThisRound = 0;
+        optionCTotalAllocationThisRound = 0;
+        optionDTotalAllocationThisRound = 0;
+        
+        totalLostThisRound = 0;
+
+        teamsKnockedOutThisRound = [];
+
         for (let team of teams) {
+            let wasAlive = false;
+            if (team.remainingMoney !== 0) {
+                wasAlive = true;
+            }
+
+            optionATotalAllocationThisRound += team.optionsAllocated.a;
+            optionBTotalAllocationThisRound += team.optionsAllocated.b;
+            optionCTotalAllocationThisRound += team.optionsAllocated.c;
+            optionDTotalAllocationThisRound += team.optionsAllocated.d;
+
+            // Compute new team totals
+            let beforeDeduction = team.remainingMoney;
+
             team.remainingMoney = team.optionsAllocated[questions[activeQuestionIndex].answer];
+
+            // Compute total lost for this round
+            totalLostThisRound += beforeDeduction - team.remainingMoney;
+
+            // Compute those who were knocked out this round
+            if (wasAlive && team.remainingMoney === 0) {
+                teamsKnockedOutThisRound.push(team.teamName);
+            }
         }
+
+        totalAllocationAllThisRound = optionATotalAllocationThisRound
+            + optionBTotalAllocationThisRound
+            + optionCTotalAllocationThisRound
+            + optionDTotalAllocationThisRound;
+
+        // TODO: Compute running totals...
     } else if (state === GAME_STATE.ANSWER) {
+        showImage = false;
+        showAllocations = false;
         state = GAME_STATE.SCORES;
     } else if (state === GAME_STATE.SCORES) {
+        showImage = false;
         const _allTeamsOrAllButOneBankrupt = allTeamsOrAllButOneBankrupt();
         if (activeQuestionIndex === questions.length - 1 || _allTeamsOrAllButOneBankrupt) {
             state = GAME_STATE.FINISH;
@@ -131,6 +199,14 @@ function handleProgressState() {
                 };
                 team.lockedIn = false;
             }
+
+            optionATotalAllocationThisRound = 0;
+            optionBTotalAllocationThisRound = 0;
+            optionCTotalAllocationThisRound = 0;
+            optionDTotalAllocationThisRound = 0;
+            totalLostThisRound = 0;
+            teamsKnockedOutThisRound = [];
+            totalAllocationAllThisRound = 0;
 
             state = GAME_STATE.GAME;
         }
@@ -566,9 +642,23 @@ function handleKick(data) {
 }
 
 function handleToggleImage() {
+    showImage = !showImage;
 
-    // TODO: Isolate the spectator websockets...
-    broadcast(MESSAGE_TYPE.SERVER.TOGGLE_IMAGE, {});
+    // TODO: Only send update to spectators...
+    broadcastGameState();
+}
+
+function handleToggleAllocations() {
+    showAllocations = !showAllocations;
+
+    // TODO: Only send update to spectators...
+    broadcastGameState();
+}
+
+function handleEmote(data) {
+    if (data.emote) {
+        broadcast(MESSAGE_TYPE.SERVER.EMOTE, { emote: data.emote }, (c) => c.isSpectator);
+    }
 }
 
 // Handle disconnection
@@ -583,8 +673,9 @@ function handlePing(data) {
 
 // Handle connection and register listeners
 wss.on('connection', (ws, req) => {
-    
+
     let preId = url.parse(req.url, true).query.id;
+    let isSpectator = url.parse(req.url, true).query.spectate;
     let found = false;
     let player = null;
     if (preId !== null) {
@@ -606,16 +697,20 @@ wss.on('connection', (ws, req) => {
     } else {
         ws.id = uuid.v4();
     }
+
+    if (isSpectator) {
+        ws.isSpectator = true;
+    }
   
     ws.on('close', handleClose);
     ws.on('message', (msg) => handleMessage(ws, msg, {
         [MESSAGE_TYPE.CLIENT.PING]: { handler: handlePing },
         [MESSAGE_TYPE.CLIENT.JOIN_SOLO]: { handler: handleJoinSolo, rateLimit: { atomic: true } },
-        [MESSAGE_TYPE.CLIENT.JOIN_TEAM]: { handler: handleJoinTeam },
-        [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam },
-        [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam },
-        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState },
+        [MESSAGE_TYPE.CLIENT.JOIN_TEAM]: { handler: handleJoinTeam, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
@@ -626,7 +721,9 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.NOTIFY]: { handler: handleNotify },
         [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
         [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat },
-        [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage }
+        [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations },
+        [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: 1000 } }
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });
@@ -638,11 +735,16 @@ wss.on('connection', (ws, req) => {
  * Send an object to all connected websockets
  * 
  * @param {MESSAGE_TYPE} type to inject into message 
- * @param {any} obj to encode and send 
+ * @param {any} obj to encode and send
+ * @param {function} predicate a filter rule for clients
  */
-function broadcast(type, obj = {}) {
+function broadcast(type, obj = {}, predicate = null) {
     let blobStr = formatMessage(type, obj);
-    wss.clients.forEach((c) => c.send(blobStr));
+    wss.clients.forEach((c) => {
+        if (predicate === null || predicate(c)) {
+            c.send(blobStr);
+        }
+    });
 }
 
 // Utility method for money denominations

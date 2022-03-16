@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage } from './shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS } from './shared.js';
 
 // Connect to server
 
@@ -79,7 +79,22 @@ var pregameContainer = document.getElementById('pregame'),
     teamMembers = document.getElementById('teammembers'),
     containerino = document.getElementById('containerino'),
     chatMessage = document.getElementById('chatmessage'),
-    sendChatMessage = document.getElementById('sendchatmessage');
+    sendChatMessage = document.getElementById('sendchatmessage'),
+    laughReactButton = document.getElementById('laugh'),
+    cryReactButton = document.getElementById('cry'),
+    shockReactButton = document.getElementById('shock'),
+    loveReactButton = document.getElementById('love'),
+    laughReactButton2 = document.getElementById('laugh2'),
+    cryReactButton2 = document.getElementById('cry2'),
+    shockReactButton2 = document.getElementById('shock2'),
+    loveReactButton2 = document.getElementById('love2'),
+    laughReactButton3 = document.getElementById('laugh3'),
+    cryReactButton3 = document.getElementById('cry3'),
+    shockReactButton3 = document.getElementById('shock3'),
+    loveReactButton3 = document.getElementById('love3'),
+    preImage = document.getElementById('preimage'),
+    postImage = document.getElementById('postimage'),
+    showPreImageButton = document.getElementById('showpreimage');
 
 // Register event listeners
 joinSoloButton.addEventListener('click', () => { joinGameSolo(); });
@@ -104,6 +119,25 @@ addRemainingB.addEventListener('click', () => addRemaining('b'));
 addRemainingC.addEventListener('click', () => addRemaining('c'));
 addRemainingD.addEventListener('click', () => addRemaining('d'));
 
+laughReactButton.addEventListener('click', () => sendReaction(REACTIONS.LAUGH));
+cryReactButton.addEventListener('click', () => sendReaction(REACTIONS.CRY));
+shockReactButton.addEventListener('click', () => sendReaction(REACTIONS.SHOCK));
+loveReactButton.addEventListener('click', () => sendReaction(REACTIONS.LOVE));
+laughReactButton2.addEventListener('click', () => sendReaction(REACTIONS.LAUGH));
+cryReactButton2.addEventListener('click', () => sendReaction(REACTIONS.CRY));
+shockReactButton2.addEventListener('click', () => sendReaction(REACTIONS.SHOCK));
+loveReactButton2.addEventListener('click', () => sendReaction(REACTIONS.LOVE));
+laughReactButton3.addEventListener('click', () => sendReaction(REACTIONS.LAUGH));
+cryReactButton3.addEventListener('click', () => sendReaction(REACTIONS.CRY));
+shockReactButton3.addEventListener('click', () => sendReaction(REACTIONS.SHOCK));
+loveReactButton3.addEventListener('click', () => sendReaction(REACTIONS.LOVE));
+
+showPreImageButton.addEventListener('click', () => {
+    showPreImage = !showPreImage;
+    showPreImageButton.innerHTML = showPreImage ? 'Hide image' : 'Show image';
+    updateUI();
+});
+
 sendChatMessage.addEventListener('click', () => {
     const msg = chatMessage.value;
     sendMessage(ws, MESSAGE_TYPE.CLIENT.TEAM_CHAT, { message: msg }, id);
@@ -121,7 +155,8 @@ var id = null,
     },
     currentErrorMessage = null,
     currentErrorMessageTimeout = null,
-    currentNotification = null;
+    currentNotification = null,
+    showPreImage = false;
 
 /* === Begin Handler functions === */
 
@@ -310,6 +345,10 @@ function addRemaining(optionChar) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.ADD_REMAINING, { team: team, option: optionChar }, id);
 }
 
+function sendReaction(reaction) {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.EMOTE, { emote: reaction });
+}
+
 /* === End Sender Functions === */
 
 function updateUI() {
@@ -422,6 +461,20 @@ function updateUI() {
         scores.hidden = true;
         log.hidden = chatMessage.hidden = sendChatMessage.hidden = teamMembers.hidden = solo || _team.members.length === 1;
 
+        if (gameState.activeQuestion.imageUrl) {
+            showPreImageButton.hidden = false;
+            preImage.src = gameState.activeQuestion.imageUrl;
+
+            if (showPreImage) {
+                preImage.hidden = false;
+            } else {
+                preImage.hidden = true;
+            }
+        } else {
+            showPreImageButton.hidden = true;
+            preImage.hidden = true;
+        }
+
         teamName.innerHTML = _team.teamName;
         
         questionNumber.innerHTML = gameState.activeQuestionIndex + 1;
@@ -502,6 +555,13 @@ function updateUI() {
         finish.hidden = true;
         answer.hidden = false;
         scores.hidden = true;
+
+        if (gameState.activeQuestion.imageUrl) {
+            postImage.hidden = false;
+            postImage.src = gameState.activeQuestion.imageUrl;
+        } else {
+            postImage.hidden = true;
+        }
 
         answerText.innerHTML = gameState.activeQuestion.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.activeQuestion.answer];
         remainingAfter.innerHTML = numberWithCommas(_team.remainingMoney);

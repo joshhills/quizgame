@@ -17,7 +17,7 @@ export const MESSAGE_TYPE = {
         NOTIFY: 'notify',
         REMOVE_NOTIFY: 'removeNotify',
         TEAM_CHAT: 'teamChat',
-        TOGGLE_IMAGE: 'toggleImage'
+        EMOTE: 'emote'
     },
     CLIENT: {
         PING: 'ping',
@@ -37,7 +37,9 @@ export const MESSAGE_TYPE = {
         NOTIFY: 'notify',
         REMOVE_NOTIFY: 'removeNotify',
         TEAM_CHAT: 'teamChat',
-        TOGGLE_IMAGE: 'toggleImage'
+        TOGGLE_IMAGE: 'toggleImage',
+        TOGGLE_ALLOCATIONS: 'toggleAllocations',
+        EMOTE: 'emote'
     }
 };
 
@@ -50,6 +52,14 @@ export const GAME_STATE = {
     ANSWER: 'answer',
     SCORES: 'scores',
     FINISH: 'finish'
+};
+
+// User reactions
+export const REACTIONS = {
+    LAUGH: 'laugh',
+    CRY: 'cry',
+    SHOCK: 'shock',
+    LOVE: 'love'
 };
 
 /**
@@ -113,6 +123,9 @@ export function handleMessage(ws, data, typeMap, callback) {
 
             if (callback) {
                 return callback();
+            }
+            else {
+                return;
             }
         }
 

@@ -5,6 +5,10 @@
         </title>
         <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
         <style>
+            @font-face {
+                font-family: 'Fredoka';
+                src: URL('../fredoka.ttf') format('truetype');
+            }
 
             body {
                 margin: 0;
@@ -12,7 +16,7 @@
                 background-color: #1c1d1f;
 
                 color: white;
-                font-family: 'Arial';
+                font-family: 'Fredoka';
 
                 text-align: center;
             }
@@ -50,8 +54,11 @@
                 overflow: hidden;
             }
 
+            .q-num {
+                color: #ea3c3b;
+            }
+
             .questionnumber {
-                font-family: 'Arial';
                 font-size: 30px;
                 margin: 0;
             }
@@ -69,17 +76,21 @@
             .game {
                 display: grid;
                 grid-template-columns: 1fr;
-                grid-template-rows: 40px 40px 160px 320px 160px;
+                grid-template-rows: 40px 40px 175px 345px 120px;
                 grid-column-gap: 0px;
                 grid-row-gap: 0px;
+            }
+
+            .game.scores {
+                grid-template-rows: 40px 40px 125px 500px 15px;
             }
 
             .options { 
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                grid-template-rows: 155px 155px;
-                grid-column-gap: 10px;
-                grid-row-gap: 10px;
+                grid-template-rows: 165px 165px;
+                grid-column-gap: 15px;
+                grid-row-gap: 15px;
              }
 
             #option1, #option2, #option3, #option4 {
@@ -87,8 +98,11 @@
                 overflow: hidden;
                 box-sizing: border-box;
                 border: 2.5px solid white;
+                border-radius: 10px;
                 overflow: hidden;
                 margin: 0;
+                transition: background-color 1s;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
             }
 
             .optiontext {
@@ -125,6 +139,7 @@
 
             #t1o1allocation, #t1o2allocation, #t1o3allocation, #t1o4allocation {
                 color: yellow;
+                transition: opacity 1s;
             }
 
             .active {
@@ -143,9 +158,168 @@
                 background-color: white;
                 color: black;
             }
+
+            .emotecontainer, .imageoverlay {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                margin: auto;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .emotecontainer {
+                z-index: 2;
+            }
+
+            .imageoverlay {
+                z-index: 1;
+                transition: opacity 0.5s;
+                opacity: 0;
+            }
+
+            #activeimage {
+                height: 100%;
+                width: 100%;
+                object-fit: contain;
+            }
+
+            @keyframes floatUpOut1 {
+                0% {
+                    bottom: -15%;
+                }
+
+                40% {
+                    transform: translateX(-80%);
+                    opacity: 1;
+                }
+
+                75% {
+                    transform: translateX(80%);
+                }
+
+                100% {
+                    bottom: 110%;
+                    transform: translateX(0%);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes floatUpOut2 {
+                0% {
+                    bottom: -15%;
+                }
+
+                40% {
+                    transform: translateX(80%);
+                    opacity: 1;
+                }
+
+                75% {
+                    transform: translateX(-80%);
+                }
+
+                100% {
+                    bottom: 110%;
+                    transform: translateX(0%);
+                    opacity: 0;
+                }
+            }
+
+            .emote {
+                display: inline-flex;
+                position: absolute;
+                bottom: -15%;
+                height: 3.5rem;
+                width: 3.5rem;
+                margin: auto;
+                background-image: url('../images/emote-spritesheet.png');
+                background-size: 25rem;
+                /* For debugging */
+                /* border: 2px solid; */
+                /* border-radius: 500px; */
+                /* background-color: white;    */
+            }
+
+            .emote.left {
+                left: 6%;
+            }
+
+            .emote.right {
+                right: 6%;
+            }
+
+            .wiggle1 {
+                animation: 3s ease-in-out 0s 1 floatUpOut1;
+            }
+
+            .wiggle2 {
+                animation: 3s ease-in-out 0s 1 floatUpOut2;
+            }
+
+            .emote.laugh {
+                background-position: 198px 230px;
+            }
+            .emote.cry {
+                background-position: 66px 230px;
+            }
+            .emote.shock {
+                background-position: 132px 230px;
+            }
+            .emote.love {
+                background-position: 264px 230px;
+            }
+
+            #scores {
+                margin-left: auto;
+                margin-right: auto;
+
+                -webkit-mask-image: linear-gradient(to bottom, #1c1d1f 0%, transparent 100%);
+                mask-image: linear-gradient(to bottom, #1c1d1f 40%, transparent 100%);
+            }
+            #scorestable {
+                border-collapse: collapse;
+                margin: 25px 0;
+                font-size: 1.5em;
+                min-width: 400px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                border-radius: 5px 5px 0 0;
+                overflow: hidden;
+            }
+            #scorestable thead tr {
+                background-color: #ea3c3b;
+                color: #ffffff;
+                text-align: left;
+            }
+            #scorestable th,
+            #scorestable td {
+                padding: 12px 15px;
+            }
+            #scorestable tbody tr {
+                border-bottom: 1px solid #dddddd;
+            }
+            #scorestable tbody tr:nth-of-type(even) {
+                background-color: #f3f3f327;
+            }
+            #scorestable tbody tr:last-of-type {
+                border-bottom: 2px solid #ea3c3b;
+            }
+            #scorestable tbody tr.active-row {
+                font-weight: bold;
+                color: #009879;
+            }
+            #scorestable tr.eliminated {
+                opacity: 0.5;
+                text-decoration: line-through;
+            }
+
         </style>
     </head>
     <body>
+        <div id="emotecontainer" class="emotecontainer"></div>
         <div class="imageoverlay" id="imageoverlay">
             <img id="activeimage" src="#"/>
         </div>

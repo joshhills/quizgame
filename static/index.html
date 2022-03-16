@@ -6,6 +6,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
+            @font-face {
+                font-family: 'Fredoka';
+                src: URL('../fredoka.ttf') format('truetype');
+            }
 
             body {
                 margin: 0;
@@ -13,7 +17,7 @@
                 background-color: black;
 
                 color: white;
-                font-family: 'Arial';
+                font-family: 'Fredoka';
                 font-size: 20px;
 
                 text-align: center;
@@ -70,24 +74,19 @@
             .option {
                 padding: 10px;
                 border: 2px solid white;
+                border-radius: 15px;
             }
 
             #teamname {
-                font-family: 'Arial';
-                font-size: 50px;
+                font-size: 30px;
             }
 
             .yellow {
                 color: yellow;
             }
-
-            .purple {
-                color: #8f27a9;
-            }
             
             .welcome {
                 font-weight: 200;
-                font-family: 'Arial';
             }
 
             .red {
@@ -96,6 +95,81 @@
 
             .active {
                 background-color: green;
+            }
+
+            .imagehint {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+
+            #showpreimage {
+                margin-bottom: 15px;
+            }
+
+            button {
+                background-color: transparent;
+                color: white;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                padding: 0.5rem;
+                border: 1px solid white;
+                border-radius: 0.5rem;
+                position: relative;
+                top: -5px;
+                font-weight: bold;
+                font-family: 'Fredoka';
+                text-transform: uppercase;
+            }
+
+            button:hover:not(:disabled) {
+                background-color: rgba(255, 255, 255, 0.15);
+                cursor: pointer;
+            }
+
+            button:active {
+                background-color: rgba(255, 255, 255, 0.05);
+                top: -4px;
+            }
+
+            button:disabled {
+                opacity: 0.5;
+                text-decoration: line-through;
+            }
+
+            button.redalert {
+                background-color: #ea3c3b;
+            }
+            button.redalert:hover:not(:disabled) {
+                background-color: #e76b6b;
+            }
+            button.redalert:active {
+                background-color: rgba(231, 107, 107, 0.05);
+                top: -4px;
+            }
+
+            .emote {
+                display: inline-flex;
+                height: 3.5rem;
+                width: 3.5rem;
+                margin: auto;
+                background-image: url('../images/emote-spritesheet.png');
+                background-size: 25rem;
+                /* For debugging */
+                /* border: 2px solid; */
+                /* border-radius: 500px; */
+                /* background-color: white;    */
+            }
+
+            .emote.laugh {
+                background-position: 198px 230px;
+            }
+            .emote.cry {
+                background-position: 66px 230px;
+            }
+            .emote.shock {
+                background-position: 132px 230px;
+            }
+            .emote.love {
+                background-position: 264px 230px;
             }
         </style>
     </head>
@@ -107,8 +181,10 @@
                 <h1 class="welcome">Welcome to the <span class="red">Video Game Quiz</span></h1>
                 <div id="pregamestatuswidget">
                     <span id="pregamestatuswidgetready"></span> as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
-                    <button id="pregamestatuswidgetreadybutton"></button>
+                    <br/>
+                    <br/>
                     <button id="pregamestatuswidgetleave">Leave team</button>
+                    <button id="pregamestatuswidgetreadybutton"></button>
                 </div>
                 <h4 id="enternameprompt">Enter your player name:</h4>
                 <input type="text" maxlength="16" id="name" />
@@ -129,11 +205,13 @@
                 <div>
                     <h2>Question <span id="questionnumber"></span></h2>
                     <p id="questiontext"></p>
+                    <button id="showpreimage">Show image</button>
+                    <img src="" class="imagehint" id="preimage"/>
                 </div>
                 <div>
-                    <h3 style="display: inline;">Remaining Money: £<span id="remaining"></span></h3>
+                    <h3>£<span id="remaining"></span> remaining</h3>
                     <button id="reset">Reset</button>
-                    <button id="lockin">Lock In</button>
+                    <button class="redalert" id="lockin">Lock In</button>
                     <br/><br/>
                 </div>
                 <div class="options">
@@ -177,14 +255,33 @@
             <div id="scores" hidden>
                 <h2>Scores</h2>
                 <table id="scorestable"></table>
+                <div class="reactions">
+                    <button id="laugh"><span class="emote laugh"></span></button>
+                    <button id="cry"><span class="emote cry"></span></button>
+                    <button id="shock"><span class="emote shock"></span></button>
+                    <button id="love"><span class="emote love"></span></button>
+                </div>
             </div>
             <div id="answer" hidden>
                 <h2>The answer was...</h2>
                 <h2><span id="answertext"></span></h2>
+                <img src="" class="imagehint" id="postimage"/>
                 <p>Your team's remaining money: £<span id="remainingafter"></span></p>
+                <div class="reactions">
+                    <button id="laugh2"><span class="emote laugh"></span></button>
+                    <button id="cry2"><span class="emote cry"></span></button>
+                    <button id="shock2"><span class="emote shock"></span></button>
+                    <button id="love2"><span class="emote love"></span></button>
+                </div>
             </div>
             <div id="finish" hidden>
                 <h2 id="winnertext"></h2>
+                <div class="reactions">
+                    <button id="laugh3">😆</button>
+                    <button id="cry3">😭</button>
+                    <button id="shock3">😲</button>
+                    <button id="love3">😍</button>
+                </div>
             </div>
         </div>
         <script type="module" src="./script.js"></script>

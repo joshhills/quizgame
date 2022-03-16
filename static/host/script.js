@@ -24,7 +24,8 @@ let rawGameState = document.getElementById('rawgamestate'),
     notifyPresets = document.getElementById('notifypresets'),
     playersTable = document.getElementById('players'),
     reset = document.getElementById('reset'),
-    toggleImage = document.getElementById('toggleimage');
+    toggleImage = document.getElementById('toggleimage'),
+    toggleAllocations = document.getElementById('toggleallocations');
 
 function kick(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
@@ -54,8 +55,11 @@ notifyPreset.addEventListener('click', () => {
 });
 
 toggleImage.addEventListener('click', () => {
-    // TODO: Add data payload to say whether it should be toggled on/off
     sendMessage(ws, MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE);
+});
+
+toggleAllocations.addEventListener('click', () => {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS);
 });
 
 /* === Begin Handler functions === */
