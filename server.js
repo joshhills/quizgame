@@ -1,6 +1,7 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE } from './static/shared.js';
 
 import express from 'express';
+import fileUpload from 'express-fileupload';
 import pkg from 'ws';
 const { Server } = pkg;
 import * as uuid from 'uuid';
@@ -8,9 +9,48 @@ import url from 'url';
 
 const PORT = process.env.PORT || 3000;
 
-const server = express()
+let server = express()
   .use(express.static('./static'))
-  .listen(PORT, () => console.log(`Listening on ${PORT}`));
+  .use(fileUpload());
+
+// Support quiz file upload
+server.post('/upload-quiz', async (req, res) => {
+    try {
+        if (!req.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+            let quiz = req.files.quiz;
+
+            if (quiz.data) {
+                let quizObj = JSON.parse(quiz.data.toString('ascii'));
+
+                if (quizObj.name && quizObj.questions && quizObj.questions.length > 0) {
+                    quizName = quizObj.name;
+                    questions = quizObj.questions;
+                    
+                    broadcastGameState();
+
+                    res.send({
+                        status: true
+                    });
+                } else {
+                    res.send({
+                        status: false,
+                        message: 'Malformed input'
+                    });
+                }
+            }
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+server = server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const wss = new Server({ server });
 
@@ -18,44 +58,9 @@ const wss = new Server({ server });
 
 const STARTING_MONEY = 100000;
 
-const questions = [
-    {
-        text: "What is the surname of the current president of Nintendo America?",
-        options: {
-            a: 'Mario',
-            b: 'Bowser',
-            c: 'Toad',
-            d: 'Yoshi'
-        },
-        answer: 'b',
-        preImageUrl: 'https://mario.wiki.gallery/images/thumb/2/21/DougBowser.jpg/1200px-DougBowser.jpg',
-        postImageUrl: 'https://gbatemp.net/attachments/doug-bowser-original-jpg.258904/'
-    },
-    {
-        text: "What prompted the first 'Easter Egg' in a video game?",
-        options: {
-            a: 'An accidental bug',
-            b: 'A developer\'s birthday',
-            c: 'A dispute over credits',
-            d: 'A crazed fan'
-        },
-        answer: 'c',
-        postImageUrl: 'https://csanyk.com/rants/wp-content/uploads/2015/09/tumblr_lyq4oaXr2M1qzmhdko1_5001.gif'
-    },
-    {
-        text: "Which of these was accidentally included in 'The Last of Us'?",
-        options: {
-            a: 'The number to a real-world phone sex hotline',
-            b: 'A Nazi flag',
-            c: 'Candid audio of the developers getting drunk',
-            d: 'A giraffe with 8 legs'
-        },
-        answer: 'a',
-        postImageUrl: 'https://cdn.vox-cdn.com/assets/2855671/last_of_us.jpg'
-    }
-];
-
 let state = GAME_STATE.PREGAME,
+    questions = [],
+    quizName = null,
     activeQuestion = null,
     activeQuestionIndex = 0,
     teams = null,
@@ -106,6 +111,7 @@ function broadcastGameState() {
     }
 
     const gameState = {
+        quizName: quizName,
         scene: state,
         activeQuestion: _activeQuestion,
         activeQuestionIndex: activeQuestionIndex,
@@ -127,7 +133,7 @@ function broadcastGameState() {
 
 function handleProgressState() {
 
-    if (state === GAME_STATE.PREGAME && teams.length > 1) {
+    if (state === GAME_STATE.PREGAME && teams.length > 1 && questions.length > 0) {
         state = GAME_STATE.GAME;
         activeQuestion = questions[0];
     } else if (state === GAME_STATE.GAME) {
@@ -291,6 +297,11 @@ function handleCreateTeam(data) {
         }
     }
 
+    if (state !== GAME_STATE.PREGAME) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team while quiz in progress" });
+        return;
+    }
+
     // Otherwise, create and add it
     teams.push(
         {
@@ -368,12 +379,12 @@ function handleJoinTeam(data) {
     let playerName = data.as;
 
     if (!teamName || /^\s*$/.test(teamName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty name!" });
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty name!" });
         return;
     }
 
     if (!playerName || /^\s*$/.test(playerName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty player name!" });
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty player name!" });
         return;
     }
 
@@ -397,6 +408,13 @@ function handleJoinTeam(data) {
     // Find the team to add the player to
     for (let team of teams) {
         if (teamName === team.teamName) {
+
+            // Check max team size
+            if (team.members.length === MAX_TEAM_SIZE) {
+                sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Team '${team.teamName}' is full!` });
+                return;
+            }
+
             team.members.push({
                 name: playerName,
                 id: data.id.id,
@@ -416,6 +434,11 @@ function handleJoinSolo(data) {
 
     let tws = getClientById(wss, data.id.id);
     let teamName = data.as;
+
+    if (state !== GAME_STATE.PREGAME) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a quiz in progress as a solo player" });
+        return;
+    }
 
     if (!teamName || /^\s*$/.test(teamName)) {
         sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot play solo with an empty player name!" });
@@ -608,7 +631,7 @@ function handleKick(data) {
 
     // Find the person who's being kicked
     for (var i = 0; i < teams.length; i++) {
-        for (let j = 0; j < teams[j].members.length; j++) {
+        for (let j = 0; j < teams[i].members.length; j++) {
             if (teams[i].members[j].id === idToSwap) {
                 teamIx = i;
                 ix = j;
@@ -671,6 +694,11 @@ function handlePing(data) {
     sendMessage(tws, MESSAGE_TYPE.SERVER.PONG, {});
 }
 
+function handleLoadQuiz(data) {
+    quizName = data.name;
+    questions = data.questions;
+}
+
 // Handle connection and register listeners
 wss.on('connection', (ws, req) => {
 
@@ -723,7 +751,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat },
         [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage },
         [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations },
-        [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: 1000 } }
+        [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } }
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });

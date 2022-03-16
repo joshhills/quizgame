@@ -66,19 +66,6 @@ function handleStateChange(data) {
 }
 
 function handleReset() {
-    questionnumber.innerHTML = '';
-    question.innerHTML = '';
-    options.innerHTML = '';
-    option1text.innerHTML = '';
-    option2text.innerHTML = '';
-    option3text.innerHTML = '';
-    option4text.innerHTML = '';
-
-    option1.className = '';
-    option2.className = '';
-    option3.className = '';
-    option4.className = '';
-
     emoteSideFlip = true;
 }
 
@@ -215,10 +202,10 @@ function updateUI() {
                 optionCTotalAllocationPercentage = 0,
                 optionDTotalAllocationPercentage = 0;
             if (gameState.totalAllocationAllThisRound !== 0) {
-                optionATotalAllocationPercentage = (gameState.optionATotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100;
-                optionBTotalAllocationPercentage = (gameState.optionBTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100;
-                optionCTotalAllocationPercentage = (gameState.optionCTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100;
-                optionDTotalAllocationPercentage = (gameState.optionDTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100;
+                optionATotalAllocationPercentage = Math.round((gameState.optionATotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                optionBTotalAllocationPercentage = Math.round((gameState.optionBTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                optionCTotalAllocationPercentage = Math.round((gameState.optionCTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                optionDTotalAllocationPercentage = Math.round((gameState.optionDTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
             }
 
             if (gameState.showAllocations) {

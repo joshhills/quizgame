@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>
-            Video Game Quiz
+            Quiz
         </title>
         <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -43,7 +43,8 @@
             }
 
             #solos, #teams > table {
-                display: inline-block;
+                margin: auto;
+                margin-bottom: 2rem;
             }
 
             ul {
@@ -93,10 +94,6 @@
                 color: #ea3c3b;
             }
 
-            .active {
-                background-color: green;
-            }
-
             .imagehint {
                 width: 100%;
                 margin-bottom: 15px;
@@ -141,7 +138,7 @@
             button.redalert:hover:not(:disabled) {
                 background-color: #e76b6b;
             }
-            button.redalert:active {
+            button.redalert:active:not(:disabled) {
                 background-color: rgba(231, 107, 107, 0.05);
                 top: -4px;
             }
@@ -171,6 +168,89 @@
             .emote.love {
                 background-position: 264px 230px;
             }
+
+            .styledtable {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .styledtable {
+                border-collapse: collapse;
+                margin: 25px 0;
+                font-size: 1em;
+                min-width: 400px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                border-radius: 5px 5px 0 0;
+                overflow: hidden;
+            }
+            .styledtable thead tr {
+                background-color: #ea3c3b;
+                color: #ffffff;
+                text-align: left;
+            }
+            .styledtable th,
+            .styledtable td {
+                padding: 12px 15px;
+            }
+            .styledtable tbody tr {
+                border-bottom: 1px solid #dddddd;
+            }
+            .styledtable tbody tr:nth-of-type(even) {
+                background-color: #f3f3f327;
+            }
+            .styledtable tbody tr:last-of-type {
+                border-bottom: 2px solid #ea3c3b;
+            }
+            .styledtable tbody tr.active-row {
+                color: #009879;
+            }
+            .styledtable tr.eliminated {
+                opacity: 0.5;
+                text-decoration: line-through;
+            }
+
+            .teambutton, .leavebutton {
+                top: 0px;
+                width: 100%;
+            }
+
+            input[type=text] {
+                background-color: transparent;
+                color: white;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                padding: 0.5rem;
+                border: 1px solid white;
+                border-radius: 0.5rem;
+                position: relative;
+                top: -5px;
+                font-family: 'Fredoka';
+            }
+
+            .inputgroup {
+                display: grid;
+                grid-template-columns: 5fr 1fr 5fr;
+                grid-template-rows: 1fr;
+                grid-column-gap: 20px;
+                align-items: center;
+                justify-items: center;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+
+            #joinsolo, #ortext {
+                position: relative;
+                top: 16px;
+            }
+
+            #createteam {
+                margin-top: 10px;
+            }
+
+            a {
+                color: #ea3c3b;
+            }
+            a:hover, a:active {
+                color: #e76b6b;
+            }
         </style>
     </head>
     <body>
@@ -178,7 +258,7 @@
             <div id="errormessage"></div>
             <div id="notification"></div>
             <div id="pregame">
-                <h1 class="welcome">Welcome to the <span class="red">Video Game Quiz</span></h1>
+                <h1 class="welcome">Welcome to the <span class="red" id="quizname">Quiz</span></h1>
                 <div id="pregamestatuswidget">
                     <span id="pregamestatuswidgetready"></span> as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
                     <br/>
@@ -186,16 +266,31 @@
                     <button id="pregamestatuswidgetleave">Leave team</button>
                     <button id="pregamestatuswidgetreadybutton"></button>
                 </div>
-                <h4 id="enternameprompt">Enter your player name:</h4>
-                <input type="text" maxlength="16" id="name" />
-                <button id="joinsolo">Play Solo</button>
-                <h4 id="enterteamnameprompt">Enter a team name:</h4>
-                <input type="text" maxlength="16" id="team" />
-                <button id="createteam">Create Team</button>
+                <h4 id="enternameprompt">Enter your player name</h4>
+                <input type="text" placeholder="Player" maxlength="16" id="name" />
+                <div id="inprogmessage">
+                    <p>The quiz is already in progress.</p>
+                    <p id="inprogjointeam">You can try joining a team below...</p>
+                    <p id="inprognoteam">There are no teams available to join. Go to <a href="/spectate">spectate view</a></p>
+                </div>
+                <p style="margin-bottom: 0;" id="thentext">then</p>
+                <div id="inputgroup" class="inputgroup">
+                    <div class="ig">
+                        <h4 id="enterteamnameprompt">enter a team name:</h4>
+                        <input type="text" placeholder="Team" maxlength="16" id="team" />
+                        <button id="createteam">Create Team</button>
+                    </div>
+                    <div class="ig">
+                        <p id="ortext">or</p>
+                    </div>
+                    <div class="ig">
+                        <button id="joinsolo">Play Solo</button>
+                    </div>
+                </div>
                 <h3 id="teamstitle">Teams (<span id="teamcount"></span>)</h3>
                 <div id="teams"></div>
                 <h3 id="solostitle">Solo Players (<span id="soloplayercount"></span>)</h3>
-                <table id="solos"></table>
+                <table class="styledtable" id="solos"></table>
             </div>
             <div id="game" hidden>
                 <div>
@@ -254,7 +349,7 @@
             </div>
             <div id="scores" hidden>
                 <h2>Scores</h2>
-                <table id="scorestable"></table>
+                <table class="styledtable" id="scorestable"></table>
                 <div class="reactions">
                     <button id="laugh"><span class="emote laugh"></span></button>
                     <button id="cry"><span class="emote cry"></span></button>

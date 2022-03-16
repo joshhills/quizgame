@@ -1,9 +1,10 @@
 <html>
     <head>
         <title>
-            Video Game Quiz
+            Quiz
         </title>
         <link href="https://fonts.googleapis.com/css2?family=Syne+Tactile&display=swap" rel="stylesheet">
+        <link href="../shared.css" rel="stylesheet">
         <style>
             @font-face {
                 font-family: 'Fredoka';
@@ -13,8 +14,13 @@
             body {
                 margin: 0;
                 padding: 0;
-                background-color: #1c1d1f;
+                background: rgb(117,56,56);
+                background: radial-gradient(circle at bottom, rgba(117,56,56,1) 0%, rgba(66,48,48,1) 33%, rgba(28,29,31,1) 70%);
 
+                background-position-y: bottom;
+                background-repeat: no-repeat;
+
+                overflow: hidden;
                 color: white;
                 font-family: 'Fredoka';
 
@@ -34,13 +40,11 @@
             .container {
                 width: 1280px;
                 height: 720px;
-                background-color: #1c1d1f;
                 margin: 0;
                 position: absolute;
                 top: 50%;
                 left: 50%;
                 transform: translateY(-50%) translateX(-50%);
-                overflow: hidden;
 
                 display: grid;
                 grid-template-columns: 1fr;
@@ -51,7 +55,6 @@
 
             .q-num, .q, .options {
                 position: relative;
-                overflow: hidden;
             }
 
             .q-num {
@@ -103,6 +106,7 @@
                 margin: 0;
                 transition: background-color 1s;
                 box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                background-color: #1c1d1f;
             }
 
             .optiontext {
@@ -316,9 +320,23 @@
                 text-decoration: line-through;
             }
 
+            .starsbackground {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                margin: auto;
+            }
+
         </style>
     </head>
     <body>
+        <div class="starsbackground">
+            <div id='stars'></div>
+            <div id='stars2'></div>
+            <div id='stars3'></div>
+        </div>
         <div id="emotecontainer" class="emotecontainer"></div>
         <div class="imageoverlay" id="imageoverlay">
             <img id="activeimage" src="#"/>

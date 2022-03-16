@@ -43,6 +43,8 @@ export const MESSAGE_TYPE = {
     }
 };
 
+export const RATE_LIMIT_TIMEOUT = 3000;
+
 export const RateLimitCache = {};
 
 // State machine of game
@@ -61,6 +63,8 @@ export const REACTIONS = {
     SHOCK: 'shock',
     LOVE: 'love'
 };
+
+export const MAX_TEAM_SIZE = 2;
 
 /**
  * Send an object over a websocket
@@ -132,16 +136,28 @@ export function handleMessage(ws, data, typeMap, callback) {
         let handler = config.handler;
         let rateLimited = false;
 
-        // TODO: Simplify logic here
         const rateLimitKey = `${ws.id}_${handler.name}`;
         if (handler && config.rateLimit && config.rateLimit.rate) {
-            let lastTimeStamp = RateLimitCache[rateLimitKey];
+            let rateLimitInfo = RateLimitCache[rateLimitKey];
+            let now = Date.now();
 
-            if (!lastTimeStamp) {
-                RateLimitCache[rateLimitKey] = Date.now();
-            } else if (lastTimeStamp && Date.now() < lastTimeStamp + config.rateLimit.rate) {
-                rateLimited = true;
-                RateLimitCache[rateLimitKey] = Date.now();
+            // If there is no rate limit info, this is the first time
+            // Or, if there is rate limit info, it's not being actively rate limited, and the initial time period has passed, then reset it
+            if (!rateLimitInfo || ((!rateLimitInfo.unlock || now > rateLimitInfo.unlock) && now > rateLimitInfo.firstTimestamp + config.rateLimit.rate.perMs)) {
+                RateLimitCache[rateLimitKey] = {
+                    firstTimestamp: Date.now(),
+                    hits: 1,
+                    unlock: null
+                };
+            }
+            // If there is rate limit info and we're being rate limited, update that
+            else {
+                rateLimitInfo.hits++;
+                
+                if (rateLimitInfo.hits > config.rateLimit.rate.hits) {
+                    rateLimited = true;
+                    rateLimitInfo.unlock = now + RATE_LIMIT_TIMEOUT;
+                }
             }
         }
 
@@ -176,7 +192,7 @@ export function handleMessage(ws, data, typeMap, callback) {
 
         if (rateLimited) {
             // TODO: Make rate limiting its own thing
-            sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Rate limited" });
+            sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Woah, slow down!" });
         }
     } else {
         console.warn('No message in payload');

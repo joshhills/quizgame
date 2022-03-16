@@ -1,0 +1,39 @@
+{
+    "name": "Video Game Quiz",
+    "questions": [
+        {
+            "text": "What is the surname of the current president of Nintendo America?",
+            "options": {
+                "a": "Mario",
+                "b": "Bowser",
+                "c": "Toad",
+                "d": "Yoshi"
+            },
+            "answer": "b",
+            "preImageUrl": "https://mario.wiki.gallery/images/thumb/2/21/DougBowser.jpg/1200px-DougBowser.jpg",
+            "postImageUrl": "https://gbatemp.net/attachments/doug-bowser-original-jpg.258904/"
+        },
+        {
+            "text": "What prompted the first 'Easter Egg' in a video game?",
+            "options": {
+                "a": "An accidental bug",
+                "b": "A developer's birthday",
+                "c": "A dispute over credits",
+                "d": "A crazed fan"
+            },
+            "answer": "c",
+            "postImageUrl": "https://csanyk.com/rants/wp-content/uploads/2015/09/tumblr_lyq4oaXr2M1qzmhdko1_5001.gif"
+        },
+        {
+            "text": "Which of these was accidentally included in 'The Last of Us'?",
+            "options": {
+                "a": "The number to a real-world phone sex hotline",
+                "b": "A Nazi flag",
+                "c": "Candid audio of the developers getting drunk",
+                "d": "A giraffe with 8 legs"
+            },
+            "answer": "a",
+            "postImageUrl": "https://cdn.vox-cdn.com/assets/2855671/last_of_us.jpg"
+        }
+    ]
+}

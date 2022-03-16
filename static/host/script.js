@@ -15,6 +15,7 @@ let id = null,
 
 // Get element references
 let rawGameState = document.getElementById('rawgamestate'),
+    loadQuizButton = document.getElementById('loadquiz'),
     progressState = document.getElementById('progressstate'),
     numPlayers = document.getElementById('numplayers'),
     notification = document.getElementById('notification'),
@@ -33,6 +34,24 @@ function kick(theId) {
 
 progressState.addEventListener('click', () => {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.PROGRESS_STATE, {}, id);
+});
+
+loadQuizButton.addEventListener('click', () => {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _ => {
+
+            let file = Array.from(input.files)[0];
+
+            let formData = new FormData();
+            formData.append('quiz', file);
+
+            fetch('/upload-quiz', {
+                method: 'POST',
+                body: formData
+            });
+        };
+    input.click();
 });
 
 reset.addEventListener('click', () => {

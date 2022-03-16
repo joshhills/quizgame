@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS } from './shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE } from './shared.js';
 
 // Connect to server
 
@@ -17,13 +17,17 @@ function connect() {
 connect();
 
 // Constants
-const ERROR_TIMEOUT_MS = 5000;
+const ERROR_TIMEOUT_MS = 3000;
 
 // Get elements
 var pregameContainer = document.getElementById('pregame'),
     gameContainer = document.getElementById('game'),
     errorMessage = document.getElementById('errormessage'),
     notification  = document.getElementById('notification'),
+    inProgMessage  = document.getElementById('inprogmessage'),
+    inProgJoinTeam  = document.getElementById('inprogjointeam'),
+    inProgNoTeam  = document.getElementById('inprognoteam'),
+    quizName = document.getElementById('quizname'),
     teamName = document.getElementById('teamname'),
     questionNumber = document.getElementById('questionnumber'),
     questionText = document.getElementById('questiontext'),
@@ -66,6 +70,8 @@ var pregameContainer = document.getElementById('pregame'),
     pregameStatusWidgetTeam = document.getElementById('pregamestatuswidgetteam'),
     pregameStatusWidgetReadyButton = document.getElementById('pregamestatuswidgetreadybutton'),
     pregameStatusWidgetLeave = document.getElementById('pregamestatuswidgetleave'),
+    inputGroup = document.getElementById('inputgroup'),
+    thenText = document.getElementById('thentext'),
     enterNamePrompt = document.getElementById('enternameprompt'),
     enterTeamNamePrompt = document.getElementById('enterteamnameprompt'),
     scores = document.getElementById('scores'),
@@ -372,6 +378,10 @@ function updateUI() {
         answer.hidden = true;
         scores.hidden = true;
         finish.hidden = true;
+        
+        if (gameState.quizName) {
+            quizName.innerHTML = gameState.quizName;
+        }
 
         if (playerName !== null) {
             document.getElementById('name').hidden = true;
@@ -383,40 +393,56 @@ function updateUI() {
             pregameStatusWidgetSolo.innerHTML = solo ? 'solo ' : '';
             pregameStatusWidgetTeam.innerHTML = team;
             pregameStatusWidget.hidden = false;
+            inputGroup.style.display = 'none';
+            thenText.hidden = true;
             enterNamePrompt.hidden = true;
             enterTeamNamePrompt.hidden = true;
             pregameStatusWidgetReadyButton.innerHTML = ready ? 'I\'m not ready' : 'I\'m ready';
         } else {
             document.getElementById('name').hidden = false;
             document.getElementById('team').hidden = false;
-            joinSoloButton.hidden = false;
-            createTeamButton.hidden = false;
             pregameStatusWidget.hidden = true;
+
+            if (gameState.scene === GAME_STATE.PREGAME) {
+                inputGroup.style.display = 'grid';
+                thenText.hidden = false;
+                joinSoloButton.hidden = false;
+                createTeamButton.hidden = false;
+                enterTeamNamePrompt.hidden = false;
+            } else {
+                inputGroup.style.display = 'none';
+                thenText.hidden = true;
+                joinSoloButton.hidden = true;
+                createTeamButton.hidden = true;
+                enterTeamNamePrompt.hidden = true;
+            }
+
             enterNamePrompt.hidden = false;
-            enterTeamNamePrompt.hidden = false;
         }
 
         let solosHTML = '';
         let numSolos = 0;
         let teamsHTML = '';
         let numTeams = 0;
+        let wasTeamAvailableToJoin = false;
         for (let _team of gameState.teams) {
             if (_team.solo) {
-                solosHTML += `<tr class="${_team.teamName === team ? 'active' : ''}"><td>${_team.teamName}</td><td>${_team.members[0].ready ? '✅' : '…'}</td></tr></tr>`;
+                solosHTML += `<tr class="${_team.teamName === team ? 'active-row' : ''}"><td>${_team.teamName}</td><td>${_team.members[0].ready ? 'Ready' : 'Not ready'}</td></tr></tr>`;
                 numSolos++;
             } else {
-                let joinButtonHTML = `<button class="teambutton" data-team="${_team.teamName}">Join Team</button>`;
+                wasTeamAvailableToJoin |= _team.members.length !== MAX_TEAM_SIZE;
+                let joinButtonHTML = _team.members.length !== MAX_TEAM_SIZE ? `<button class="teambutton" data-team="${_team.teamName}">Join Team</button>` : '';
                 let leaveButtonHTML = '<button class="leavebutton">Leave Team</button>';
                 let membersHTML = '';
                 let isAlreadyInTeam = false;
                 for (let tm of _team.members) {
-                    membersHTML += `<tr><td>${tm.name}</td><td>${tm.ready ? '✅' : '…'}</td></tr>`;
                     if (tm.name === playerName) {
                         isAlreadyInTeam = true;
                     }
+                    membersHTML += `<tr class="${tm.name === playerName ? 'active-row' : ''}"><td>${tm.name}</td><td>${tm.ready ? 'Ready' : 'Not ready'}</td></tr>`;
                 }
                 
-                teamsHTML += `<table class="${isAlreadyInTeam ? 'active' : ''}"><tr><th>${`${_team.teamName} (${_team.members.length})`}</th><th>${isAlreadyInTeam ? leaveButtonHTML : joinButtonHTML}</th></tr>${membersHTML}`;
+                teamsHTML += `<table class="styledtable"><thead><tr><th>${`${_team.teamName} (${_team.members.length}/${MAX_TEAM_SIZE})`}</th><th>${isAlreadyInTeam ? leaveButtonHTML : joinButtonHTML}</th></tr></thead><tbody>${membersHTML}</tbody>`;
                 teamsHTML += `</table>`;
                 numTeams++;
             }
@@ -450,6 +476,24 @@ function updateUI() {
             teamsTitle.hidden = true;
         } else {
             teamsTitle.hidden = false;
+        }
+
+        // Late joins
+        if (!playerName && gameState.scene !== GAME_STATE.PREGAME) {
+            inProgMessage.hidden = false;
+            solos.hidden = true;
+            solosTitle.hidden = true;
+            if (wasTeamAvailableToJoin) {
+                inProgJoinTeam.hidden = false;
+                inProgNoTeam.hidden = true;
+            } else {
+                inProgJoinTeam.hidden = true;
+                inProgNoTeam.hidden = false;
+                enterNamePrompt.hidden = true;
+                document.getElementById('name').hidden = true;
+            }
+        } else {
+            inProgMessage.hidden = true;
         }
     } else if (gameState.scene === 'game') {
         let _team = getTeamByName(team);
@@ -572,11 +616,12 @@ function updateUI() {
         scores.hidden = false;
         finish.hidden = true;
 
-        let scoresTableHtml = '<tr><th>Team</th><th>Remaining Money</th></tr>';
+        let scoresTableHtml = '<thead><tr><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
         gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
         for (let _team of gameState.teams) {
             scoresTableHtml += `<tr><td>${_team.teamName}</td><td>£${numberWithCommas(_team.remainingMoney)}</td></tr>`;
         }
+        scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
     } else if (gameState.scene === 'finish') {
         pregameContainer.hidden = true;
