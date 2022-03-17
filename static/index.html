@@ -13,7 +13,8 @@
             body {
                 margin: 0;
                 padding: 0;
-                background-color: black;
+                background: rgb(117,56,56);
+                background: radial-gradient(circle at bottom, rgba(117,56,56,1) 0%, rgba(66,48,48,1) 33%, rgba(28,29,31,1) 70%);
 
                 color: white;
                 font-family: 'Varela';
@@ -23,11 +24,14 @@
             }
 
             .container {
-                background-color: #1c1d1f;
+                background-color: #ffffff05;
+                backdrop-filter: blur(5px);
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
                 max-width: 640px;
                 margin: 0 auto;
                 padding: 20px;
                 min-height: calc(100vh - 40px);
+                position: relative;
             }
 
             #errormessage {
@@ -39,11 +43,6 @@
                 padding: 1rem;
                 background-color: white;
                 color: black;
-            }
-
-            #solos, #teams > table {
-                margin: auto;
-                margin-bottom: 2rem;
             }
 
             ul {
@@ -74,11 +73,31 @@
             .option {
                 padding: 10px;
                 border: 2px solid white;
-                border-radius: 15px;
+            }
+
+            .option:nth-child(1) {
+                border-top: none;
+                border-left: none;
+                border-bottom-right-radius: 15px;
+            }
+            .option:nth-child(2) {
+                border-top: none;
+                border-right: none;
+                border-bottom-left-radius: 15px;
+            }
+            .option:nth-child(3) {
+                border-bottom: none;
+                border-left: none;
+                border-top-right-radius: 15px;
+            }
+            .option:nth-child(4) {
+                border-bottom: none;
+                border-right: none;
+                border-top-left-radius: 15px;
             }
 
             #teamname {
-                font-size: 30px;
+                font-size: 24px;
             }
 
             .yellow {
@@ -128,7 +147,6 @@
 
             button:disabled {
                 opacity: 0.5;
-                text-decoration: line-through;
             }
 
             button.redalert {
@@ -169,12 +187,10 @@
             }
 
             .styledtable {
+                border-collapse: collapse;
                 margin-left: auto;
                 margin-right: auto;
-            }
-            .styledtable {
-                border-collapse: collapse;
-                margin: 25px 0;
+                margin-bottom: 2rem;
                 font-size: 1em;
                 min-width: 400px;
                 box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
@@ -275,7 +291,7 @@
                 <p style="margin-bottom: 0;" id="thentext">then</p>
                 <div id="inputgroup" class="inputgroup">
                     <div class="ig">
-                        <h4 id="enterteamnameprompt">enter a team name:</h4>
+                        <h4 id="enterteamnameprompt">enter a team name</h4>
                         <input type="text" placeholder="Team" maxlength="16" id="team" />
                         <button id="createteam">Create Team</button>
                     </div>
@@ -297,20 +313,17 @@
                     <ul id="teammembers"></ul>
                 </div>
                 <div>
-                    <h2>Question <span id="questionnumber"></span></h2>
+                    <h3 class="red">Question <span id="questionnumber"></span></h3>
                     <p id="questiontext"></p>
                     <button id="showpreimage">Show image</button>
                     <img src="" class="imagehint" id="preimage"/>
                 </div>
                 <div>
                     <h3>£<span id="remaining"></span> remaining</h3>
-                    <button id="reset">Reset</button>
-                    <button class="redalert" id="lockin">Lock In</button>
-                    <br/><br/>
                 </div>
                 <div class="options">
                     <div class="option">
-                        <p>A</p>
+                        <!-- <p>A</p> -->
                         <p id="optiona"></p>
                         <p>£<span id="allocateda">0</span></p>
                         <button id="minusa">-</button>
@@ -318,7 +331,7 @@
                         <button id="addremaininga">Add Remaining</button>
                     </div>
                     <div class="option">
-                        <p>B</p>
+                        <!-- <p>B</p> -->
                         <p id="optionb"></p>
                         <p>£<span id="allocatedb">0</span></p>
                         <button id="minusb">-</button>
@@ -326,7 +339,7 @@
                         <button id="addremainingb">Add Remaining</button>
                     </div>
                     <div class="option">
-                        <p>C</p>
+                        <!-- <p>C</p> -->
                         <p id="optionc"></p>
                         <p>£<span id="allocatedc">0</span></p>
                         <button id="minusc">-</button>
@@ -334,13 +347,18 @@
                         <button id="addremainingc">Add Remaining</button>
                     </div>
                     <div class="option">
-                        <p>D</p>
+                        <!-- <p>D</p> -->
                         <p id="optiond"></p>
                         <p>£<span id="allocatedd">0</span></p>
                         <button id="minusd">-</button>
                         <button id="addd">+</button>
                         <button id="addremainingd">Add Remaining</button>
                     </div>
+                </div>
+                <div>
+                    <br/>
+                    <button id="reset">Reset</button>
+                    <button class="redalert" id="lockin">Lock In</button>
                 </div>
                 <p id="help"></p>
                 <textarea readonly id="log" style="width: 100%;" rows="10"></textarea>
@@ -371,10 +389,10 @@
             <div id="finish" hidden>
                 <h2 id="winnertext"></h2>
                 <div class="reactions">
-                    <button id="laugh3">😆</button>
-                    <button id="cry3">😭</button>
-                    <button id="shock3">😲</button>
-                    <button id="love3">😍</button>
+                    <button id="laugh3"><span class="emote laugh"></span></button>
+                    <button id="cry3"><span class="emote cry"></span></button>
+                    <button id="shock3"><span class="emote shock"></span></button>
+                    <button id="love3"><span class="emote love"></span></button>
                 </div>
             </div>
         </div>

@@ -478,6 +478,8 @@ function updateUI() {
             teamsTitle.hidden = false;
         }
 
+        solos.hidden = false;
+
         // Late joins
         if (!playerName && gameState.scene !== GAME_STATE.PREGAME) {
             inProgMessage.hidden = false;
@@ -616,10 +618,10 @@ function updateUI() {
         scores.hidden = false;
         finish.hidden = true;
 
-        let scoresTableHtml = '<thead><tr><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
+        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
         gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
-        for (let _team of gameState.teams) {
-            scoresTableHtml += `<tr><td>${_team.teamName}</td><td>£${numberWithCommas(_team.remainingMoney)}</td></tr>`;
+        for (let i = 0; i < gameState.teams.length; i++) {
+            scoresTableHtml += `<tr><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;

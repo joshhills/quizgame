@@ -252,10 +252,10 @@ function updateUI() {
             question.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} was lost. ${gameState.teamsKnockedOutThisRound.length} team${gameState.teamsKnockedOutThisRound.length !== 1 ? 's were' : ' was'} eliminated.`;
             options.className = 'options hidden';
 
-            let scoresTableHtml = '<thead><tr><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
+            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
             gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
-            for (let _team of gameState.teams) {
-                scoresTableHtml += `<tr class="${_team.remainingMoney === 0 ? 'eliminated' : ''}"><td>${_team.teamName}</td><td>£${numberWithCommas(_team.remainingMoney)}</td></tr>`;
+            for (let i = 0; i < gameState.teams.length; i++) {
+                scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td></tr>`;
             }
             scoresTableHtml + '</tbody>';
             scoresTable.innerHTML = scoresTableHtml;
