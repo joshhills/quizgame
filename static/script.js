@@ -100,7 +100,13 @@ var pregameContainer = document.getElementById('pregame'),
     loveReactButton3 = document.getElementById('love3'),
     preImage = document.getElementById('preimage'),
     postImage = document.getElementById('postimage'),
-    showPreImageButton = document.getElementById('showpreimage');
+    useHintButton = document.getElementById('usehint'),
+    numHintsRemaining = document.getElementById('numhintsremaining'),
+    showPreImageButton = document.getElementById('showpreimage'),
+    optionABox = document.getElementById('optionabox'),
+    optionBBox = document.getElementById('optionbbox'),
+    optionCBox = document.getElementById('optioncbox'),
+    optionDBox = document.getElementById('optiondbox');
 
 // Register event listeners
 joinSoloButton.addEventListener('click', () => { joinGameSolo(); });
@@ -147,6 +153,10 @@ showPreImageButton.addEventListener('click', () => {
 sendChatMessage.addEventListener('click', () => {
     const msg = chatMessage.value;
     sendMessage(ws, MESSAGE_TYPE.CLIENT.TEAM_CHAT, { message: msg }, id);
+});
+
+useHintButton.addEventListener('click', () => {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id); 
 });
 
 // Game State
@@ -592,6 +602,53 @@ function updateUI() {
             lockIn.disabled = true;
             
             help.innerHTML = 'You\'re locked in!';
+        }
+
+        if (gameState.allowHints) {
+            useHintButton.hidden = false;
+            numHintsRemaining.innerHTML = _team.remainingHints;
+
+            if (_team.remainingHints && _team.activeHint === null) {
+                useHintButton.disabled = false;
+            } else {
+                useHintButton.disabled = true;
+            }
+
+            optionABox.classList = 'option';
+            optionBBox.classList = 'option';
+            optionCBox.classList = 'option';
+            optionDBox.classList = 'option';
+
+            if (_team.activeHint) {
+                for (let hint of _team.activeHint) {
+                    if (hint === 'a') {
+                        optionABox.classList = 'option wrong';
+                        addA.disabled = true;
+                        minusA.disabled = true;
+                        addRemainingA.disabled = true;
+                    }
+                    if (hint === 'b') {
+                        optionBBox.classList = 'option wrong';
+                        addB.disabled = true;
+                        minusB.disabled = true;
+                        addRemainingB.disabled = true;
+                    }
+                    if (hint === 'c') {
+                        optionCBox.classList = 'option wrong';
+                        addC.disabled = true;
+                        minusC.disabled = true;
+                        addRemainingC.disabled = true;
+                    }
+                    if (hint === 'd') {
+                        optionDBox.classList = 'option wrong';
+                        addD.disabled = true;
+                        minusD.disabled = true;
+                        addRemainingD.disabled = true;
+                    }
+                }
+            }
+        } else {
+            useHintButton.hidden = true;
         }
     } else if (gameState.scene === 'answer') {
         let _team = getTeamByName(team);

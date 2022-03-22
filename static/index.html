@@ -266,6 +266,30 @@
             a:hover, a:active {
                 color: #e76b6b;
             }
+
+            .option.wrong:nth-child(1) {
+                background: rgb(28,29,31);
+                background: linear-gradient(135deg, rgba(28,29,31,0) 7%, rgba(234,60,59,1) 90%);
+            }
+            .option.wrong:nth-child(2) {
+                background: rgb(28,29,31);
+                background: linear-gradient(225deg, rgba(28,29,31,0) 7%, rgba(234,60,59,1) 90%);
+            }
+            .option.wrong:nth-child(3) {
+                background: rgb(28,29,31);
+                background: linear-gradient(45deg, rgba(28,29,31,0) 7%, rgba(234,60,59,1) 90%);
+            }
+            .option.wrong:nth-child(4) {
+                background: rgb(28,29,31);
+                background: linear-gradient(315deg, rgba(28,29,31,0) 7%, rgba(234,60,59,1) 90%);
+            }
+
+            .allocation {
+                margin-bottom: 0;
+            }
+            .moneycontrol {
+                margin-top: 1.5rem;
+            }
         </style>
     </head>
     <body>
@@ -322,42 +346,43 @@
                     <h3>£<span id="remaining"></span> remaining</h3>
                 </div>
                 <div class="options">
-                    <div class="option">
+                    <div class="option" id="optionabox">
                         <!-- <p>A</p> -->
                         <p id="optiona"></p>
-                        <p>£<span id="allocateda">0</span></p>
-                        <button id="minusa">-</button>
-                        <button id="adda">+</button>
-                        <button id="addremaininga">Add Remaining</button>
+                        <p class="allocation">£<span id="allocateda">0</span></p>
+                        <button class="moneycontrol" id="minusa">-</button>
+                        <button class="moneycontrol" id="adda">+</button>
+                        <button class="moneycontrol" id="addremaininga">Add Remaining</button>
                     </div>
-                    <div class="option">
+                    <div class="option" id="optionbbox">
                         <!-- <p>B</p> -->
                         <p id="optionb"></p>
-                        <p>£<span id="allocatedb">0</span></p>
-                        <button id="minusb">-</button>
-                        <button id="addb">+</button>
-                        <button id="addremainingb">Add Remaining</button>
+                        <p class="allocation">£<span id="allocatedb">0</span></p>
+                        <button class="moneycontrol" id="minusb">-</button>
+                        <button class="moneycontrol" id="addb">+</button>
+                        <button class="moneycontrol" id="addremainingb">Add Remaining</button>
                     </div>
-                    <div class="option">
+                    <div class="option" id="optioncbox">
                         <!-- <p>C</p> -->
                         <p id="optionc"></p>
-                        <p>£<span id="allocatedc">0</span></p>
-                        <button id="minusc">-</button>
-                        <button id="addc">+</button>
-                        <button id="addremainingc">Add Remaining</button>
+                        <p class="allocation">£<span id="allocatedc">0</span></p>
+                        <button class="moneycontrol" id="minusc">-</button>
+                        <button class="moneycontrol" id="addc">+</button>
+                        <button class="moneycontrol" id="addremainingc">Add Remaining</button>
                     </div>
-                    <div class="option">
+                    <div class="option" id="optiondbox">
                         <!-- <p>D</p> -->
                         <p id="optiond"></p>
-                        <p>£<span id="allocatedd">0</span></p>
-                        <button id="minusd">-</button>
-                        <button id="addd">+</button>
-                        <button id="addremainingd">Add Remaining</button>
+                        <p class="allocation">£<span id="allocatedd">0</span></p>
+                        <button class="moneycontrol" id="minusd">-</button>
+                        <button class="moneycontrol" id="addd">+</button>
+                        <button class="moneycontrol" id="addremainingd">Add Remaining</button>
                     </div>
                 </div>
                 <div>
                     <br/>
                     <button id="reset">Reset</button>
+                    <button id="usehint">Use Hint (<span id="numhintsremaining">0</span>)</button>
                     <button class="redalert" id="lockin">Lock In</button>
                 </div>
                 <p id="help"></p>

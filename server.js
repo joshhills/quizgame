@@ -31,7 +31,17 @@ server.post('/upload-quiz', async (req, res) => {
                 if (quizObj.name && quizObj.questions && quizObj.questions.length > 0) {
                     quizName = quizObj.name;
                     questions = quizObj.questions;
+                    allowHints = quizObj.allowHints;
+                    numHints = quizObj.numHints;
+                    startingMoney = quizObj.startingMoney;
                     
+                    if (state === GAME_STATE.PREGAME) {
+                        for (let team of teams) {
+                            team.remainingHints = numHints;
+                            team.remainingMoney = startingMoney;
+                        }
+                    }
+
                     broadcastGameState();
 
                     res.send({
@@ -56,7 +66,9 @@ const wss = new Server({ server });
 
 /** Bootstrap game state */
 
-const STARTING_MONEY = 100000;
+let startingMoney  = 100000;
+let allowHints = true;
+let numHints = 1;
 
 let state = GAME_STATE.PREGAME,
     questions = [],
@@ -113,6 +125,7 @@ function broadcastGameState() {
     const gameState = {
         quizName: quizName,
         scene: state,
+        allowHints: allowHints,
         activeQuestion: _activeQuestion,
         activeQuestionIndex: activeQuestionIndex,
         teams: teams,
@@ -204,6 +217,7 @@ function handleProgressState() {
                     d: 0
                 };
                 team.lockedIn = false;
+                team.activeHint = null;
             }
 
             optionATotalAllocationThisRound = 0;
@@ -256,6 +270,11 @@ function handleResetAllocation(data) {
 
 function handleAddOption(data) {
     let team = getTeamByName(data.team);
+
+    if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
+        // Don't add money to active hint
+        return;
+    }
 
     let step = getDenomination(data.team);
     if (moneyRemainingThisTurn(data.team) >= step) {
@@ -313,7 +332,7 @@ function handleCreateTeam(data) {
                     ready: false
                 }
             ],
-            remainingMoney: STARTING_MONEY,
+            remainingMoney: startingMoney,
             optionsAllocated: {
                 a: 0,
                 b: 0,
@@ -321,7 +340,9 @@ function handleCreateTeam(data) {
                 d: 0
             },
             lockedIn: false,
-            solo: false
+            solo: false,
+            remainingHints: numHints,
+            activeHint: null
         }
     );
 
@@ -477,6 +498,7 @@ function handleJoinSolo(data) {
         checkingForDuplicates = false;
     }
 
+    // Create a team based on their name and use it
     teams.push(
         {
             teamName: teamName,
@@ -487,7 +509,7 @@ function handleJoinSolo(data) {
                     ready: false
                 }
             ],
-            remainingMoney: STARTING_MONEY,
+            remainingMoney: startingMoney,
             optionsAllocated: {
                 a: 0,
                 b: 0,
@@ -495,7 +517,9 @@ function handleJoinSolo(data) {
                 d: 0
             },
             lockedIn: false,
-            solo: true
+            solo: true,
+            remainingHints: numHints,
+            activeHint: null
         }
     );
 
@@ -585,8 +609,14 @@ function handleToggleReady(data) {
 }
 
 function handleAddRemaining(data) {
+    let team = getTeamByName(data.team); 
+    
+    if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
+        // Don't add money to active hint
+        return;
+    }
+
     if (moneyRemainingThisTurn(data.team) > 0) {
-        let team = getTeamByName(data.team); 
         team.optionsAllocated[data.option] += moneyRemainingThisTurn(data.team);
     }
 
@@ -684,6 +714,54 @@ function handleEmote(data) {
     }
 }
 
+function handleUseHint(data) {
+    
+    const tws = getClientById(wss, data.id.id);
+
+    // Get player's team based on their ID
+    const team = getTeamById(data.id.id);
+
+    if (team.activeHint) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You already have a hint" });
+        return;
+    }
+
+    if (!activeQuestion) {
+        console.error('Client attempted to use hint but there is no active question');
+        return;
+    }
+
+    if (!allowHints) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Hints are not enabled for this game!" });
+        return;
+    }
+
+    if (team.hintsRemaining <= 0) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "No more hints remaining!" });
+        return;
+    }
+
+    // Randomise their hint and apply it to their team data
+    // TODO: Exclude the data from broadcast in the game state
+    const answer = activeQuestion.answer;
+    const hint = Object.keys(activeQuestion.options)
+        .filter(val => val !== answer)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 2);
+
+    // Decrement hints remaining
+    team.remainingHints--;
+    team.activeHint = hint;
+
+    // Re-allocate money
+    team.optionsAllocated[team.activeHint[0]] = 0;
+    team.optionsAllocated[team.activeHint[1]] = 0;
+
+    // Broadcast the state to the team
+    // TODO: Only send to teammates
+    broadcastGameState();
+}
+
 // Handle disconnection
 function handleClose() {
     console.log(`Client ${this.id} disconnected`);
@@ -692,11 +770,6 @@ function handleClose() {
 function handlePing(data) {
     let tws = getClientById(wss, data.id.id);
     sendMessage(tws, MESSAGE_TYPE.SERVER.PONG, {});
-}
-
-function handleLoadQuiz(data) {
-    quizName = data.name;
-    questions = data.questions;
 }
 
 // Handle connection and register listeners
@@ -751,7 +824,8 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat },
         [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage },
         [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations },
-        [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } }
+        [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } },
+        [MESSAGE_TYPE.CLIENT.USE_HINT]: { handler: handleUseHint, rateLimit: { rate: { hits: 1, perMs: 5000 } } }
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });
@@ -820,6 +894,19 @@ function getTeamByName(teamName) {
     }
 
     console.error('Attempted to find a non-existent team!');
+}
+
+function getTeamById(id) {
+    
+    for (let team of teams) {
+        for (let tm of team.members) {
+            if (tm.id === id) {
+                return team;
+            }
+        }
+    }
+
+    console.error('Attempted to get team by ID but no team found');
 }
 
 function allTeamsOrAllButOneBankrupt() {

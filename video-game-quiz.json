@@ -1,5 +1,8 @@
 {
     "name": "Video Game Quiz",
+    "startingMoney": 200000,
+    "allowHints": true,
+    "numHints": 3,
     "questions": [
         {
             "text": "What is the surname of the current president of Nintendo America?",
