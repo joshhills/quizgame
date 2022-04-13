@@ -1,43 +1,153 @@
 <html>
     <head>
-        <title>Video Game Quiz - Host View</title>
+        <title>Quiz - Host View</title>
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     </head>
     <body>
-        <h1>Host</h1>
+        <div class="container p-5">
+            <div class="row">
+                <div class="col">
+
+                    <h2 class="mb-4">Host Controls</h2>
         
-        <div>
-            <button id="loadquiz">Load Quiz</button>
-            <button id="progressstate">Progress State</button>
-            <button id="reset">Reset</button>
+                    <div class="card mb-4">
+                        <h5 class="card-header">Quiz</h5>
+                        <div class="card-body">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary w-100" id="loadquiz">Load Quiz</button>
+                                <button class="btn btn-primary w-100" id="progressstate">Progress State</button>
+                                <button class="btn btn-danger w-100" id="reset">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="card mb-4">
+                        <h5 class="card-header">Visuals</h5>
+                        <div class="card-body">
+                            <div class="d-flex gap-2">
+                                <button id="toggleimage" class="btn btn-primary w-100">Toggle image</button>
+                                <button id="toggleallocations" class="btn btn-primary w-100">Toggle allocations</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <h5 class="card-header">Notifications</h5>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-10 mb-3">
+                                    <select class="form-select" name="notifypresets" id="notifypresets">
+                                        <option value="Game starting soon - remember to ready up!">Game starting soon - remember to ready up!</option>
+                                        <option value="Hold on, we're having technical issues...">Hold on, we're having technical issues...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <button class="btn btn-primary w-100" id="notifypreset">Notify Using Preset</button>
+                                </div>
+                            </div>
+                
+                            <div class="row">
+                                <div class="col-md-10 mb-3">
+                                    <input type="text" class="form-control" id="notification" placeholder="Type a custom notification..." size="32" name="notification"/>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <button class="btn btn-primary w-100" id="notify">Notify Custom</button>
+                                </div>
+                            </div>
+                            <hr class="mt-0"/>
+                            <button class="btn btn-primary w-100" id="removenotify">Remove Notification</button>
+                        </div>
+                    </div>
+            
+                    <h2 class="mb-4">Info</h2>
+
+                    <div id="gameinfo" class="card mb-4">
+                        <h5 class="card-header" id="quizname">Quiz Name</h5>
+                        <div class="card-body">
+                            <!--
+                                States:
+                                PREGAME: 'pregame',
+                                GAME: 'game',
+                                ANSWER: 'answer',
+                                SCORES: 'scores',
+                                FINISH: 'finish'
+                            -->
+                            <div id="statepregame" hidden>
+                                Waiting for contestants. <span id="noquizloaded" hidden>No quiz loaded!</span>
+                            </div>
+                            <div id="statescores" hidden>
+                                Currently showing scores
+                            </div>
+                            <div id="statefinish" hidden>
+                                Showing final screen
+                            </div>
+                            <div id="stategameanswer" hidden>
+                                <h5 id="questionname" class="card-title">
+                                    Question
+                                </h5>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="text-center mt-2 mb-2" id="optiona"></p>
+                                        <p class="text-center mt-2 mb-2" id="optionATotalAllocationThisRound"></p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="text-center mt-2 mb-2" id="optionb"></p>
+                                        <p class="text-center mt-2 mb-2" id="optionBTotalAllocationThisRound"></p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="text-center mt-2 mb-2" id="optionc"></p>
+                                        <p class="text-center mt-2 mb-2" id="optionCTotalAllocationThisRound"></p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="text-center mt-2 mb-2" id="optiond"></p>
+                                        <p class="text-center mt-2 mb-2" id="optionDTotalAllocationThisRound"></p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <p id="lockedinpercent" class="text-center"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="playerinfo" class="card mb-4">
+                        <h5 class="card-header"></span> Players (<span id="percentready"></span>/<span id="numplayers"></span> ready)</h5>
+                        <div class="card-body">
+                            <table class="table table-responsive align-middle" id="players"></table>
+                        </div>
+                    </div>
+
+                    <div id="gameinfo" class="card mb-4">
+                        <h5 class="card-header">Leaderboard (<span id="numteams"></span> teams)</h5>
+                        <div class="card-body">
+                            <table id="leaderboard" class="table table-responsive align-middle"></table>
+                        </div>
+                    </div>
+
+                    <div class="accordion" id="accordiondebug">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="debugheading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                    Debug Data
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordiondebug">
+                                <div class="accordion-body">
+                                    <textarea class="form-control" name="rawgamestate" rows="30" id="rawgamestate" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <br />
 
-        <div>
-            <select name="notifypresets" id="notifypresets">
-                <option value="Game starting soon - remember to ready up!">Game starting soon - remember to ready up!</option>
-                <option value="Hold on, we're having technical issues...">Hold on, we're having technical issues...</option>
-            </select>
-            <button id="notifypreset">Notify Using Preset</button>
-
-            <input type="text" id="notification" placeholder="Type a custom notification..." size="32" name="notification"/>
-            <button id="notify">Notify Custom</button> <button id="removenotify">Remove Notification</button>
-
-            <button id="toggleimage">Toggle image</button> <button id="toggleallocations">Toggle allocations</button>
-        </div>
-
-        <div>
-            <h3>
-                Players (<span id="numplayers"></span>)
-            </h3>
-            <table id="players">
-                <tr><th>Name</th><th>Id</th><th>Control</th></tr>
-            </table>
-        </div>
-
-        <label for="rawgamestate">Debug Data</label>
-        <textarea name="rawgamestate" rows="30" style="width: 100%;" id="rawgamestate" readonly></textarea>
-
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
         <script type="module" src="./script.js"></script>
     </body>
 </html>

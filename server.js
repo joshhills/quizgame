@@ -1,6 +1,7 @@
 import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE } from './static/shared.js';
 
 import express from 'express';
+import fetch from 'node-fetch';
 import fileUpload from 'express-fileupload';
 import pkg from 'ws';
 const { Server } = pkg;
@@ -57,6 +58,26 @@ server.post('/upload-quiz', async (req, res) => {
         }
     } catch (err) {
         res.status(500).send(err);
+    }
+});
+
+server.get('/imageExists', async(req, res) => {
+    const imageUrl = decodeURIComponent(req.query.url);
+
+    try {
+        await fetch(imageUrl)
+        .then(newRes => {
+            if (newRes.ok) {
+                res.sendStatus(200);
+            } else {
+                res.sendStatus(204);
+            }
+        }).catch(() => {
+            res.sendStatus(204);
+        });
+    }
+    catch (e) {
+        res.sendStatus(204);
     }
 });
 

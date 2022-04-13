@@ -1,6 +1,6 @@
 {
     "name": "Video Game Quiz",
-    "startingMoney": 200000,
+    "startingMoney": 100000,
     "allowHints": true,
     "numHints": 3,
     "questions": [

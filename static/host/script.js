@@ -26,7 +26,26 @@ let rawGameState = document.getElementById('rawgamestate'),
     playersTable = document.getElementById('players'),
     reset = document.getElementById('reset'),
     toggleImage = document.getElementById('toggleimage'),
-    toggleAllocations = document.getElementById('toggleallocations');
+    toggleAllocations = document.getElementById('toggleallocations'),
+    quizname = document.getElementById('quizname'),
+    questionname = document.getElementById('questionname'),
+    optiona = document.getElementById('optiona'),
+    optionb = document.getElementById('optionb'),
+    optionc = document.getElementById('optionc'),
+    optiond = document.getElementById('optiond'),
+    optionATotalAllocationThisRound = document.getElementById('optionATotalAllocationThisRound'),
+    optionBTotalAllocationThisRound = document.getElementById('optionBTotalAllocationThisRound'),
+    optionCTotalAllocationThisRound = document.getElementById('optionCTotalAllocationThisRound'),
+    optionDTotalAllocationThisRound = document.getElementById('optionDTotalAllocationThisRound'),
+    percentReady = document.getElementById('percentready'),
+    lockedInPercent = document.getElementById('lockedinpercent'),
+    leaderboard = document.getElementById('leaderboard'),
+    numteams = document.getElementById('numteams'),
+    stateGameAnswer = document.getElementById('stategameanswer'),
+    statePregame = document.getElementById('statepregame'),
+    stateScores = document.getElementById('statescores'),
+    stateFinish = document.getElementById('statefinish'),
+    noQuizLoaded = document.getElementById('noquizloaded');
 
 function kick(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
@@ -41,6 +60,8 @@ loadQuizButton.addEventListener('click', () => {
     input.type = 'file';
     input.onchange = _ => {
 
+        let r = gameState.quizName === null ? true : confirm(`'${gameState.quizName}' is already loaded, are you sure you want to override it?`);
+        if (r) {
             let file = Array.from(input.files)[0];
 
             let formData = new FormData();
@@ -50,7 +71,8 @@ loadQuizButton.addEventListener('click', () => {
                 method: 'POST',
                 body: formData
             });
-        };
+        }
+    };
     input.click();
 });
 
@@ -118,19 +140,134 @@ function updateUI() {
         return;
     }
 
+    if (gameState.scene === 'pregame') {
+        statePregame.hidden = false;
+        stateGameAnswer.hidden = true;
+        stateScores.hidden = true;
+        stateFinish.hidden = true;
+
+        if (gameState.quizName === null) {
+            noQuizLoaded.hidden = false;
+        } else {
+            noQuizLoaded.hidden = true;
+        }
+    } else if (gameState.scene === 'game' || gameState.scene === 'answer') {
+        statePregame.hidden = true;
+        stateGameAnswer.hidden = false;
+        stateScores.hidden = true;
+        stateFinish.hidden = true;
+    } else if (gameState.scene === 'scores') {
+        statePregame.hidden = true;
+        stateGameAnswer.hidden = true;
+        stateScores.hidden = false;
+        stateFinish.hidden = true;
+    } else if (gameState.scene === 'finish') {
+        statePregame.hidden = true;
+        stateGameAnswer.hidden = true;
+        stateScores.hidden = true;
+        stateFinish.hidden = false;
+    }
+
+    // Update button states
+    if ((gameState.quizName === null || gameState.teams.length < 2) && gameState.scene === 'pregame') {
+        progressState.disabled = true;
+    } else {
+        progressState.disabled = false;
+    }
+    
+    if (gameState.showImage) {
+        toggleImage.innerHTML = 'Hide image';
+    } else {
+        toggleImage.innerHTML = 'Show image';
+    }
+
+    if (gameState.scene !== 'game' && gameState.scene !== 'answer') {
+        toggleImage.disabled = true;
+    } else {
+        toggleImage.disabled = false;
+    }
+
+    if (gameState.toggleAllocations) {
+        toggleAllocations.innerHTML = 'Hide allocations';
+    } else {
+        toggleAllocations.innerHTML = 'Show allocations';
+    }
+
+    if (gameState.scene !== 'answer') {
+        toggleAllocations.disabled = true;
+    } else {
+        toggleAllocations.disabled = false;
+    }
+
+    let inumTeams = gameState.teams.length;
+    numteams.innerHTML = inumTeams;
     let inumPlayers = gameState.teams.reduce((p, t) => p + t.members.length, 0);
+    let inumPlayersReady = gameState.teams.reduce((p, t) => p.concat(t.members), []).reduce((p, tm) => p + (tm.ready ? 1 : 0), 0);
+    let numTeamsLockedIn = gameState.teams.reduce((p ,t) => p + (t.lockedIn ? 1 : 0), 0);
+
+    percentReady.innerHTML = inumPlayersReady;
+    if (gameState.scene === 'answer') {
+        lockedInPercent.innerHTML = `Answer: ${gameState.activeQuestion.answer.toUpperCase()}`;
+    } else {
+        lockedInPercent.innerHTML = `${numTeamsLockedIn} / ${gameState.teams.length} locked in`;
+    }
+
+    // Update question info
+    if (gameState.quizName) {
+        quizname.innerHTML = gameState.quizName;
+    } else {
+        quizname.innerHTML = 'Quiz';
+    }
+
+    if (gameState.activeQuestion) {
+        let aAllocated = 0, bAllocated = 0, cAllocated = 0, dAllocated = 0, totalMoneyToSpend = 0;
+        for (let team of gameState.teams) {
+            aAllocated += team.optionsAllocated.a;
+            bAllocated += team.optionsAllocated.b;
+            cAllocated += team.optionsAllocated.c;
+            dAllocated += team.optionsAllocated.d;
+            totalMoneyToSpend += team.remainingMoney;
+        }
+
+        questionname.innerHTML = `${gameState.activeQuestionIndex + 1}: ${gameState.activeQuestion.text}`;
+        optiona.innerHTML = `A: ${gameState.activeQuestion.options.a}`;
+        optionb.innerHTML = `B: ${gameState.activeQuestion.options.b}`;
+        optionc.innerHTML = `C: ${gameState.activeQuestion.options.c}`;
+        optiond.innerHTML = `D: ${gameState.activeQuestion.options.d}`;
+        optionATotalAllocationThisRound.innerHTML = `£${numberWithCommas(aAllocated)} (${Math.round(aAllocated / totalMoneyToSpend * 100)}%)`;
+        optionBTotalAllocationThisRound.innerHTML = `£${numberWithCommas(bAllocated)} (${Math.round(bAllocated / totalMoneyToSpend * 100)}%)`;
+        optionCTotalAllocationThisRound.innerHTML = `£${numberWithCommas(cAllocated)} (${Math.round(cAllocated / totalMoneyToSpend * 100)}%)`;
+        optionDTotalAllocationThisRound.innerHTML = `£${numberWithCommas(dAllocated)} (${Math.round(dAllocated / totalMoneyToSpend * 100)}%)`;
+    } else {
+        questionname.innerHTML = 'Waiting for next question...';
+        optiona.innerHTML = '';
+        optionb.innerHTML = '';
+        optionc.innerHTML = '';
+        optiond.innerHTML = '';
+        optionATotalAllocationThisRound.innerHTML = '';
+        optionBTotalAllocationThisRound.innerHTML = '';
+        optionCTotalAllocationThisRound.innerHTML = '';
+        optionDTotalAllocationThisRound.innerHTML = '';
+    }
 
     // Number players
     numPlayers.innerHTML = inumPlayers;
 
     // Players table
-    let playersTableHTML = '<tr><th>Name</th><th>Id</th><th>Team</th><th>Solo</th><th>Control</th></tr>';
+    let playersTableHTML = '<tr><th>Name</th><th>Team</th><th>Solo</th><th>Ready</th><th>Control</th></tr>';
 
-    for (let team of gameState.teams) {
+    for (let team of gameState.teams.sort((a,b) => a.teamName.localeCompare(b.teamName))) {
         for (let tm of team.members) {
-            playersTableHTML += `<tr><td>${tm.name}</td><td>${tm.id}</td><td>${team.teamName}</td><td>${team.solo ? '✅' : ''}</td><td><button class="kick" data-id="${tm.id}">Kick</button></td>`
+            playersTableHTML += `<tr><td>${tm.name}</td><td>${team.teamName}</td><td>${team.solo ? '<span class="bi bi-check-circle"/>' : ''}</td><td>${tm.ready ? '<span class="bi bi-check-circle"/>' : ''}</td><td><button class="kick btn btn-danger w-100 btn-sm" data-id="${tm.id}" data-name="${tm.name}">Kick</button></td>`
         }
     }
+
+    let numTeamsWithActiveHints = gameState.teams.reduce((p, t) => p + (t.activeHint ? 1 : 0), 0);
+    let leaderboardHTML = `<tr><th>Name</th><th>Money Remaining</th><th>Locked In (${numTeamsLockedIn})</th><th>Hints Remaining</th><th>Active Hints (${numTeamsWithActiveHints})</th></tr>`;
+    for (let team of gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney)) {
+        leaderboardHTML += `<tr><td>${team.teamName}</td><td>£${numberWithCommas(team.remainingMoney)}</td><td>${team.lockedIn ? '<span class="bi bi-check-circle"/>' : ''}</td><td>${team.remainingHints}</td><td>${team.activeHint ? JSON.stringify(team.activeHint.sort((a,b) => a.localeCompare(b))) : ''}</td></tr>`;
+    }
+    leaderboard.innerHTML = leaderboardHTML;
 
     playersTable.innerHTML = playersTableHTML;
 
@@ -138,7 +275,15 @@ function updateUI() {
     for (let b of kickButtons) {
         b.addEventListener('click', () => {
             let playerId = b.getAttribute('data-id');
-            kick(playerId);
+            let playerName = b.getAttribute('data-name');
+            let r = confirm(`Are you sure you want to kick '${playerName}'?`);
+            if (r) {
+                kick(playerId);
+            }
         });
     }
 };
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
