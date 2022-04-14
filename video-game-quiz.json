@@ -1,42 +1,281 @@
 {
-    "name": "Video Game Quiz",
-    "startingMoney": 100000,
-    "allowHints": true,
-    "numHints": 3,
-    "questions": [
-        {
-            "text": "What is the surname of the current president of Nintendo America?",
-            "options": {
-                "a": "Mario",
-                "b": "Bowser",
-                "c": "Toad",
-                "d": "Yoshi"
-            },
-            "answer": "b",
-            "preImageUrl": "https://mario.wiki.gallery/images/thumb/2/21/DougBowser.jpg/1200px-DougBowser.jpg",
-            "postImageUrl": "https://gbatemp.net/attachments/doug-bowser-original-jpg.258904/"
-        },
-        {
-            "text": "What prompted the first 'Easter Egg' in a video game?",
-            "options": {
-                "a": "An accidental bug",
-                "b": "A developer's birthday",
-                "c": "A dispute over credits",
-                "d": "A crazed fan"
-            },
-            "answer": "c",
-            "postImageUrl": "https://csanyk.com/rants/wp-content/uploads/2015/09/tumblr_lyq4oaXr2M1qzmhdko1_5001.gif"
-        },
-        {
-            "text": "Which of these was accidentally included in 'The Last of Us'?",
-            "options": {
-                "a": "The number to a real-world phone sex hotline",
-                "b": "A Nazi flag",
-                "c": "Candid audio of the developers getting drunk",
-                "d": "A giraffe with 8 legs"
-            },
-            "answer": "a",
-            "postImageUrl": "https://cdn.vox-cdn.com/assets/2855671/last_of_us.jpg"
-        }
-    ]
+  "name": "Video Game Quiz",
+  "startingMoney": 100000,
+  "allowHints": false,
+  "numHints": 3,
+  "questions": [
+    {
+      "text": "What is the surname of the current president of Nintendo America?",
+      "additionalText": "This is an example of 'nominative determinism', the hypothesis that people tend to gravitate towards areas of work that fit their names.",
+      "options": {
+        "a": "Mario",
+        "b": "Bowser",
+        "c": "Toad",
+        "d": "Yoshi"
+      },
+      "answer": "b",
+      "preImageUrl": "https://mario.wiki.gallery/images/thumb/2/21/DougBowser.jpg/1200px-DougBowser.jpg",
+      "postImageUrl": "https://gbatemp.net/attachments/doug-bowser-original-jpg.258904/"
+    },
+    {
+      "text": "What prompted the first 'Easter Egg' in a video game?",
+      "additionalText": "This was in the 1980 video game 'Adventure' for the Atari 2600. Atari at the time disallowed including names in game credits to prevent them being poached by other companies. The sole programmer, Warren Robinett, included a hidden credits screen anyway, and left. Atari only realised when a 14 year old fan wrote in, having found it.",
+      "options": {
+        "a": "An accidental bug",
+        "b": "A developer's birthday",
+        "c": "A dispute over credits",
+        "d": "A crazed fan"
+      },
+      "answer": "c",
+      "preImageUrl": "",
+      "postImageUrl": "https://csanyk.com/rants/wp-content/uploads/2015/09/tumblr_lyq4oaXr2M1qzmhdko1_5001.gif"
+    },
+    {
+      "text": "Which of these was accidentally included in 'The Last of Us'?",
+      "additionalText": "Neil Druckmann explained that the slipup was \"an honest mistake\" by one of the game's artists, saying \"What happened was, they put some phone numbers in the game and then they thought they could just change the area code to 555, then it's invalid because it's what they do in movies, but I guess that doesn't work when you have a 1-800 in front of it\".",
+      "options": {
+        "a": "The number to a real-world phone sex hotline",
+        "b": "The full source code of 'Crash Bandicoot'",
+        "c": "Candid audio of the developers getting drunk",
+        "d": "A giraffe with 8 legs"
+      },
+      "answer": "a",
+      "preImageUrl": "",
+      "postImageUrl": "https://cdn.vox-cdn.com/assets/2855671/last_of_us.jpg"
+    },
+    {
+      "text": "Which is these is not an official Guinness World Record?",
+      "additionalText": "The first videogame to feature juggling was Mortal Kombat. The longest title for a fighting game is 'Dexterion, The Ultimate Annihilator of the evil dominion: Under Cyborg Demon's Armageddon Battle - Fate of the cryptic world in cybernetic trooper's hands'.\n\nOther weird records include 'largest videogame controller', 'first dental hygiene videogame' and 'hottest videogame', which was an interactive performance piece featuring a modified 'Dance Dance Revolution' machine where players were shot with flamethrowers if they performed poorly.",
+      "options": {
+        "a": "Videogame with most species of butterfly",
+        "b": "Longest title for a fighting videogame",
+        "c": "Oldest videogames YouTuber",
+        "d": "First videogame to feature juggling"
+      },
+      "answer": "a",
+      "preImageUrl": "https://store.guinnessworldrecords.com/images/fullsize/GWR00019.jpg",
+      "postImageUrl": "https://s.hdnux.com/photos/12/21/34/2692869/6/1200x0.jpg"
+    },
+    {
+      "text": "In 2020, which American politician hosted a 'get out the vote' event on Twitch, and ended up streaming the game 'Among Us' to more than 430,000 live spectators?",
+      "additionalText": "It was the third-largest audience the site had ever attracted to a single stream. After the event, sitting congresswoman Ilhan Omar, who joined AOC during the stream, tweeted the word 'poggers'.",
+      "options": {
+        "a": "Kamala Harris",
+        "b": "Elizabeth Warren",
+        "c": "Alexandria Ocasio-Cortez",
+        "d": "Pete Buttigieg"
+      },
+      "answer": "c",
+      "preImageUrl": "",
+      "postImageUrl": "https://static-cdn.jtvnw.net/cf_vods/d2nvs31859zcd8/7fc89e5d429d394879f6_aoc_39559064893_1603240391//thumb/thumb0-1280x720.jpg"
+    },
+    {
+      "text": "'RuneScape' developer Jagex researched the most used term in their in-game chat. Which of these is it?",
+      "additionalText": "In 2013, this was being said an average of 6,048,000 times every week.",
+      "options": {
+        "a": "LOL",
+        "b": "WTF",
+        "c": "WUBU2",
+        "d": "GG"
+      },
+      "answer": "a",
+      "preImageUrl": "",
+      "postImageUrl": "https://preview.redd.it/iqnjcg09wqh71.png?width=640&crop=smart&auto=webp&s=f220a194e28225d5b9a713ee20f394eb81ac554f"
+    },
+    {
+      "text": "Which movie did the environment artists on 'Silent Hill' use for inspiration when designing an American school interior?",
+      "additionalText": "This is apparent as many of the movie's posters were copied directly into the game. It is speculated that they did this because they were unable to physically visit these places to take reference photos.",
+      "options": {
+        "a": "The Simpsons Movie",
+        "b": "Kindergarten Cop",
+        "c": "High School Musical",
+        "d": "Heathers"
+      },
+      "answer": "b",
+      "preImageUrl": "https://static.wikia.nocookie.net/silent/images/d/d8/Midwich.jpg/",
+      "postImageUrl": "https://sites.google.com/site/shresortbackup/_/rsrc/1304372849089/home/DOGKILLCAT.png"
+    },
+    {
+      "text": "What was the original name for the 'Xbox'?",
+      "additionalText": "In 1999, Microsoft's Ed Fries met with the DirectX team to discuss a new idea called the 'DirectX Box', a PC with a hidden Windows OS that would be marketed like a console machine. The first mockup was a silver X with a PC board inside. As the project moved through development, Windows was dropped, the console look changed, eventually being renamed.",
+      "options": {
+        "a": "XPlay",
+        "b": "WinCon",
+        "c": "DirectX Box",
+        "d": "The Halo"
+      },
+      "answer": "c",
+      "preImageUrl": "",
+      "postImageUrl": "https://i.guim.co.uk/img/media/40c5d572d3e952ce7e694973c0009041c85afdd5/0_0_2048_1693/master/2048.jpg?width=445&quality=45&auto=format&fit=max&dpr=2&s=bceaea3c788a276e2ddf506307b5f368"
+    },
+    {
+      "text": "What was the first game to be played in space?",
+      "additionalText": "In 1993, 'Tetris' for Game Boy traveled aboard a Soyuz TM-17 rocket to the MIR Space Station, where it was played 'in rare minutes of leisure' by Russian cosmonaut Aleksandr A. Serebrov. The game was later sold at an auction for $1,220.",
+      "options": {
+        "a": "Space Invaders",
+        "b": "Tetris",
+        "c": "E.T. the Extra-Terrestrial",
+        "d": "Asteroids"
+      },
+      "answer": "b",
+      "preImageUrl": "",
+      "postImageUrl": "https://i.pinimg.com/originals/a0/e0/eb/a0e0eb9abbc6571637452c8d6357d144.png"
+    },
+    {
+      "text": "In 2013, what caused a Super Mario 64 speedrunner to experience a glitch which teleported Mario higher up in the 'Tick Tock Clock' stage, saving time?",
+      "additionalText": "First predicted in 1950 by scifi writer Isaac Asimov, this 'single event upset' is a phenomenon whereby beams of radiation from space pass through a computer's random-access-memory, flipping bits - in this case, altering Mario's position. Similar events have caused planes to fall out of the sky and elections to give thousands of impossible additional votes to candidates.",
+      "options": {
+        "a": "Their console was hit by cosmic radiation",
+        "b": "Their dog kicked the console",
+        "c": "They were cheating",
+        "d": "Their cartridge had been inserted backwards"
+      },
+      "answer": "a",
+      "preImageUrl": "https://i.ytimg.com/vi/X5cwuYFUUAY/maxresdefault.jpg",
+      "postImageUrl": "https://i.imgur.com/GXGwggw.png"
+    },
+    {
+      "text": "Which of these shocking things happens in the 2006 video game 'Sonic The Hedgehog'?",
+      "additionalText": "Sonic's age was listed as 15, and Elise's as 17",
+      "options": {
+        "a": "Knuckled is arrested for drunk driving",
+        "b": "Sonic is kissed by a human girl",
+        "c": "Tails has one of his tails cut off",
+        "d": "Dr. Robotnik forms a rock band"
+      },
+      "answer": "b",
+      "preImageUrl": "https://i.ytimg.com/vi/NzlV1XPXN9g/maxresdefault.jpg",
+      "postImageUrl": "https://imgix.kotaku.com.au/content/uploads/sites/3/2015/09/18/1455156035972501831.png?ar=16%3A9&auto=format&fit=crop&q=65&w=1280"
+    },
+    {
+      "text": "In the 2008 game 'Rock Band 2', what did a modifier in the settings menu called 'Awesomeness Detection' with the description \"Lets Harmonix know that you are awesome!\" actually do?",
+      "additionalText": "Harmonix claimed that high-level players should always play with Awesomeness Detection on, but they did not say what it did, leading to many rumours. This was eventually confessed in a Harmonix podcast by one of the game's designers.",
+      "options": {
+        "a": "Auto-tune the player's voice",
+        "b": "Absolutely nothing",
+        "c": "Double the game's difficulty",
+        "d": "Send the developers bug reports"
+      },
+      "answer": "b",
+      "preImageUrl": "https://static.wikia.nocookie.net/gaming-urban-legends/images/e/ea/Awesomeness.jpg",
+      "postImageUrl": ""
+    },
+    {
+      "text": "Why might you coat a game cartridge in denatonium benzoate?",
+      "additionalText": "Because of their small size, the game cards have long been coated with non-toxic bitterants as a safety precaution against accidental consumption by young children.",
+      "options": {
+        "a": "To protect it from airport security gates",
+        "b": "To prevent young children swallowing it",
+        "c": "To make it glow in the dark",
+        "d": "To preserve it in mint condition"
+      },
+      "answer": "b",
+      "preImageUrl": "",
+      "postImageUrl": "https://wgntv.com/wp-content/uploads/sites/5/2017/03/switch.jpg?strip=1"
+    },
+    {
+      "text": "What strange bug was found in 'Scribblenauts', a game about boy who has a magical notebook that summons anything he writes in it, prior to release?",
+      "additionalText": "'Scribblenauts' almost launched with a strange bug, in which a lion would eat itself if bacon was glued to its back. The odd occurrence was found in the late stages of A.I. finalization.",
+      "options": {
+        "a": "French words were censored",
+        "b": "Lions could eat themselves",
+        "c": "Attempting to summon 'God' would spawn a dog",
+        "d": "The player's head would slowly shrink"
+      },
+      "answer": "b",
+      "preImageUrl": "https://cdn.vox-cdn.com/thumbor/52Em_3tYXTaIVgVoqy-xhsP1lGs=/0x0:892x499/1200x800/filters:focal(375x178:517x320)/cdn.vox-cdn.com/uploads/chorus_image/image/61155973/scribblenauts_unlimited.0.1488117274.0.jpg",
+      "postImageUrl": ""
+    },
+    {
+      "text": "Thanks to World War II, what was the Nintendo Entertainment System called in South Korea?",
+      "additionalText": "Hyundai Electronics distributed Nintendo's product in South Korea, after South Korea put a ban on Japanese cultural imports following World War II, which wasn't lifted until 2004.",
+      "options": {
+        "a": "Adult Entertainment System",
+        "b": "Korean Gameplay Unit",
+        "c": "Axis Box",
+        "d": "Hyundai Comboy"
+      },
+      "answer": "d",
+      "preImageUrl": "",
+      "postImageUrl": "https://consolevariations.com/storage/images/variations/consoles/hyundai-comboy/large/hyundai-comboy.jpg"
+    },
+    {
+      "text": "In 'Fallout 3', a handheld nuclear weapon launcher called the 'Fat Man' makes a unique noise when used. Where did the recording come from?",
+      "additionalText": "The Fat Man itself is modelled after an actual nuke launcher called the M-388 Davy Crockett Tactical Nuclear Recoilless Rifle, which was developed in the 1950s.",
+      "options": {
+        "a": "The Liberty bell from Philadelphia",
+        "b": "The lunch bell from the developers' cafeteria",
+        "c": "The chime from Big Ben",
+        "d": "The dial-up noise from America Online"
+      },
+      "answer": "b",
+      "preImageUrl": "https://static.wikia.nocookie.net/fallout/images/7/72/Fat_Manr.jpg/",
+      "postImageUrl": ""
+    },
+    {
+      "text": "Sony Online Entertainment experimented briefly with an in-game command-line function helping players to do what in 'EverQuest II'?",
+      "additionalText": "Sony planned to integrate the pizza function more tightly into the game, so players could charge pizza to their monthly game subscription bill.\n\n\"The goal for the future is to eventually let people do more things like this,\" spokesman Chris Kramer said. \"They could type /harry potter and get the new Harry Potter book delivered or /star wars and get the new Star Wars DVD.\"",
+      "options": {
+        "a": "Order food from Pizza Hut",
+        "b": "Email the mayor of your city",
+        "c": "Phone a suicide hotline",
+        "d": "Translate their text to "
+      },
+      "answer": "a",
+      "preImageUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/201230/ss_df7fcdce4379a75d8239f69ea127586aba5bc755.1920x1080.jpg?t=1623777611",
+      "postImageUrl": "https://www.giantbomb.com/a/uploads/scale_medium/0/1992/2405963-everquest_pizza_hut_promotion.jpg"
+    },
+    {
+      "text": "In 1990, which of these would you never find in the box, after loaning a Nintendo game from Blockbuster Video?",
+      "additionalText": "20 years prior to their bankruptcy, and following a sharp rise in scale for video game rental, Blockbuster employees had taken to photocopying original game manuals to replace those lost or not returned to a retailer after it was rented. As part of a larger lawsuit, Nintendo won a claim against this practice on the grounds of breach of copyright.\n\nIn compliance with the ruling, Blockbuster produced original short instructions, usually in the form of a small booklet, card, or label stuck on the back of the rental box, that explained the game's basic premise and controls.",
+      "options": {
+        "a": "The original instruction booklet",
+        "b": "The game itself",
+        "c": "Adverts for other Nintendo games",
+        "d": "The cardboard insert"
+      },
+      "answer": "a",
+      "preImageUrl": "https://i.insider.com/5dde9c9bfd9db267664bf9c1?width=750&format=jpeg&auto=webp",
+      "postImageUrl": "https://i.kinja-img.com/gawker-media/image/upload/c_fill,f_auto,fl_progressive,g_center,h_675,pg_1,q_80,w_1200/ontbqyy0hek0sqppt1ag.jpg"
+    },
+    {
+      "text": "Spore was the first notable game to be 'review bombed' upon release. What was the reason?",
+      "additionalText": "Spore was review bombed on Amazon in 2008 after publisher Electronic Arts incorporated a DRM system that limited buyers' ability to install the game more than three times. This system was meant to prevent piracy, but ultimately led to a coordinated backlash with buyers feeling like they were \"renting a broken game.\"",
+      "options": {
+        "a": "Christian groups were angry at religious allegories",
+        "b": "Buyers could only install the game three times",
+        "c": "Peter Molyneux disparaged a games journalist",
+        "d": "The game was publicly delayed five times"
+      },
+      "answer": "b",
+      "preImageUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/17390/0000006439.1920x1080.jpg?t=1642702281",
+      "postImageUrl": ""
+    },
+    {
+      "text": "Which of these intellectual properties have not had an official collaboration with 'Fortnite'?",
+      "additionalText": "Which is strange, because aside from Marvel and DC, Fortnite has a diverse assortment of licensed tie-ins including the Segway company, Monopoly, the band Radiohead, the movies Tenet and It: Chapter Two, Ferrari, UEFA Euro 2020 and artist Jean-Michel Basquiat.",
+      "options": {
+        "a": "Stranger Things",
+        "b": "Ghostbusters",
+        "c": "The Walking Dead",
+        "d": "Game Of Thrones"
+      },
+      "answer": "d",
+      "preImageUrl": "",
+      "postImageUrl": "https://static.wikia.nocookie.net/fortnite/images/1/19/Kane_and_Reus_-_Promo_-_Fortnite.jpg/"
+    },
+    {
+      "text": "Which exclusion from the New York City skyline in Deus Ex prompted outrage from fans in 2000?",
+      "additionalText": "In Deus Ex, players can run around Liberty Island and check out the view, but the developers had to crop the texture due to engine limitations. Speaking on the matter, Designer Harvey Smith said:\n\n\"When people complained, we just explained that it had been destroyed by terrorist attacks. We start the game with the Liberty Island statue having been destroyed by terrorists a few years before. We just said that the towers had been destroyed too. And this was way before 9-11. Years. That's kind of freaky.\"",
+      "options": {
+        "a": "The World Trade Center Towers",
+        "b": "The Statue Of Liberty",
+        "c": "The Empire State Building",
+        "d": "The One Worldwide Plaza"
+      },
+      "answer": "a",
+      "preImageUrl": "",
+      "postImageUrl": "https://gotgame.com/wp-content/uploads/2015/09/deus-e.jpg"
+    }
+  ]
 }

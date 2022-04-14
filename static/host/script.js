@@ -45,7 +45,9 @@ let rawGameState = document.getElementById('rawgamestate'),
     statePregame = document.getElementById('statepregame'),
     stateScores = document.getElementById('statescores'),
     stateFinish = document.getElementById('statefinish'),
-    noQuizLoaded = document.getElementById('noquizloaded');
+    noQuizLoaded = document.getElementById('noquizloaded'),
+    winnersEl = document.getElementById('winners'),
+    knockoutsEl = document.getElementById('knockouts');
 
 function kick(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
@@ -161,15 +163,27 @@ function updateUI() {
         stateGameAnswer.hidden = true;
         stateScores.hidden = false;
         stateFinish.hidden = true;
+
+        knockoutsEl.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} lost this round. `;
+        if (gameState.teamsKnockedOutThisRound && gameState.teamsKnockedOutThisRound.length > 0) {
+            knockoutsEl.innerHTML += `Knocked out this round: ${JSON.stringify(gameState.teamsKnockedOutThisRound)}`;
+        }
+
     } else if (gameState.scene === 'finish') {
         statePregame.hidden = true;
         stateGameAnswer.hidden = true;
         stateScores.hidden = true;
         stateFinish.hidden = false;
+
+        if (gameState.winners && gameState.winners.length > 1) {
+            winnersEl.innerHTML = `There were multiple winners: ${JSON.stringify(gameState.winners)}`;
+        } else if (gameState.winners && gameState.winners.length === 1) {
+            winnersEl.innerHTML = `Winner: ${JSON.stringify(gameState.winners)}`;
+        }
     }
 
     // Update button states
-    if ((gameState.quizName === null || gameState.teams.length < 2) && gameState.scene === 'pregame') {
+    if (((gameState.quizName === null || gameState.teams.length < 2) && gameState.scene === 'pregame') || gameState.scene === 'finish') {
         progressState.disabled = true;
     } else {
         progressState.disabled = false;

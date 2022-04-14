@@ -23,11 +23,12 @@ server.post('/upload-quiz', async (req, res) => {
                 message: 'No file uploaded'
             });
         } else {
-            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+            // Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             let quiz = req.files.quiz;
 
             if (quiz.data) {
-                let quizObj = JSON.parse(quiz.data.toString('ascii'));
+                // console.log(quiz.data.toString('ascii'));
+                let quizObj = JSON.parse(quiz.data.toString());
 
                 if (quizObj.name && quizObj.questions && quizObj.questions.length > 0) {
                     quizName = quizObj.name;
@@ -57,6 +58,8 @@ server.post('/upload-quiz', async (req, res) => {
             }
         }
     } catch (err) {
+        console.log(err);
+
         res.status(500).send(err);
     }
 });

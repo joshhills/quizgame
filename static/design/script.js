@@ -77,24 +77,29 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                                     <!-- Text -->
                                     <div class="mb-3">
                                         <label class="form-label">Question Text</label>
-                                        <textarea class="form-control" rows="3" placeholder="Write a question here" id="questiontext-${j}">${content.questions[i].text}</textarea>
+                                        <textarea class="form-control" rows="3" placeholder="Write a question here" id="questiontext-${j}">${content.questions[i].text ? content.questions[i].text : ''}</textarea>
+                                    </div>
+                                    <!-- Host Additional Text -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Additional Info</label>
+                                        <textarea class="form-control" rows="3" placeholder="Write some optional, additional info here for the host" id="questionadditionaltext-${j}">${content.questions[i].additionalText ? content.questions[i].additionalText : ''}</textarea>
                                     </div>
                                     <!-- Options -->
                                     <div class="mb-3">
                                         <label class="form-label">Option A</label>
-                                        <input type="text" class="form-control" placeholder="A Text" id="questionoptiona-${j}" value="${content.questions[i].options.a}" />
+                                        <input type="text" class="form-control" placeholder="A Text" id="questionoptiona-${j}" value="${content.questions[i].options.a ? content.questions[i].options.a : ''}" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Option B</label>
-                                        <input type="text" class="form-control" placeholder="B Text" id="questionoptionb-${j}" value="${content.questions[i].options.b}" />
+                                        <input type="text" class="form-control" placeholder="B Text" id="questionoptionb-${j}" value="${content.questions[i].options.b ? content.questions[i].options.b : ''}" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Option C</label>
-                                        <input type="text" class="form-control" placeholder="C Text" id="questionoptionc-${j}" value="${content.questions[i].options.c}" />
+                                        <input type="text" class="form-control" placeholder="C Text" id="questionoptionc-${j}" value="${content.questions[i].options.c ? content.questions[i].options.c : ''}" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Option D</label>
-                                        <input type="text" class="form-control" placeholder="D Text" id="questionoptiond-${j}" value="${content.questions[i].options.d}" />
+                                        <input type="text" class="form-control" placeholder="D Text" id="questionoptiond-${j}" value="${content.questions[i].options.d ? content.questions[i].options.d : ''}" />
                                     </div>
                                     <!-- Answer -->
                                     <div class="mb-3">
@@ -236,6 +241,11 @@ document.getElementById('addquestion').addEventListener('click', () => {
                     <div class="mb-3">
                         <label class="form-label">Question Text</label>
                         <textarea class="form-control" rows="3" placeholder="Write a question here" id="questiontext-${i}"></textarea>
+                    </div>
+                    <!-- Host Additional Text -->
+                    <div class="mb-3">
+                        <label class="form-label">Additional Info</label>
+                        <textarea class="form-control" rows="3" placeholder="Write some optional, additional info here for the host" id="questionadditionaltext-${i}"></textarea>
                     </div>
                     <!-- Options -->
                     <div class="mb-3">
@@ -507,20 +517,25 @@ function isBlank(str) {
     return (!str || /^\s*$/.test(str));
 }
 
+function cleanString(str) {
+    return str;
+}
+
 function parseQuestions() {
     let questions = [];
 
     for (let j = 0; j < numQuestions; j++) {
         
         const i = Array.from(accordion.children)[j].dataset.uid;
-
+        
         questions.push({
-            "text": document.getElementById(`questiontext-${i}`).value,
+            "text": cleanString(document.getElementById(`questiontext-${i}`).value),
+            "additionalText": cleanString(document.getElementById(`questionadditionaltext-${i}`).value),
             "options": {
-                "a": document.getElementById(`questionoptiona-${i}`).value,
-                "b": document.getElementById(`questionoptionb-${i}`).value,
-                "c": document.getElementById(`questionoptionc-${i}`).value,
-                "d": document.getElementById(`questionoptiond-${i}`).value
+                "a": cleanString(document.getElementById(`questionoptiona-${i}`).value),
+                "b": cleanString(document.getElementById(`questionoptionb-${i}`).value),
+                "c": cleanString(document.getElementById(`questionoptionc-${i}`).value),
+                "d": cleanString(document.getElementById(`questionoptiond-${i}`).value)
             },
             "answer": document.getElementById(`questionanswer-${i}`).value,
             "preImageUrl": document.getElementById(`questionpreimage-${i}`).value,
