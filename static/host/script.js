@@ -47,7 +47,8 @@ let rawGameState = document.getElementById('rawgamestate'),
     stateFinish = document.getElementById('statefinish'),
     noQuizLoaded = document.getElementById('noquizloaded'),
     winnersEl = document.getElementById('winners'),
-    knockoutsEl = document.getElementById('knockouts');
+    knockoutsEl = document.getElementById('knockouts'),
+    additionalInfo = document.getElementById('additionalinfo');
 
 function kick(theId) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.KICK, { kick: theId }, id);
@@ -220,8 +221,11 @@ function updateUI() {
     let numTeamsLockedIn = gameState.teams.reduce((p ,t) => p + (t.lockedIn ? 1 : 0), 0);
 
     percentReady.innerHTML = inumPlayersReady;
+    additionalInfo.hidden = true;
     if (gameState.scene === 'answer') {
         lockedInPercent.innerHTML = `Answer: ${gameState.activeQuestion.answer.toUpperCase()}`;
+        additionalInfo.hidden = false;
+        additionalInfo.innerHTML = gameState.activeQuestion.additionalText ? gameState.activeQuestion.additionalText : '';
     } else {
         lockedInPercent.innerHTML = `${numTeamsLockedIn} / ${gameState.teams.length} locked in`;
     }

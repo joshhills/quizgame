@@ -142,7 +142,8 @@ function broadcastGameState() {
             options: activeQuestion.options,
             // Don't send answer to clients if they're mid-guessing!
             answer: state === GAME_STATE.GAME ? null : activeQuestion.answer,
-            imageUrl: state === GAME_STATE.GAME ? activeQuestion.preImageUrl : activeQuestion.postImageUrl
+            imageUrl: state === GAME_STATE.GAME ? activeQuestion.preImageUrl : activeQuestion.postImageUrl,
+            additionalText: activeQuestion.additionalText ? activeQuestion.additionalText : '' 
         };
     }
 
