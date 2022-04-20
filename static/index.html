@@ -140,7 +140,7 @@
                 cursor: pointer;
             }
 
-            button:active {
+            button:active:not(:disabled) {
                 background-color: rgba(255, 255, 255, 0.05);
                 top: -4px;
             }
@@ -228,7 +228,7 @@
                 width: 100%;
             }
 
-            .teambutton:active, .leavebutton:active {
+            .teambutton:active:not(:disabled), .leavebutton:active:not(:disabled) {
                 top: 1px;
             }
 
@@ -294,10 +294,26 @@
             .moneycontrol {
                 margin-top: 1.5rem;
             }
+            #timer {
+                width: 100%;
+                position: absolute;
+                height: 4px;
+                top: 0;
+                left: 0;
+            }
+            #timerbar {
+                width: 100%;
+                height: 100%;
+                background-color: #009879;
+                transition: width 0.1s;
+            }
         </style>
     </head>
     <body>
         <div id="containerino" class="container">
+            <div id="timer">
+                <div id="timerbar" hidden></div>
+            </div>
             <div id="errormessage"></div>
             <div id="notification"></div>
             <div id="pregame">
@@ -321,13 +337,13 @@
                     <div class="ig">
                         <h4 id="enterteamnameprompt">enter a team name</h4>
                         <input type="text" placeholder="Team" maxlength="16" id="team" />
-                        <button id="createteam">Create Team</button>
+                        <button id="createteam" disabled>Create Team</button>
                     </div>
                     <div class="ig">
                         <p id="ortext">or</p>
                     </div>
                     <div class="ig">
-                        <button id="joinsolo">Play Solo</button>
+                        <button id="joinsolo" disabled>Play Solo</button>
                     </div>
                 </div>
                 <h3 id="teamstitle">Teams (<span id="teamcount"></span>)</h3>

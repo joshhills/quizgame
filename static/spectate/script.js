@@ -132,6 +132,8 @@ function updateUI() {
 
         if (gameState.activeQuestion && gameState.activeQuestion.imageUrl) {
             activeImage.src = gameState.activeQuestion.imageUrl;
+        } else {
+            activeImage.src = '';
         }
 
         if (gameState.showImage) {
@@ -249,7 +251,10 @@ function updateUI() {
             scoresContainer.hidden = false;
             gameContainer.className = 'game scores';
             questionnumber.innerHTML = 'Scores';
-            question.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} was lost. ${gameState.teamsKnockedOutThisRound.length} team${gameState.teamsKnockedOutThisRound.length !== 1 ? 's were' : ' was'} eliminated.`;
+            question.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} was lost. £${numberWithCommas(gameState.totalGainedThisRound)} was gained.`;
+            if (gameState.teamsKnockedOutThisRound.length > 0) {
+                question.innerHTML += ` ${gameState.teamsKnockedOutThisRound.length} team${gameState.teamsKnockedOutThisRound.length !== 1 ? 's' : ''} lost it all.`;
+            }
             options.className = 'options hidden';
 
             let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';

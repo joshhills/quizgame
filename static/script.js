@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE } from './shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE, interpolateColour } from './shared.js';
 
 // Connect to server
 
@@ -106,11 +106,50 @@ var pregameContainer = document.getElementById('pregame'),
     optionABox = document.getElementById('optionabox'),
     optionBBox = document.getElementById('optionbbox'),
     optionCBox = document.getElementById('optioncbox'),
-    optionDBox = document.getElementById('optiondbox');
+    optionDBox = document.getElementById('optiondbox'),
+    timerBar = document.getElementById('timerbar');
+
+function updateJoinButtons() {
+    const playerName = document.getElementById('name').value;
+    const teamName = document.getElementById('team').value;
+
+    const playerNameValid = !(!playerName || /^\s*$/.test(playerName));
+    const teamNameValid = !(!teamName || /^\s*$/.test(teamName));
+
+    let didMatchAny = false;
+    for (const team of gameState.teams) {
+        if (teamName === team.teamName) {
+            didMatchAny = true;
+        }
+    }
+    if (didMatchAny) {
+        createTeamButton.innerHTML = 'Join existing team';
+    } else {
+        createTeamButton.innerHTML = 'Create team';
+    }
+
+    if (playerNameValid) {
+        joinSoloButton.disabled = false;
+    } else {
+        joinSoloButton.disabled = true;
+    }
+
+    if (playerName && teamNameValid) {
+        createTeamButton.disabled = false;
+    } else {
+        createTeamButton.disabled = true;
+    }
+
+    for (const el of document.getElementsByClassName('teambutton')) {
+        el.disabled = !playerNameValid;
+    }
+}
 
 // Register event listeners
 joinSoloButton.addEventListener('click', () => { joinGameSolo(); });
+document.getElementById('name').addEventListener('input', updateJoinButtons);
 createTeamButton.addEventListener('click', () => createTeam());
+document.getElementById('team').addEventListener('input', updateJoinButtons);
 pregameStatusWidgetLeave.addEventListener('click', () => leaveTeam());
 pregameStatusWidgetReadyButton.addEventListener('click', () => toggleReady());
 
@@ -173,6 +212,8 @@ var id = null,
     currentErrorMessageTimeout = null,
     currentNotification = null,
     showPreImage = false;
+
+let timerBarInterval = -1;
 
 /* === Begin Handler functions === */
 
@@ -367,6 +408,16 @@ function sendReaction(reaction) {
 
 /* === End Sender Functions === */
 
+function getTimerBarWidth() {
+    const now = Date.now();
+    const secondsElapsed = (now - gameState.activeQuestion.timeBegan) / 1000;
+    let percentOfLimit = 100 - ((secondsElapsed / gameState.secondsPerQuestion) * 100);
+    if (percentOfLimit < 0) {
+        percentOfLimit = 0;
+    }
+    return percentOfLimit;
+}
+
 function updateUI() {
 
     if (gameState.init) {
@@ -388,6 +439,9 @@ function updateUI() {
         answer.hidden = true;
         scores.hidden = true;
         finish.hidden = true;
+        timerBar.hidden = true;
+        clearInterval(timerBarInterval);
+        timerBarInterval = -1;
         
         if (gameState.quizName) {
             quizName.innerHTML = gameState.quizName;
@@ -472,6 +526,8 @@ function updateUI() {
             }
         }
 
+        updateJoinButtons();
+
         for (let element of document.getElementsByClassName('leavebutton')) {
             element.addEventListener('click', () => leaveTeam());
         }
@@ -516,6 +572,15 @@ function updateUI() {
         answer.hidden = true;
         scores.hidden = true;
         log.hidden = chatMessage.hidden = sendChatMessage.hidden = teamMembers.hidden = solo || _team.members.length === 1;
+        timerBar.hidden = false;
+
+        if (timerBarInterval === -1) {
+            timerBarInterval = setInterval(() => {
+                const percentageRemaining = getTimerBarWidth();
+                timerBar.style.width = `${percentageRemaining}%`;
+                // timerBar.style.backgroundColor = interpolateColour('rgb(234, 60, 59)', 'rgb(0, 152, 121)', percentageRemaining);
+            }, 1000);
+        }
 
         if (gameState.activeQuestion.imageUrl) {
             showPreImageButton.hidden = false;
@@ -554,15 +619,15 @@ function updateUI() {
         allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c']);
         allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d']);
 
-        if (moneyRemainingThisTurn() !== 0) {
-            lockIn.disabled = true;
-            help.innerHTML = 'You haven\'t allocated all of your money - use it or lose it!';
-        } else {
-            lockIn.disabled = false;
+        let mrtt = moneyRemainingThisTurn();
+
+        if (mrtt === _team.remainingMoney) {
+            help.innerHTML = 'You haven\'t allocated all any money yet - correct wagers earn back double, incorrect wagers are lost!';
+        } else  if (mrtt !== _team.remainingMoney) {
             help.innerHTML = '';
         }
 
-        if (moneyRemainingThisTurn() === 0) {
+        if (mrtt === 0) {
             addA.disabled = true;
             addB.disabled = true;
             addC.disabled = true;
@@ -587,7 +652,7 @@ function updateUI() {
         minusC.disabled = _team.optionsAllocated['c'] === 0;
         minusD.disabled = _team.optionsAllocated['d'] === 0;
 
-        reset.disabled = moneyRemainingThisTurn() === _team.remainingMoney;
+        reset.disabled = mrtt === _team.remainingMoney;
 
         if (_team.lockedIn) {
             addA.disabled = true;
@@ -658,6 +723,9 @@ function updateUI() {
         finish.hidden = true;
         answer.hidden = false;
         scores.hidden = true;
+        timerBar.hidden = true;
+        clearInterval(timerBarInterval);
+        timerBarInterval = -1;
 
         if (gameState.activeQuestion.imageUrl) {
             postImage.hidden = false;
@@ -674,11 +742,14 @@ function updateUI() {
         answer.hidden = true;
         scores.hidden = false;
         finish.hidden = true;
+        timerBar.hidden = true;
+        clearInterval(timerBarInterval);
+        timerBarInterval = -1;
 
         let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
         gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
         for (let i = 0; i < gameState.teams.length; i++) {
-            scoresTableHtml += `<tr><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td></tr>`;
+            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
@@ -688,6 +759,9 @@ function updateUI() {
         answer.hidden = true;
         scores.hidden = true;
         finish.hidden = false;
+        timerBar.hidden = true;
+        clearInterval(timerBarInterval);
+        timerBarInterval = -1;
 
         if (gameState.winners.length === 0) {
             winnerText.innerHTML = 'Nobody won x-(';

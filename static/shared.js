@@ -66,7 +66,7 @@ export const REACTIONS = {
     LOVE: 'love'
 };
 
-export const MAX_TEAM_SIZE = 2;
+export const MAX_TEAM_SIZE = 5;
 
 /**
  * Send an object over a websocket
@@ -219,4 +219,26 @@ export function getClientById(wss, id) {
         };
     });
     return tws;
+}
+
+/* COLOUR FUNCTIONS */
+
+function getRgb(color) {
+    let [r, g, b] = color.replace('rgb(', '')
+        .replace(')', '')
+        .split(',')
+        .map(str => Number(str));;
+    return {
+        r,
+        g,
+        b
+    }
+}
+  
+export function interpolateColour(colorA, colorB, intval) {
+    const rgbA = getRgb(colorA),
+        rgbB = getRgb(colorB);
+    const colorVal = (prop) =>
+        Math.round(rgbA[prop] * (1 - intval) + rgbB[prop] * intval);
+    return `rgb(${colorVal('r')}, ${colorVal('g')}, ${colorVal('b')})`;
 }

@@ -165,9 +165,10 @@ function updateUI() {
         stateScores.hidden = false;
         stateFinish.hidden = true;
 
-        knockoutsEl.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} lost this round. `;
+        knockoutsEl.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} lost this round, £${numberWithCommas(gameState.totalGainedThisRound)} gained.`;
+
         if (gameState.teamsKnockedOutThisRound && gameState.teamsKnockedOutThisRound.length > 0) {
-            knockoutsEl.innerHTML += `Knocked out this round: ${JSON.stringify(gameState.teamsKnockedOutThisRound)}`;
+            knockoutsEl.innerHTML += `Lost everything this round: ${JSON.stringify(gameState.teamsKnockedOutThisRound)}`;
         }
 
     } else if (gameState.scene === 'finish') {
@@ -184,7 +185,7 @@ function updateUI() {
     }
 
     // Update button states
-    if (((gameState.quizName === null || gameState.teams.length < 2) && gameState.scene === 'pregame') || gameState.scene === 'finish') {
+    if (((gameState.quizName === null || gameState.teams.length === 0) && gameState.scene === 'pregame') || gameState.scene === 'finish') {
         progressState.disabled = true;
     } else {
         progressState.disabled = false;
@@ -196,16 +197,16 @@ function updateUI() {
         toggleImage.innerHTML = 'Show image';
     }
 
-    if (gameState.scene !== 'game' && gameState.scene !== 'answer') {
-        toggleImage.disabled = true;
-    } else {
-        toggleImage.disabled = false;
-    }
-
-    if (gameState.toggleAllocations) {
+    if (gameState.showAllocations) {
         toggleAllocations.innerHTML = 'Hide allocations';
     } else {
         toggleAllocations.innerHTML = 'Show allocations';
+    }
+
+    if (gameState.activeQuestion && gameState.activeQuestion.imageUrl && (gameState.scene === 'game' || gameState.scene === 'answer')) {
+        toggleImage.disabled = false;
+    } else {
+        toggleImage.disabled = true;
     }
 
     if (gameState.scene !== 'answer') {

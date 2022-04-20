@@ -37,6 +37,10 @@ async function imageExists(imageUrl) {
     }
 }
 
+function deQuote(str) {
+    return str.replace(/"/gi, '&quot;');
+}
+
 document.getElementById('loadquiz').addEventListener('click', () => {
     let input = document.createElement('input');
     input.type = 'file';
@@ -49,12 +53,16 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                 document.getElementById('quizstartingmoney').value = content.startingMoney;
                 document.getElementById('quizallowhints').value = content.allowHints;
                 document.getElementById('quiznumhints').value = content.numHints;
+                document.getElementById('quizincrementeachround').value = content.incrementEachRound;
+                document.getElementById('quizsecondsperquestion').value = content.secondsPerQuestion;
 
                 document.getElementById('accordion').innerHTML = '';
                 numQuestions = content.questions.length;
 
                 for (let i = 0; i < content.questions.length; i++) {
                     const j = generateUID();
+
+                    console.log(content.questions[i].options);
 
                     document.getElementById('accordion').insertAdjacentHTML('beforeend',
                         `<div class="accordion-item" id="question-${j}" data-uid="${j}">
@@ -87,19 +95,19 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                                     <!-- Options -->
                                     <div class="mb-3">
                                         <label class="form-label">Option A</label>
-                                        <input type="text" class="form-control" placeholder="A Text" id="questionoptiona-${j}" value="${content.questions[i].options.a ? content.questions[i].options.a : ''}" />
+                                        <input type="text" class="form-control" placeholder="A Text" id="questionoptiona-${j}" value="${content.questions[i].options.a ? deQuote(content.questions[i].options.a) : ''}" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Option B</label>
-                                        <input type="text" class="form-control" placeholder="B Text" id="questionoptionb-${j}" value="${content.questions[i].options.b ? content.questions[i].options.b : ''}" />
+                                        <input type="text" class="form-control" placeholder="B Text" id="questionoptionb-${j}" value="${content.questions[i].options.b ? deQuote(content.questions[i].options.b) : ''}" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Option C</label>
-                                        <input type="text" class="form-control" placeholder="C Text" id="questionoptionc-${j}" value="${content.questions[i].options.c ? content.questions[i].options.c : ''}" />
+                                        <input type="text" class="form-control" placeholder="C Text" id="questionoptionc-${j}" value="${content.questions[i].options.c ? deQuote(content.questions[i].options.c) : ''}" />
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Option D</label>
-                                        <input type="text" class="form-control" placeholder="D Text" id="questionoptiond-${j}" value="${content.questions[i].options.d ? content.questions[i].options.d : ''}" />
+                                        <input type="text" class="form-control" placeholder="D Text" id="questionoptiond-${j}" value="${content.questions[i].options.d ? deQuote(content.questions[i].options.d) : ''}" />
                                     </div>
                                     <!-- Answer -->
                                     <div class="mb-3">
@@ -398,6 +406,8 @@ document.getElementById('savequiz').addEventListener('click', () => {
             "startingMoney": +document.getElementById('quizstartingmoney').value,
             "allowHints": document.getElementById('quizallowhints').value === "on" ? true : false,
             "numHints": +document.getElementById('quiznumhints').value,
+            "incrementEachRound": +document.getElementById('quizincrementeachround').value,
+            "secondsPerQuestion": +document.getElementById('quizsecondsperquestion').value,
             questions: parseQuestions()
         };
     
@@ -431,6 +441,22 @@ async function validateQuiz() {
         allGood = false;
     } else {
         elNumHints.classList = 'form-control';
+    }
+
+    const elIncrementEachRound = document.getElementById('quizincrementeachround');
+    if (elIncrementEachRound.value < 0) {
+        elIncrementEachRound.classList = 'form-control is-invalid';
+        allGood = false;
+    } else {
+        elIncrementEachRound.classList = 'form-control';
+    }
+
+    const elSecondsPerQuestion = document.getElementById('quizsecondsperquestion');
+    if (elSecondsPerQuestion.value < 0) {
+        elSecondsPerQuestion.classList = 'form-control is-invalid';
+        allGood = false;
+    } else {
+        elSecondsPerQuestion.classList = 'form-control';
     }
 
     for (let j = 0; j < numQuestions; j++) {

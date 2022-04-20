@@ -35,8 +35,10 @@ server.post('/upload-quiz', async (req, res) => {
                     questions = quizObj.questions;
                     allowHints = quizObj.allowHints;
                     numHints = quizObj.numHints;
+                    secondsPerQuestion = quizObj.secondsPerQuestion;
                     startingMoney = quizObj.startingMoney;
-                    
+                    incrementEachRound = quizObj.incrementEachRound;
+
                     if (state === GAME_STATE.PREGAME) {
                         for (let team of teams) {
                             team.remainingHints = numHints;
@@ -90,9 +92,11 @@ const wss = new Server({ server });
 
 /** Bootstrap game state */
 
-let startingMoney  = 100000;
+let startingMoney  = 100;
 let allowHints = true;
 let numHints = 1;
+let secondsPerQuestion = 60;
+let incrementEachRound = 100;
 
 let state = GAME_STATE.PREGAME,
     questions = [],
@@ -108,8 +112,10 @@ let state = GAME_STATE.PREGAME,
     optionCTotalAllocationThisRound = 0,
     optionDTotalAllocationThisRound = 0,
     totalLostThisRound = 0,
+    totalGainedThisRound = 0,
     teamsKnockedOutThisRound = [],
-    totalAllocationAllThisRound = 0;
+    totalAllocationAllThisRound = 0,
+    advanceTimer = -1;
 
 reset();
 
@@ -129,6 +135,7 @@ function reset() {
     optionCTotalAllocationThisRound = 0;
     optionDTotalAllocationThisRound = 0;
     totalLostThisRound = 0;
+    totalGainedThisRound = 0;
     teamsKnockedOutThisRound = [];
     totalAllocationAllThisRound = 0;
 }
@@ -143,7 +150,8 @@ function broadcastGameState() {
             // Don't send answer to clients if they're mid-guessing!
             answer: state === GAME_STATE.GAME ? null : activeQuestion.answer,
             imageUrl: state === GAME_STATE.GAME ? activeQuestion.preImageUrl : activeQuestion.postImageUrl,
-            additionalText: activeQuestion.additionalText ? activeQuestion.additionalText : '' 
+            additionalText: activeQuestion.additionalText ? activeQuestion.additionalText : '',
+            timeBegan: activeQuestion.timeBegan
         };
     }
 
@@ -162,8 +170,10 @@ function broadcastGameState() {
         optionCTotalAllocationThisRound: optionCTotalAllocationThisRound,
         optionDTotalAllocationThisRound: optionDTotalAllocationThisRound,
         totalLostThisRound: totalLostThisRound,
+        totalGainedThisRound: totalGainedThisRound,
         teamsKnockedOutThisRound: teamsKnockedOutThisRound,
-        totalAllocationAllThisRound: totalAllocationAllThisRound
+        totalAllocationAllThisRound: totalAllocationAllThisRound,
+        secondsPerQuestion: secondsPerQuestion
     };
 
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, {state: gameState});
@@ -171,12 +181,28 @@ function broadcastGameState() {
 
 function handleProgressState() {
 
-    if (state === GAME_STATE.PREGAME && teams.length > 1 && questions.length > 0) {
+    if (state === GAME_STATE.PREGAME && teams.length > 0 && questions.length > 0) {
         state = GAME_STATE.GAME;
         activeQuestion = questions[0];
+        activeQuestion.timeBegan = Date.now();
+    
+        // Auto-advance question if we have a time-limit per question
+        if (secondsPerQuestion > 0) {
+            clearTimeout(advanceTimer);
+            advanceTimer = setTimeout(() => {
+                handleProgressState();
+            }, secondsPerQuestion * 1000);
+        }
+
+        // Force ready everyone up
+        for (let team of teams) {
+            for (let tm of team.members)
+            tm.ready = true;
+        }
     } else if (state === GAME_STATE.GAME) {
         state = GAME_STATE.ANSWER;
         showImage = false;
+        showAllocations = false;
         
         // Compute total allocations for this round
         optionATotalAllocationThisRound = 0;
@@ -185,6 +211,7 @@ function handleProgressState() {
         optionDTotalAllocationThisRound = 0;
         
         totalLostThisRound = 0;
+        totalGainedThisRound = 0;
 
         teamsKnockedOutThisRound = [];
 
@@ -202,10 +229,21 @@ function handleProgressState() {
             // Compute new team totals
             let beforeDeduction = team.remainingMoney;
 
-            team.remainingMoney = team.optionsAllocated[questions[activeQuestionIndex].answer];
+            // team.remainingMoney = team.optionsAllocated[questions[activeQuestionIndex].answer];
+            let currentAnswer = questions[activeQuestionIndex].answer;
+            let losses = 0;
+            let winnings = team.optionsAllocated[currentAnswer];
+            for (let option of ['a', 'b', 'c', 'd']) {
+                if (option !== currentAnswer) {
+                    losses += team.optionsAllocated[option];
+                }
+            }
+            team.remainingMoney -= losses;
+            team.remainingMoney += winnings;
 
             // Compute total lost for this round
-            totalLostThisRound += beforeDeduction - team.remainingMoney;
+            totalLostThisRound += losses;
+            totalGainedThisRound += winnings;
 
             // Compute those who were knocked out this round
             if (wasAlive && team.remainingMoney === 0) {
@@ -218,23 +256,40 @@ function handleProgressState() {
             + optionCTotalAllocationThisRound
             + optionDTotalAllocationThisRound;
 
-        // TODO: Compute running totals...
+        clearTimeout(advanceTimer);
+        advanceTimer = -1;
     } else if (state === GAME_STATE.ANSWER) {
         showImage = false;
         showAllocations = false;
         state = GAME_STATE.SCORES;
+        clearTimeout(advanceTimer);
+        advanceTimer = -1;
     } else if (state === GAME_STATE.SCORES) {
         showImage = false;
-        const _allTeamsOrAllButOneBankrupt = allTeamsOrAllButOneBankrupt();
-        if (activeQuestionIndex === questions.length - 1 || _allTeamsOrAllButOneBankrupt) {
+        // const _allTeamsOrAllButOneBankrupt = allTeamsOrAllButOneBankrupt();
+        if (activeQuestionIndex === questions.length - 1) {
             state = GAME_STATE.FINISH;
             
             winners = getTeamsWithMostMoney();
         } else {
             activeQuestionIndex++;
             activeQuestion = questions[activeQuestionIndex];
+            activeQuestion.timeBegan = Date.now();
+
+            // Auto-advance question if we have a time-limit per question
+            if (secondsPerQuestion > 0) {
+                clearTimeout(advanceTimer);
+                advanceTimer = setTimeout(() => {
+                    handleProgressState();
+                }, secondsPerQuestion * 1000);
+            }
 
             for (let team of teams) {
+                // Give every team a base amount each turn
+                if (incrementEachRound) {
+                    team.remainingMoney += incrementEachRound;    
+                }
+
                 team.optionsAllocated = {
                     a: 0,
                     b: 0,
@@ -250,6 +305,7 @@ function handleProgressState() {
             optionCTotalAllocationThisRound = 0;
             optionDTotalAllocationThisRound = 0;
             totalLostThisRound = 0;
+            totalGainedThisRound = 0;
             teamsKnockedOutThisRound = [];
             totalAllocationAllThisRound = 0;
 
