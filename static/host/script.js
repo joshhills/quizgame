@@ -11,7 +11,8 @@ function connect() {
 connect();
 
 let id = null,
-    gameState = null;
+    gameState = null,
+    secondsRemainingInterval = -1;
 
 // Get element references
 let rawGameState = document.getElementById('rawgamestate'),
@@ -138,6 +139,20 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
 
 /* === End Handler Functions === */
 
+function getSecondsLeftInQuestion() {
+    const now = Date.now();
+    const secondsElapsed = Math.round((now - gameState.activeQuestion.timeBegan) / 1000);
+    let secondsRemaining = gameState.secondsPerQuestion - secondsElapsed;
+    if (secondsRemaining < 0) {
+        secondsRemaining = 0;
+    }
+    return secondsRemaining;
+}
+
+function updateAdditionalInfoWithSecondsRemaining() {
+    additionalInfo.innerHTML = `${getSecondsLeftInQuestion()}s remaining`;
+}
+
 function updateUI() {
     if (gameState === null) {
         return;
@@ -223,6 +238,18 @@ function updateUI() {
 
     percentReady.innerHTML = inumPlayersReady;
     additionalInfo.hidden = true;
+    if (gameState.scene === 'game' && gameState.secondsPerQuestion) {
+        additionalInfo.hidden = false;
+
+        updateAdditionalInfoWithSecondsRemaining();
+        if (secondsRemainingInterval === -1) {
+            secondsRemainingInterval = setInterval(updateAdditionalInfoWithSecondsRemaining, 1000);
+        }
+    } else {
+        clearInterval(secondsRemainingInterval);
+        secondsRemainingInterval = -1;
+    }
+    
     if (gameState.scene === 'answer') {
         lockedInPercent.innerHTML = `Answer: ${gameState.activeQuestion.answer.toUpperCase()}`;
         additionalInfo.hidden = false;

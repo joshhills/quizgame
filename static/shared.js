@@ -68,6 +68,8 @@ export const REACTIONS = {
 
 export const MAX_TEAM_SIZE = 5;
 
+export const QUESTION_BUFFER_TIME_MS = 3000;
+
 /**
  * Send an object over a websocket
  * 

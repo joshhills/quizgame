@@ -418,6 +418,12 @@ function getTimerBarWidth() {
     return percentOfLimit;
 }
 
+function updateTimerBar() {
+    const percentageRemaining = getTimerBarWidth();
+    timerBar.style.width = `${percentageRemaining}%`;
+    timerBar.style.backgroundColor = interpolateColour('rgb(234, 60, 59)', 'rgb(0, 152, 121)', percentageRemaining / 100);
+}
+
 function updateUI() {
 
     if (gameState.init) {
@@ -575,11 +581,8 @@ function updateUI() {
         timerBar.hidden = false;
 
         if (timerBarInterval === -1) {
-            timerBarInterval = setInterval(() => {
-                const percentageRemaining = getTimerBarWidth();
-                timerBar.style.width = `${percentageRemaining}%`;
-                // timerBar.style.backgroundColor = interpolateColour('rgb(234, 60, 59)', 'rgb(0, 152, 121)', percentageRemaining);
-            }, 1000);
+            updateTimerBar();
+            timerBarInterval = setInterval(updateTimerBar, 1000);
         }
 
         if (gameState.activeQuestion.imageUrl) {
@@ -622,9 +625,17 @@ function updateUI() {
         let mrtt = moneyRemainingThisTurn();
 
         if (mrtt === _team.remainingMoney) {
-            help.innerHTML = 'You haven\'t allocated all any money yet - correct wagers earn back double, incorrect wagers are lost!';
+            if (!_team.lockedIn) {
+                help.innerHTML = 'You haven\'t allocated any money yet!<br/>';
+            } else {
+                help.innerHTML = '';
+            }
         } else  if (mrtt !== _team.remainingMoney) {
             help.innerHTML = '';
+        }
+        
+        if (getTimerBarWidth() < 40 && !_team.lockedIn) {
+            help.innerHTML += 'Heads up, you\'re running out of time';
         }
 
         if (mrtt === 0) {
@@ -653,6 +664,7 @@ function updateUI() {
         minusD.disabled = _team.optionsAllocated['d'] === 0;
 
         reset.disabled = mrtt === _team.remainingMoney;
+        lockIn.disabled = false;
 
         if (_team.lockedIn) {
             addA.disabled = true;
@@ -663,10 +675,18 @@ function updateUI() {
             minusB.disabled = true;
             minusC.disabled = true;
             minusD.disabled = true;
+            addRemainingA.disabled = true;
+            addRemainingB.disabled = true;
+            addRemainingC.disabled = true;
+            addRemainingD.disabled = true;
             reset.disabled = true;
             lockIn.disabled = true;
             
-            help.innerHTML = 'You\'re locked in!';
+            if (mrtt === _team.remainingMoney) {
+                help.innerHTML = 'You skipped this question.';
+            } else {
+                help.innerHTML = 'You\'re locked in!';
+            }
         }
 
         if (gameState.allowHints) {

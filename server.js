@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS } from './static/shared.js';
 
 import express from 'express';
 import fetch from 'node-fetch';
@@ -191,7 +191,7 @@ function handleProgressState() {
             clearTimeout(advanceTimer);
             advanceTimer = setTimeout(() => {
                 handleProgressState();
-            }, secondsPerQuestion * 1000);
+            }, secondsPerQuestion * 1000 + QUESTION_BUFFER_TIME_MS);
         }
 
         // Force ready everyone up
@@ -281,7 +281,7 @@ function handleProgressState() {
                 clearTimeout(advanceTimer);
                 advanceTimer = setTimeout(() => {
                     handleProgressState();
-                }, secondsPerQuestion * 1000);
+                }, secondsPerQuestion * 1000 + QUESTION_BUFFER_TIME_MS);
             }
 
             for (let team of teams) {
