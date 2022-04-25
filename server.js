@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS } from './static/shared.js';
 
 import express from 'express';
 import fetch from 'node-fetch';
@@ -107,6 +107,7 @@ let state = GAME_STATE.PREGAME,
     winners = null,
     showImage = false,
     showAllocations = false,
+    historicData = {},
     optionATotalAllocationThisRound = 0,
     optionBTotalAllocationThisRound = 0,
     optionCTotalAllocationThisRound = 0,
@@ -128,6 +129,7 @@ function reset() {
     activeQuestionIndex = 0;
     teams = [];
     winners = null;
+    historicData = {};
     showImage = false;
     showAllocations = false;
     optionATotalAllocationThisRound = 0;
@@ -249,6 +251,10 @@ function handleProgressState() {
             if (wasAlive && team.remainingMoney === 0) {
                 teamsKnockedOutThisRound.push(team.teamName);
             }
+
+            // Log whether or not the team gained or lost money
+            team.lastMoney = beforeDeduction;
+            team.lastChange = team.remainingMoney - beforeDeduction;
         }
 
         totalAllocationAllThisRound = optionATotalAllocationThisRound
@@ -258,6 +264,15 @@ function handleProgressState() {
 
         clearTimeout(advanceTimer);
         advanceTimer = -1;
+
+        if (SHOW_ALLOCATIONS_TIMER_MS !== -1) {
+            setTimeout(() => {
+                if (state === GAME_STATE.ANSWER && !showAllocations) {
+                    showAllocations = true;
+                    broadcastGameState();
+                }
+            }, SHOW_ALLOCATIONS_TIMER_MS);
+        }
     } else if (state === GAME_STATE.ANSWER) {
         showImage = false;
         showAllocations = false;

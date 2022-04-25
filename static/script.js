@@ -107,7 +107,10 @@ var pregameContainer = document.getElementById('pregame'),
     optionBBox = document.getElementById('optionbbox'),
     optionCBox = document.getElementById('optioncbox'),
     optionDBox = document.getElementById('optiondbox'),
-    timerBar = document.getElementById('timerbar');
+    timerBar = document.getElementById('timerbar'),
+    infoModal = document.getElementById('infomodal'),
+    infoModalClose = document.getElementById('infomodalclose'),
+    infoModalOpen = document.getElementById('infomodalopen');
 
 function updateJoinButtons() {
     const playerName = document.getElementById('name').value;
@@ -196,6 +199,14 @@ sendChatMessage.addEventListener('click', () => {
 
 useHintButton.addEventListener('click', () => {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id); 
+});
+
+infoModalClose.addEventListener('click', () => {
+    infoModal.hidden = true;
+});
+
+infoModalOpen.addEventListener('click', () => {
+    infoModal.hidden = false;
 });
 
 // Game State
@@ -580,9 +591,13 @@ function updateUI() {
         log.hidden = chatMessage.hidden = sendChatMessage.hidden = teamMembers.hidden = solo || _team.members.length === 1;
         timerBar.hidden = false;
 
-        if (timerBarInterval === -1) {
+        if (timerBarInterval === -1 && getTimerBarWidth() !== 0) {
             updateTimerBar();
             timerBarInterval = setInterval(updateTimerBar, 1000);
+        }
+        if (timerBarInterval !== -1 && getTimerBarWidth() === 0) {
+            clearInterval(timerBarInterval);
+            timerBarInterval = -1;
         }
 
         if (gameState.activeQuestion.imageUrl) {
@@ -766,10 +781,21 @@ function updateUI() {
         clearInterval(timerBarInterval);
         timerBarInterval = -1;
 
-        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
+        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th></th></tr></thead><tbody>';
         gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
         for (let i = 0; i < gameState.teams.length; i++) {
-            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td></tr>`;
+            let scoreDidChange = gameState.teams[i].lastChange !== 0;
+            let changeIconHtml = '';
+            if (scoreDidChange) {
+                let largeChange = Math.abs(gameState.teams[i].lastChange) > gameState.teams[i].lastMoney / 2;
+
+                if (gameState.teams[i].lastChange < 0) {
+                    changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-down red"/>`;
+                } else {
+                    changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-up green"/>`;
+                }
+            }
+            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td>${changeIconHtml}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;

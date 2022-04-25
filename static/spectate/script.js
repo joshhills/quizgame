@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage } from '../shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, interpolateColour } from '../shared.js';
 
 // Connect to server
 
@@ -16,7 +16,8 @@ let id = null,
     gameState = null,
     currentNotification = null,
     emoteSideFlip = true,
-    numEmojies = 0;
+    numEmojies = 0,
+    timerBarInterval = -1;
 
 // Get element references
 
@@ -41,7 +42,8 @@ let notification = document.getElementById('notification'),
     scoresTable = document.getElementById('scorestable'),
     imageOverlay = document.getElementById('imageoverlay'),
     activeImage = document.getElementById('activeimage'),
-    emoteContainer = document.getElementById('emotecontainer');
+    emoteContainer = document.getElementById('emotecontainer'),
+    timerBar = document.getElementById('timerbar');
 
 /* === Begin Handler functions === */
 
@@ -120,6 +122,22 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
 
 /* === End Handler Functions === */
 
+function getTimerBarWidth() {
+    const now = Date.now();
+    const secondsElapsed = (now - gameState.activeQuestion.timeBegan) / 1000;
+    let percentOfLimit = 100 - ((secondsElapsed / gameState.secondsPerQuestion) * 100);
+    if (percentOfLimit < 0) {
+        percentOfLimit = 0;
+    }
+    return percentOfLimit;
+}
+
+function updateTimerBar() {
+    const percentageRemaining = getTimerBarWidth();
+    timerBar.style.width = `${percentageRemaining}%`;
+    timerBar.style.backgroundColor = interpolateColour('rgb(234, 60, 59)', 'rgb(0, 152, 121)', percentageRemaining / 100);
+}
+
 function updateUI() {
     
     if (currentNotification === null) {
@@ -173,6 +191,22 @@ function updateUI() {
             option2.hidden = true;
             option3.hidden = true;
             option4.hidden = true;
+        }
+
+        if (gameState.scene === GAME_STATE.GAME) {
+            timerBar.hidden = false;
+            if (timerBarInterval === -1 && getTimerBarWidth() !== 0) {
+                updateTimerBar();
+                timerBarInterval = setInterval(updateTimerBar, 1000);
+            }
+            if (timerBarInterval !== -1 && getTimerBarWidth() === 0) {
+                clearInterval(timerBarInterval);
+                timerBarInterval = -1;
+            }
+        } else {
+            clearInterval(timerBarInterval);
+            timerBarInterval = -1;
+            timerBar.hidden = true;
         }
 
         if (gameState.scene === GAME_STATE.PREGAME) {
@@ -257,10 +291,21 @@ function updateUI() {
             }
             options.className = 'options hidden';
 
-            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Remaining Money</th></tr></thead><tbody>';
+            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th></th></tr></thead><tbody>';
             gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
             for (let i = 0; i < gameState.teams.length; i++) {
-                scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td></tr>`;
+                let scoreDidChange = gameState.teams[i].lastChange !== 0;
+                let changeIconHtml = '';
+                if (scoreDidChange) {
+                    let largeChange = Math.abs(gameState.teams[i].lastChange) > gameState.teams[i].lastMoney / 2;
+    
+                    if (gameState.teams[i].lastChange < 0) {
+                        changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-down red"/>`;
+                    } else {
+                        changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-up green"/>`;
+                    }
+                }
+                scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td>${changeIconHtml}</td></tr>`;
             }
             scoresTableHtml + '</tbody>';
             scoresTable.innerHTML = scoresTableHtml;

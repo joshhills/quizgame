@@ -1,281 +1,270 @@
 {
-  "name": "Video Game Quiz",
-  "startingMoney": 100000,
-  "allowHints": false,
+  "name": "Firesprite Game Quiz - Wager Up!",
+  "startingMoney": 100,
+  "allowHints": true,
   "numHints": 3,
+  "incrementEachRound": 100,
+  "secondsPerQuestion": 60,
   "questions": [
     {
-      "text": "What is the surname of the current president of Nintendo America?",
-      "additionalText": "This is an example of 'nominative determinism', the hypothesis that people tend to gravitate towards areas of work that fit their names.",
+      "text": "Which of these would Donkey Kong eat last?",
+      "additionalText": "They're all varieties of banana, barring 'Granny Smith', which is a type of apple. A 2010 study in the \nThe National Center for Biotechnology Information established that apes prefer pieces of banana over apples.",
       "options": {
-        "a": "Mario",
-        "b": "Bowser",
-        "c": "Toad",
-        "d": "Yoshi"
+        "a": "Cavendish",
+        "b": "Gros Michel",
+        "c": "Lady's Finger",
+        "d": "Granny Smith"
       },
-      "answer": "b",
-      "preImageUrl": "https://mario.wiki.gallery/images/thumb/2/21/DougBowser.jpg/1200px-DougBowser.jpg",
-      "postImageUrl": "https://gbatemp.net/attachments/doug-bowser-original-jpg.258904/"
+      "answer": "d",
+      "preImageUrl": "https://i.ytimg.com/vi/rYNMatF5hcU/maxresdefault.jpg",
+      "postImageUrl": "https://images.everydayhealth.com/images/diet-nutrition/all-about-bananas-nutrition-facts-health-benefits-recipes-and-more-rm-722x406.jpg"
     },
     {
-      "text": "What prompted the first 'Easter Egg' in a video game?",
-      "additionalText": "This was in the 1980 video game 'Adventure' for the Atari 2600. Atari at the time disallowed including names in game credits to prevent them being poached by other companies. The sole programmer, Warren Robinett, included a hidden credits screen anyway, and left. Atari only realised when a 14 year old fan wrote in, having found it.",
+      "text": "At which of these Olympic locations have Mario & Sonic not made joint appearances?",
+      "additionalText": "The first game in the series was 'Mario & Sonic At The Athens 2004 Olympic Games' - prior to that, e.g. Sydney 2000, Mario and Sonic were seen as rivals for being the mascots of Nintendo and SEGA respectively.",
       "options": {
-        "a": "An accidental bug",
-        "b": "A developer's birthday",
-        "c": "A dispute over credits",
-        "d": "A crazed fan"
+        "a": "London",
+        "b": "Sydney",
+        "c": "Rio",
+        "d": "Beijing"
+      },
+      "answer": "b",
+      "preImageUrl": "https://cdn3.whatculture.com/images/2014/09/Mario-and-Sonic-600x338.jpg",
+      "postImageUrl": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/1b58fc05-b804-4a0b-a460-1463437e735b/d9ziby9-41c1f29e-d7a3-406f-b2f5-ce6c0457a036.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzFiNThmYzA1LWI4MDQtNGEwYi1hNDYwLTE0NjM0MzdlNzM1YlwvZDl6aWJ5OS00MWMxZjI5ZS1kN2EzLTQwNmYtYjJmNS1jZTZjMDQ1N2EwMzYucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.e_nH9L_zJpCfgy5ICwXQFryziV_umbZDXmQvoCSZJZ4"
+    },
+    {
+      "text": "Which of these TV shows has not had a dance stolen by Fortnite?",
+      "additionalText": "'Fresh', 'Jubilation', and 'Dance Moves' are the real in-game emotes from the other three shows. ",
+      "options": {
+        "a": "The Fresh Prince of Bel-Air",
+        "b": "Seinfeld",
+        "c": "The Office",
+        "d": "Scrubs"
       },
       "answer": "c",
       "preImageUrl": "",
-      "postImageUrl": "https://csanyk.com/rants/wp-content/uploads/2015/09/tumblr_lyq4oaXr2M1qzmhdko1_5001.gif"
-    },
-    {
-      "text": "Which of these was accidentally included in 'The Last of Us'?",
-      "additionalText": "Neil Druckmann explained that the slipup was \"an honest mistake\" by one of the game's artists, saying \"What happened was, they put some phone numbers in the game and then they thought they could just change the area code to 555, then it's invalid because it's what they do in movies, but I guess that doesn't work when you have a 1-800 in front of it\".",
-      "options": {
-        "a": "The number to a real-world phone sex hotline",
-        "b": "The full source code of 'Crash Bandicoot'",
-        "c": "Candid audio of the developers getting drunk",
-        "d": "A giraffe with 8 legs"
-      },
-      "answer": "a",
-      "preImageUrl": "",
-      "postImageUrl": "https://cdn.vox-cdn.com/assets/2855671/last_of_us.jpg"
-    },
-    {
-      "text": "Which is these is not an official Guinness World Record?",
-      "additionalText": "The first videogame to feature juggling was Mortal Kombat. The longest title for a fighting game is 'Dexterion, The Ultimate Annihilator of the evil dominion: Under Cyborg Demon's Armageddon Battle - Fate of the cryptic world in cybernetic trooper's hands'.\n\nOther weird records include 'largest videogame controller', 'first dental hygiene videogame' and 'hottest videogame', which was an interactive performance piece featuring a modified 'Dance Dance Revolution' machine where players were shot with flamethrowers if they performed poorly.",
-      "options": {
-        "a": "Videogame with most species of butterfly",
-        "b": "Longest title for a fighting videogame",
-        "c": "Oldest videogames YouTuber",
-        "d": "First videogame to feature juggling"
-      },
-      "answer": "a",
-      "preImageUrl": "https://store.guinnessworldrecords.com/images/fullsize/GWR00019.jpg",
-      "postImageUrl": "https://s.hdnux.com/photos/12/21/34/2692869/6/1200x0.jpg"
-    },
-    {
-      "text": "In 2020, which American politician hosted a 'get out the vote' event on Twitch, and ended up streaming the game 'Among Us' to more than 430,000 live spectators?",
-      "additionalText": "It was the third-largest audience the site had ever attracted to a single stream. After the event, sitting congresswoman Ilhan Omar, who joined AOC during the stream, tweeted the word 'poggers'.",
-      "options": {
-        "a": "Kamala Harris",
-        "b": "Elizabeth Warren",
-        "c": "Alexandria Ocasio-Cortez",
-        "d": "Pete Buttigieg"
-      },
-      "answer": "c",
-      "preImageUrl": "",
-      "postImageUrl": "https://static-cdn.jtvnw.net/cf_vods/d2nvs31859zcd8/7fc89e5d429d394879f6_aoc_39559064893_1603240391//thumb/thumb0-1280x720.jpg"
-    },
-    {
-      "text": "'RuneScape' developer Jagex researched the most used term in their in-game chat. Which of these is it?",
-      "additionalText": "In 2013, this was being said an average of 6,048,000 times every week.",
-      "options": {
-        "a": "LOL",
-        "b": "WTF",
-        "c": "WUBU2",
-        "d": "GG"
-      },
-      "answer": "a",
-      "preImageUrl": "",
-      "postImageUrl": "https://preview.redd.it/iqnjcg09wqh71.png?width=640&crop=smart&auto=webp&s=f220a194e28225d5b9a713ee20f394eb81ac554f"
-    },
-    {
-      "text": "Which movie did the environment artists on 'Silent Hill' use for inspiration when designing an American school interior?",
-      "additionalText": "This is apparent as many of the movie's posters were copied directly into the game. It is speculated that they did this because they were unable to physically visit these places to take reference photos.",
-      "options": {
-        "a": "The Simpsons Movie",
-        "b": "Kindergarten Cop",
-        "c": "High School Musical",
-        "d": "Heathers"
-      },
-      "answer": "b",
-      "preImageUrl": "https://static.wikia.nocookie.net/silent/images/d/d8/Midwich.jpg/",
-      "postImageUrl": "https://sites.google.com/site/shresortbackup/_/rsrc/1304372849089/home/DOGKILLCAT.png"
-    },
-    {
-      "text": "What was the original name for the 'Xbox'?",
-      "additionalText": "In 1999, Microsoft's Ed Fries met with the DirectX team to discuss a new idea called the 'DirectX Box', a PC with a hidden Windows OS that would be marketed like a console machine. The first mockup was a silver X with a PC board inside. As the project moved through development, Windows was dropped, the console look changed, eventually being renamed.",
-      "options": {
-        "a": "XPlay",
-        "b": "WinCon",
-        "c": "DirectX Box",
-        "d": "The Halo"
-      },
-      "answer": "c",
-      "preImageUrl": "",
-      "postImageUrl": "https://i.guim.co.uk/img/media/40c5d572d3e952ce7e694973c0009041c85afdd5/0_0_2048_1693/master/2048.jpg?width=445&quality=45&auto=format&fit=max&dpr=2&s=bceaea3c788a276e2ddf506307b5f368"
-    },
-    {
-      "text": "What was the first game to be played in space?",
-      "additionalText": "In 1993, 'Tetris' for Game Boy traveled aboard a Soyuz TM-17 rocket to the MIR Space Station, where it was played 'in rare minutes of leisure' by Russian cosmonaut Aleksandr A. Serebrov. The game was later sold at an auction for $1,220.",
-      "options": {
-        "a": "Space Invaders",
-        "b": "Tetris",
-        "c": "E.T. the Extra-Terrestrial",
-        "d": "Asteroids"
-      },
-      "answer": "b",
-      "preImageUrl": "",
-      "postImageUrl": "https://i.pinimg.com/originals/a0/e0/eb/a0e0eb9abbc6571637452c8d6357d144.png"
-    },
-    {
-      "text": "In 2013, what caused a Super Mario 64 speedrunner to experience a glitch which teleported Mario higher up in the 'Tick Tock Clock' stage, saving time?",
-      "additionalText": "First predicted in 1950 by scifi writer Isaac Asimov, this 'single event upset' is a phenomenon whereby beams of radiation from space pass through a computer's random-access-memory, flipping bits - in this case, altering Mario's position. Similar events have caused planes to fall out of the sky and elections to give thousands of impossible additional votes to candidates.",
-      "options": {
-        "a": "Their console was hit by cosmic radiation",
-        "b": "Their dog kicked the console",
-        "c": "They were cheating",
-        "d": "Their cartridge had been inserted backwards"
-      },
-      "answer": "a",
-      "preImageUrl": "https://i.ytimg.com/vi/X5cwuYFUUAY/maxresdefault.jpg",
-      "postImageUrl": "https://i.imgur.com/GXGwggw.png"
-    },
-    {
-      "text": "Which of these shocking things happens in the 2006 video game 'Sonic The Hedgehog'?",
-      "additionalText": "Sonic's age was listed as 15, and Elise's as 17",
-      "options": {
-        "a": "Knuckled is arrested for drunk driving",
-        "b": "Sonic is kissed by a human girl",
-        "c": "Tails has one of his tails cut off",
-        "d": "Dr. Robotnik forms a rock band"
-      },
-      "answer": "b",
-      "preImageUrl": "https://i.ytimg.com/vi/NzlV1XPXN9g/maxresdefault.jpg",
-      "postImageUrl": "https://imgix.kotaku.com.au/content/uploads/sites/3/2015/09/18/1455156035972501831.png?ar=16%3A9&auto=format&fit=crop&q=65&w=1280"
-    },
-    {
-      "text": "In the 2008 game 'Rock Band 2', what did a modifier in the settings menu called 'Awesomeness Detection' with the description \"Lets Harmonix know that you are awesome!\" actually do?",
-      "additionalText": "Harmonix claimed that high-level players should always play with Awesomeness Detection on, but they did not say what it did, leading to many rumours. This was eventually confessed in a Harmonix podcast by one of the game's designers.",
-      "options": {
-        "a": "Auto-tune the player's voice",
-        "b": "Absolutely nothing",
-        "c": "Double the game's difficulty",
-        "d": "Send the developers bug reports"
-      },
-      "answer": "b",
-      "preImageUrl": "https://static.wikia.nocookie.net/gaming-urban-legends/images/e/ea/Awesomeness.jpg",
       "postImageUrl": ""
     },
     {
-      "text": "Why might you coat a game cartridge in denatonium benzoate?",
-      "additionalText": "Because of their small size, the game cards have long been coated with non-toxic bitterants as a safety precaution against accidental consumption by young children.",
+      "text": "Which of these MOBAs has the most playable characters?",
+      "additionalText": "Also known as 'heroes' and 'champions', League has 159, whereas Dota 2 has 123, SMITE has 119, and HotS has 90. ",
       "options": {
-        "a": "To protect it from airport security gates",
-        "b": "To prevent young children swallowing it",
-        "c": "To make it glow in the dark",
-        "d": "To preserve it in mint condition"
+        "a": "Heroes of the Storm",
+        "b": "Dota 2",
+        "c": "League of Legends",
+        "d": "SMITE"
       },
-      "answer": "b",
-      "preImageUrl": "",
-      "postImageUrl": "https://wgntv.com/wp-content/uploads/sites/5/2017/03/switch.jpg?strip=1"
+      "answer": "c",
+      "preImageUrl": "https://i2.wp.com/gyglounge.com/wp-content/uploads/2020/04/Moba-main-cover.png?fit=560%2C315&ssl=1",
+      "postImageUrl": "https://i.pinimg.com/originals/a2/88/72/a28872be58fa4329ec1ed4a8519beea8.jpg"
     },
     {
-      "text": "What strange bug was found in 'Scribblenauts', a game about boy who has a magical notebook that summons anything he writes in it, prior to release?",
-      "additionalText": "'Scribblenauts' almost launched with a strange bug, in which a lion would eat itself if bacon was glued to its back. The odd occurrence was found in the late stages of A.I. finalization.",
+      "text": "What was the \"life-changing\" prize for winning Peter Molyneux's experimental 2013 video game 'Curiosity'?",
+      "additionalText": "The game setting was a white room in the middle of which floated a giant cube made of billions of smaller cubes. Players tapped the cube to dig through the surface of each layer and reveal the next layer below. The goal was to reach the centre and to discover what was inside.\n\nThe winner was identified as Edinburgh resident Bryan Henderson, who didn't even know there was a prize, and was ultimately barely contacted by the studio (whose next game 'Godus' was a flop) and therefore could not claim his winnings of a 1% revenue share.\n\nIndie publisher Devolver Digital made Henderson a non-playable character in their game 'Not a Hero'.",
       "options": {
-        "a": "French words were censored",
-        "b": "Lions could eat themselves",
-        "c": "Attempting to summon 'God' would spawn a dog",
-        "d": "The player's head would slowly shrink"
+        "a": "A private trip to space",
+        "b": "A lead role and revenue from his next game",
+        "c": "A lifetime Xbox Live subscription",
+        "d": "A new Tesla"
       },
       "answer": "b",
-      "preImageUrl": "https://cdn.vox-cdn.com/thumbor/52Em_3tYXTaIVgVoqy-xhsP1lGs=/0x0:892x499/1200x800/filters:focal(375x178:517x320)/cdn.vox-cdn.com/uploads/chorus_image/image/61155973/scribblenauts_unlimited.0.1488117274.0.jpg",
+      "preImageUrl": "https://cdn.pocket-lint.com/r/s/970x/assets/images/132749-apps-news-what-was-the-life-changing-prize-that-awaited-the-curiosity-app-winner-nothing-it-turns-out-image1-JjqDT62VcB-png.webp?v1",
+      "postImageUrl": "https://assets.reedpopcdn.com/the-god-who-peter-molyneux-forgot-1423644225954.jpg/BROK/resize/690%3E/format/jpg/quality/70/the-god-who-peter-molyneux-forgot-1423644225954.jpg"
+    },
+    {
+      "text": "Which of these live action video game movies has the highest Metacritic rating?",
+      "additionalText": "Detective Pikachu has a rating of 53 on Metacritic. The highest scoring live action video game movie is 'Werewolves Within' with 66, followed by 'Mortal Kombat' with 60.",
+      "options": {
+        "a": "Sonic The Hedgehog",
+        "b": "Assassin's Creed",
+        "c": "Detective Pikachu",
+        "d": "Warcraft"
+      },
+      "answer": "c",
+      "preImageUrl": "https://wegotthiscovered.com/wp-content/uploads/2019/05/sonic-the-hedgehog-movie.jpg",
+      "postImageUrl": "https://i.ytimg.com/vi/1roy4o4tqQM/maxresdefault.jpg"
+    },
+    {
+      "text": "Which sport has Queen Elizabeth II played on Prince William's Nintendo Wii?",
+      "additionalText": "In a 2008 tabloid article titled \"MAKE WAY FOR THE Q Wii N\", a \"Palace source\" told 'The People': \"when she saw William playing a game after lunch at Sandringham she thought the Nintendo looked tremendous fun and begged to join in. She played a simple ten-pin bowling game and by all accounts was a natural.\".\n\nPublisher THQ attempted to gift the Queen as gold-plated Wii, but it was rejected and ultimately sold when the company went bust.",
+      "options": {
+        "a": "Tennis",
+        "b": "Baseball",
+        "c": "Bowling",
+        "d": "Golf"
+      },
+      "answer": "c",
+      "preImageUrl": "",
+      "postImageUrl": "http://i.imgur.com/a5VB6.jpg"
+    },
+    {
+      "text": "In which of these games can you currently not pet a dog?",
+      "additionalText": "Ghost of Tsushima received an update that added this ability, following good-natured jibes from Tristan Cooper's Twitter account @CanYouPetTheDog.\n\nSpeaking with IGN on the subject, Zelda game director Hidemaro Fujibayashi said: “In the game it seems like you can do anything, but ... you actually have a pretty limited number of actions that can do a ton of different things,” Fujibayashi told IGN. “So if it came down to something like petting a dog, we would actually have to put in a custom action just for petting a dog that couldn't really be used for anything else.\".\n\nYou can however feed the dogs, for which they may lead you to treasure!",
+      "options": {
+        "a": "The Legend of Zelda: Breath of the Wild",
+        "b": "Assassin's Creed Valhalla",
+        "c": "Hades",
+        "d": "Ghost of Tsushima"
+      },
+      "answer": "a",
+      "preImageUrl": "",
+      "postImageUrl": "https://nintendoeverything.com/wp-content/uploads/zelda-breath-wild-dog.jpg"
+    },
+    {
+      "text": "Which of these in-game currencies would be worth the most when exchanged for real-world currency?",
+      "additionalText": "This is based on a GameRant article whereby the author found similar items across all games, e.g. T-Shirts and Bottled Drinks, and did some maths. The Sims is supposed to be an analogue to real life, whereas you need several hundreds of the other currencies to buy simple in-game items. In Pokémon a lemonade costs 300 Pokédollars.\n\nA rupee is worth roughly $0.50\nA bell is worth roughly $0.01\nA pokédollar is worth roughly $0.05\nA simoleon is worth $1.29\n\nIn The Sims 3, a 2011 Ford Fiesta Hatchback will cost the player §12,000, with a real-world MSRP $15,500.",
+      "options": {
+        "a": "1 rupee from Zelda",
+        "b": "1 bell from Animal Crossing",
+        "c": "1 pokédollar from Pokémon",
+        "d": "1 simoleon from The Sims"
+      },
+      "answer": "d",
+      "preImageUrl": "https://static.wikia.nocookie.net/pokemon/images/2/27/A_pok%C3%A9_mart_in_Omega_Ruby_%26_Alpha_Saphire..png/",
+      "postImageUrl": "https://static0.gamerantimages.com/wordpress/wp-content/uploads/2020/09/cur-sims-3.jpg?q=50&fit=crop&w=740&dpr=1.5"
+    },
+    {
+      "text": "Which of these is the highest Professional Sports Authenticator (PSA) grade shorthand a trading card can achieve?",
+      "additionalText": "PSA are the choice grader for most collectors of cards. The terms used originate from coin grading used by historians. 'GEM-MT' means 'Gem Mint', and is at the top of the scale, with 'N' meaning 'No Grade' due to tampering or questionable authenticity.",
+      "options": {
+        "a": "PR",
+        "b": "GEM-MT",
+        "c": "VG",
+        "d": "N-1"
+      },
+      "answer": "b",
+      "preImageUrl": "https://indoorgamebunker.com/wp-content/uploads/2021/07/Is-Yugioh-Still-Popular-Trading-Card-Game.png",
+      "postImageUrl": "https://i.psacard.com/psacard/images/resources/gradingstandards/1952-topps-mickey-mantel-psa-gem-mt-10.png"
+    },
+    {
+      "text": "Which of these famous classical compositions, which plays upon death in the 1975 Western shooter 'Gun Fight', was the first to ever appear in a video game?",
+      "additionalText": "'Marche Funebre' is Italian for 'Death March', however, there's another, more practical reason for the game's use of Chopin: music in early video games was usually the dominion of an engineer, not a musician, and as such, it was much easier to transcribe a piece of out-of-copyright, pre-existing music into code than attempt to compose a tune afresh.",
+      "options": {
+        "a": "Chopin's Marche Funebre",
+        "b": "Beethoven's Symphony No. 5",
+        "c": "Tchaikovsky's Piano Concerto No. 1",
+        "d": "Mozart's Eine kleine Nachtmusik"
+      },
+      "answer": "a",
+      "preImageUrl": "http://1.bp.blogspot.com/-6WaBNz2RT4k/Va_obO8k-hI/AAAAAAAAQQ8/3PNX8u4qMP0/s640/gunfight%2B3.jpg",
+      "postImageUrl": "https://cdn.britannica.com/60/140360-050-A2E7778E/LA-Bisson-Frederic-Chopin-detail-photo-publisher-1849.jpg"
+    },
+    {
+      "text": "In what region was the 'Monkey Island' in 'The Secret of Monkey Island'?",
+      "additionalText": "The program that the game's artists used to create characters was called Deluxe Paint, and it saved files as \"brush\" files. When drawing the main character, he was saved as guy.brush, hence his name 'Guybrush'.",
+      "options": {
+        "a": "Caribbean",
+        "b": "Mediterranean",
+        "c": "Bahamas",
+        "d": "Maldives"
+      },
+      "answer": "a",
+      "preImageUrl": "https://static.wikia.nocookie.net/monkeyisland/images/3/34/Monkey_island_map%28EMI%29.jpg",
       "postImageUrl": ""
     },
     {
-      "text": "Thanks to World War II, what was the Nintendo Entertainment System called in South Korea?",
-      "additionalText": "Hyundai Electronics distributed Nintendo's product in South Korea, after South Korea put a ban on Japanese cultural imports following World War II, which wasn't lifted until 2004.",
+      "text": "Which of these 81's is true?",
+      "additionalText": "According to a 2021 CI Games & E-sports survey of a representative sample of online population aged 10-65.\n\nMinecraft made WAY more than $81 million in 2020. Elden Ring only has 5 active speed running categories on 'speedrun.com'.",
       "options": {
-        "a": "Adult Entertainment System",
-        "b": "Korean Gameplay Unit",
-        "c": "Axis Box",
-        "d": "Hyundai Comboy"
+        "a": "Minecraft made $81 million in 2020",
+        "b": "Elden Ring has 81 different speedrun categories",
+        "c": "81% of Generation Z are gamers",
+        "d": "The oldest ever gaming YouTuber is 81 years old"
+      },
+      "answer": "c",
+      "preImageUrl": "",
+      "postImageUrl": "https://d.newsweek.com/en/full/1592076/gaming-grandma.png?w=1600&h=900&q=88&f=9918d7a1c39fb271ddeb2fca7cb37e9b"
+    },
+    {
+      "text": "If you were using a boosted account with high ELO in CSGO, but were being pubstomped in a ranked DM, which of these things could you be described as doing?",
+      "additionalText": "The term 'smurfing' comes from two Warcraft II players back in the '90s. They were so good at the game that when other players saw their usernames come up in matchmaking, they would often leave to avoid getting crushed. To get around this, these players created alternate accounts to keep their identity hidden. They chose the names 'PapaSmurf' and 'Smurfette', which led to the terminology used today.\n\nSo, if 'smurfing' is a seemingly low-level player behaving like a high-level player, then the reverse - a high-level player acting like a low-level player, is \"reverse smurfing\".",
+      "options": {
+        "a": "Reverse Smurfing",
+        "b": "Side Simpsoning",
+        "c": "Ground Garfielding",
+        "d": "Forward Flintstoning"
+      },
+      "answer": "a",
+      "preImageUrl": "",
+      "postImageUrl": "https://gaming4.cash/wp-content/uploads/2018/08/joe-8.png"
+    },
+    {
+      "text": "A former Nintendo of America VP made E3 history in 2004, with the introduction: \"My name is Reggie...\"",
+      "additionalText": "In an interview later, he said: \"This was a well-considered statement, and reflected the needs of Nintendo at the time, and the reality of my own personality. My enthusiasm for video games, my love for Nintendo franchises, as well as my approachability, all worked together. This is the real Reggie… whether on stage, in the office or engaging with the community. I think this is why fans welcomed me, and continue to enjoy engaging with me.\"\n\nHe also said: \"My kids have never let me live it down.\".",
+      "options": {
+        "a": "\"I've been trying to reach you about your car's extended warranty.\"",
+        "b": "\"I'm not really much of a gamer, but I am a fan of Chess.\"",
+        "c": "\"Are you ready? My body is ready.\"",
+        "d": "\"I'm about kicking ass, I'm about taking names, and we're about making games.\""
+      },
+      "answer": "d",
+      "preImageUrl": "https://oyster.ignimgs.com/mediawiki/apis.ign.com/e3/1/16/Nintendos-history-at-e3-2004-20110512013428229.jpg",
+      "postImageUrl": "https://i.ytimg.com/vi/2Gc5cuekQto/hqdefault.jpg"
+    },
+    {
+      "text": "Which of these is not a real post title on the Steam community forum for the game 'Planet Coaster'?",
+      "additionalText": "Hopefully hinted by the fact that there aren't any animals in 'Planet Coaster', but there are in the follow-up game 'Planet Zoo'.",
+      "options": {
+        "a": "My elephants keep escaping and blocking the park entrance",
+        "b": "Why are my guests such pathetic cheapskates?",
+        "c": "Is there a mod or cheat that allows you to kill or drown the visitors?",
+        "d": "Why Planet Coaster Needs A Military DLC"
+      },
+      "answer": "a",
+      "preImageUrl": "https://i0.wp.com/www.thexboxhub.com/wp-content/uploads/2020/11/Planet-Coaster-Console-Edition-4.jpeg?fit=1399%2C787&ssl=1",
+      "postImageUrl": "http://www.planetzoogame.com/images/og_image.jpg"
+    },
+    {
+      "text": "Which former member of Californian rap group N.W.A. made an appearance in the 'Call of Duty' franchise?",
+      "additionalText": "The rapper, who has also appeared in comedy films such as '21 Jump Street', 'Are We There Yet', and 'Barbershop', also played a minor role as Joseph Bowman in the 2010 'Call of Duty: Black Ops'. Unfortunately, the character dies in the game.\n\nSnoop Dogg was never a member of N.W.A.",
+      "options": {
+        "a": "Eazy-E",
+        "b": "Ice Cube",
+        "c": "Dr. Dre",
+        "d": "Snoop Dogg"
+      },
+      "answer": "b",
+      "preImageUrl": "https://i.discogs.com/VolTKKlpALZQmGwMnmZc6xKcwe6khDT9cn-JAi3vrzk/rs:fit/g:sm/q:40/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwMzY0/OC0xNjQyNDEyODMy/LTU0ODAuanBlZw.jpeg",
+      "postImageUrl": "https://api.duniagames.co.id/api/content/upload/file/17138707461622795689.JPG"
+    },
+    {
+      "text": "Which of these fast food chains have never had an officially licensed video game?",
+      "additionalText": "Burger King: Sneak King\nTaco Bell: Taco Bell Tasty Temple Challenge\nKFC: I Love You, Colonel Sanders!",
+      "options": {
+        "a": "Burger King",
+        "b": "Taco Bell",
+        "c": "KFC",
+        "d": "Five Guys"
       },
       "answer": "d",
       "preImageUrl": "",
-      "postImageUrl": "https://consolevariations.com/storage/images/variations/consoles/hyundai-comboy/large/hyundai-comboy.jpg"
+      "postImageUrl": "https://www.mrdictionary.net/users/mecha-neko/saigimages/SneakKing/SneakKing_Xbox_08.jpg"
     },
     {
-      "text": "In 'Fallout 3', a handheld nuclear weapon launcher called the 'Fat Man' makes a unique noise when used. Where did the recording come from?",
-      "additionalText": "The Fat Man itself is modelled after an actual nuke launcher called the M-388 Davy Crockett Tactical Nuclear Recoilless Rifle, which was developed in the 1950s.",
+      "text": "Sony's brand name is a portmanteau between the word 'sonus', meaning 'sound' in Latin, and what other word?",
+      "additionalText": "The desire to change the name to 'Sony' from it's original 'Tokyo Tsushin Kogyo' was to prevent a clash of acronyms with the railway company 'Tokyo Kyuko', and help Western audiences read and pronounce it. 'Sonny', a loan word into Japanese which in the early 1950s connoted smart and presentable young men, was chosen as the company wanted to \"represent a very small group of young people who have the energy and passion towards unlimited creations and innovative ideas\".\n\nThe company’s first consumer product was an electric rice cooker.",
       "options": {
-        "a": "The Liberty bell from Philadelphia",
-        "b": "The lunch bell from the developers' cafeteria",
-        "c": "The chime from Big Ben",
-        "d": "The dial-up noise from America Online"
+        "a": "\"Onyx\", for a sleek black appearance",
+        "b": "\"Sonny\", for a little boy",
+        "c": "\"Sunny\", for good weather",
+        "d": "\"Only\", for there being no comparison"
       },
       "answer": "b",
-      "preImageUrl": "https://static.wikia.nocookie.net/fallout/images/7/72/Fat_Manr.jpg/",
-      "postImageUrl": ""
+      "preImageUrl": "https://www.sony.com/en/SonyInfo/CorporateInfo/History/capsule/c9cbgj000000bauh-img/qfhh7c00000e5x5u.jpg",
+      "postImageUrl": "https://www.sony.com.hk/aboutsony/html/images/Ibuka_Morita_1961.jpg"
     },
     {
-      "text": "Sony Online Entertainment experimented briefly with an in-game command-line function helping players to do what in 'EverQuest II'?",
-      "additionalText": "Sony planned to integrate the pizza function more tightly into the game, so players could charge pizza to their monthly game subscription bill.\n\n\"The goal for the future is to eventually let people do more things like this,\" spokesman Chris Kramer said. \"They could type /harry potter and get the new Harry Potter book delivered or /star wars and get the new Star Wars DVD.\"",
+      "text": "In 2018, E-sports player 'Forsaken' was caught attempting to cheat live on-stage at a tournament. What was his master plan?",
+      "additionalText": "He put aimbot software on a cloud drive to download when he sat down at his on-stage computer. Referees thought his gameplay looked suspicious, and he was unable to delete the incriminating files in time.\n\nApologising later, he said: \"Nothing good has happened to me since the day I started playing this game ... I gave everything away for the game, I always put this game above everything else and now I realise what I have lost. I lost everything when I put the game above all else, and now I have lost the game, too.\".",
       "options": {
-        "a": "Order food from Pizza Hut",
-        "b": "Email the mayor of your city",
-        "c": "Phone a suicide hotline",
-        "d": "Translate their text to "
+        "a": "Download cheating software and rename it to 'word.exe'",
+        "b": "Wear special glasses to allow him to see his opponents' screens",
+        "c": "Pour a can of Pepsi on his opponents' keyboards",
+        "d": "Communicate with an audience member via blinking"
       },
       "answer": "a",
-      "preImageUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/201230/ss_df7fcdce4379a75d8239f69ea127586aba5bc755.1920x1080.jpg?t=1623777611",
-      "postImageUrl": "https://www.giantbomb.com/a/uploads/scale_medium/0/1992/2405963-everquest_pizza_hut_promotion.jpg"
-    },
-    {
-      "text": "In 1990, which of these would you never find in the box, after loaning a Nintendo game from Blockbuster Video?",
-      "additionalText": "20 years prior to their bankruptcy, and following a sharp rise in scale for video game rental, Blockbuster employees had taken to photocopying original game manuals to replace those lost or not returned to a retailer after it was rented. As part of a larger lawsuit, Nintendo won a claim against this practice on the grounds of breach of copyright.\n\nIn compliance with the ruling, Blockbuster produced original short instructions, usually in the form of a small booklet, card, or label stuck on the back of the rental box, that explained the game's basic premise and controls.",
-      "options": {
-        "a": "The original instruction booklet",
-        "b": "The game itself",
-        "c": "Adverts for other Nintendo games",
-        "d": "The cardboard insert"
-      },
-      "answer": "a",
-      "preImageUrl": "https://i.insider.com/5dde9c9bfd9db267664bf9c1?width=750&format=jpeg&auto=webp",
-      "postImageUrl": "https://i.kinja-img.com/gawker-media/image/upload/c_fill,f_auto,fl_progressive,g_center,h_675,pg_1,q_80,w_1200/ontbqyy0hek0sqppt1ag.jpg"
-    },
-    {
-      "text": "Spore was the first notable game to be 'review bombed' upon release. What was the reason?",
-      "additionalText": "Spore was review bombed on Amazon in 2008 after publisher Electronic Arts incorporated a DRM system that limited buyers' ability to install the game more than three times. This system was meant to prevent piracy, but ultimately led to a coordinated backlash with buyers feeling like they were \"renting a broken game.\"",
-      "options": {
-        "a": "Christian groups were angry at religious allegories",
-        "b": "Buyers could only install the game three times",
-        "c": "Peter Molyneux disparaged a games journalist",
-        "d": "The game was publicly delayed five times"
-      },
-      "answer": "b",
-      "preImageUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/17390/0000006439.1920x1080.jpg?t=1642702281",
-      "postImageUrl": ""
-    },
-    {
-      "text": "Which of these intellectual properties have not had an official collaboration with 'Fortnite'?",
-      "additionalText": "Which is strange, because aside from Marvel and DC, Fortnite has a diverse assortment of licensed tie-ins including the Segway company, Monopoly, the band Radiohead, the movies Tenet and It: Chapter Two, Ferrari, UEFA Euro 2020 and artist Jean-Michel Basquiat.",
-      "options": {
-        "a": "Stranger Things",
-        "b": "Ghostbusters",
-        "c": "The Walking Dead",
-        "d": "Game Of Thrones"
-      },
-      "answer": "d",
-      "preImageUrl": "",
-      "postImageUrl": "https://static.wikia.nocookie.net/fortnite/images/1/19/Kane_and_Reus_-_Promo_-_Fortnite.jpg/"
-    },
-    {
-      "text": "Which exclusion from the New York City skyline in Deus Ex prompted outrage from fans in 2000?",
-      "additionalText": "In Deus Ex, players can run around Liberty Island and check out the view, but the developers had to crop the texture due to engine limitations. Speaking on the matter, Designer Harvey Smith said:\n\n\"When people complained, we just explained that it had been destroyed by terrorist attacks. We start the game with the Liberty Island statue having been destroyed by terrorists a few years before. We just said that the towers had been destroyed too. And this was way before 9-11. Years. That's kind of freaky.\"",
-      "options": {
-        "a": "The World Trade Center Towers",
-        "b": "The Statue Of Liberty",
-        "c": "The Empire State Building",
-        "d": "The One Worldwide Plaza"
-      },
-      "answer": "a",
-      "preImageUrl": "",
-      "postImageUrl": "https://gotgame.com/wp-content/uploads/2015/09/deus-e.jpg"
+      "preImageUrl": "https://cdn.vox-cdn.com/thumbor/QdPlBCmrTCWE5n0T3miHKBXrKjY=/0x0:1920x993/1200x800/filters:focal(807x344:1113x650)/cdn.vox-cdn.com/uploads/chorus_image/image/61854755/Screen_Shot_2018_10_21_at_2.34.15_PM.0.png",
+      "postImageUrl": "https://pbs.twimg.com/media/Dp3dB7vW4AAC183.jpg"
     }
   ]
 }

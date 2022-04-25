@@ -70,6 +70,8 @@ export const MAX_TEAM_SIZE = 5;
 
 export const QUESTION_BUFFER_TIME_MS = 3000;
 
+export const SHOW_ALLOCATIONS_TIMER_MS = 8000;
+
 /**
  * Send an object over a websocket
  * 

@@ -4,6 +4,7 @@
             Quiz
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
         <style>
             @font-face {
                 font-family: 'Varela';
@@ -106,10 +107,6 @@
             
             .welcome {
                 font-weight: 200;
-            }
-
-            .red {
-                color: #ea3c3b;
             }
 
             .imagehint {
@@ -307,6 +304,36 @@
                 background-color: #009879;
                 transition: width 0.1s;
             }
+
+            .green {
+                color: #009879;
+            }
+            .red {
+                color: #ea3c3b;
+            }
+            #infomodal {
+                z-index: 1;
+                background-color: #ea3c3b;
+                position: absolute;
+                height: 100%;
+                width: 100%;
+                top: 0;
+                left: 0;
+            }
+            .modal {
+                position: relative;
+                display: block;
+                margin: 3rem;
+                width: calc(100% - 6rem);
+                height: calc(100% - 6rem);
+            }
+            #infomodalclose, #infomodalopen {
+                padding: 0;
+                border: none;
+                font-size: 1.2rem;
+                margin-left: 0.2rem;
+                position: relative;
+            }
         </style>
     </head>
     <body>
@@ -352,12 +379,32 @@
                 <table class="styledtable" id="solos"></table>
             </div>
             <div id="game" hidden>
+                <div id="infomodal" hidden>
+                    <div class="modal">
+                        <button id="infomodalclose">
+                            <span class="bi bi-x-circle"></span>
+                        </button>
+                        <h2>Rules:</h2>
+                        <p>This is a quiz with an interactive twist!</p>
+                        <p>
+                            Each round, you'll receive some money to allocate towards to answers you're most confident in.
+                            You may split your money between several answers - but be wary:
+                        </p>
+                        <p>
+                            Money wagered on right answers is doubled...
+                        </p>
+                        <p>
+                            Money wagered on wrong answers is lost!
+                        </p>
+                    </div>
+                    <p>Here's an explanation</p>
+                </div>
                 <div>
                     <h1 id="teamname"></h1>
                     <ul id="teammembers"></ul>
                 </div>
                 <div>
-                    <h3 class="red">Question <span id="questionnumber"></span></h3>
+                    <h3 class="red">Question <span id="questionnumber"></span><button id="infomodalopen"><span class="bi bi-question-circle"></span></button></h3>
                     <p id="questiontext"></p>
                     <button id="showpreimage">Show image</button>
                     <img src="" class="imagehint" id="preimage"/>
