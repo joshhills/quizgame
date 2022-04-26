@@ -708,7 +708,7 @@ function updateUI() {
             useHintButton.hidden = false;
             numHintsRemaining.innerHTML = _team.remainingHints;
 
-            if (_team.remainingHints && _team.activeHint === null) {
+            if (_team.remainingHints && _team.activeHint === null && !_team.lockedIn) {
                 useHintButton.disabled = false;
             } else {
                 useHintButton.disabled = true;
