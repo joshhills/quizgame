@@ -817,6 +817,11 @@ function handleUseHint(data) {
     // Get player's team based on their ID
     const team = getTeamById(data.id.id);
 
+    if (team.lockedIn) {
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
+        return;
+    }
+
     if (team.activeHint) {
         sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You already have a hint" });
         return;
