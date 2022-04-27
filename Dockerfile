@@ -1,8 +1,8 @@
 FROM node:alpine
 
 WORKDIR /apps
-RUN npm install ws node-static
 ADD . /apps/
+RUN npm install
 
 EXPOSE 3000
 
