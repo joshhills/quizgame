@@ -4,7 +4,7 @@
             Quiz
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
         <style>
             @font-face {
                 font-family: 'Varela';
@@ -334,6 +334,14 @@
                 margin-left: 0.2rem;
                 position: relative;
             }
+
+            #scorestable i:not(:last-child) {
+                margin-right: 4px;
+            }
+
+            #scorestable tbody tr td:first-child {
+                text-align: right;
+            }
         </style>
     </head>
     <body>
@@ -349,7 +357,7 @@
                     <span id="pregamestatuswidgetready"></span> as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
                     <br/>
                     <br/>
-                    <button id="pregamestatuswidgetleave">Leave team</button>
+                    <button id="pregamestatuswidgetleave"><i class="bi bi-box-arrow-left"></i> Leave team</button>
                     <button id="pregamestatuswidgetreadybutton"></button>
                 </div>
                 <h4 id="enternameprompt">Enter your player name</h4>
@@ -364,13 +372,13 @@
                     <div class="ig">
                         <h4 id="enterteamnameprompt">enter a team name</h4>
                         <input type="text" placeholder="Team" maxlength="16" id="team" />
-                        <button id="createteam" disabled>Create Team</button>
+                        <button id="createteam" disabled><i class="bi bi-people"></i> Create Team</button>
                     </div>
                     <div class="ig">
                         <p id="ortext">or</p>
                     </div>
                     <div class="ig">
-                        <button id="joinsolo" disabled>Play Solo</button>
+                        <button id="joinsolo" disabled><i class="bi bi-person"></i> Play Solo</button>
                     </div>
                 </div>
                 <h3 id="teamstitle">Teams (<span id="teamcount"></span>)</h3>
@@ -406,7 +414,7 @@
                 <div>
                     <h3 class="red">Question <span id="questionnumber"></span><button id="infomodalopen"><span class="bi bi-question-circle"></span></button></h3>
                     <p id="questiontext"></p>
-                    <button id="showpreimage">Show image</button>
+                    <button id="showpreimage"><i class="bi bi-image"></i> Show image</button>
                     <img src="" class="imagehint" id="preimage"/>
                 </div>
                 <div>
@@ -448,9 +456,9 @@
                 </div>
                 <div>
                     <br/>
-                    <button id="reset">Reset</button>
-                    <button id="usehint">Use Hint (<span id="numhintsremaining">0</span>)</button>
-                    <button class="redalert" id="lockin">Lock In</button>
+                    <button id="reset"><i class="bi bi-arrow-clockwise"></i> Reset</button>
+                    <button id="usehint"><i class="bi bi-lightbulb"></i> Use Hint (<span id="numhintsremaining">0</span>)</button>
+                    <button class="redalert" id="lockin"><i class="bi bi-lightning-charge"></i> Lock In</button>
                 </div>
                 <p id="help"></p>
                 <textarea readonly id="log" style="width: 100%;" rows="10"></textarea>
@@ -480,6 +488,7 @@
             </div>
             <div id="finish" hidden>
                 <h2 id="winnertext"></h2>
+                <div id="achievements"></div>
                 <div class="reactions">
                     <button id="laugh3"><span class="emote laugh"></span></button>
                     <button id="cry3"><span class="emote cry"></span></button>

@@ -110,7 +110,8 @@ var pregameContainer = document.getElementById('pregame'),
     timerBar = document.getElementById('timerbar'),
     infoModal = document.getElementById('infomodal'),
     infoModalClose = document.getElementById('infomodalclose'),
-    infoModalOpen = document.getElementById('infomodalopen');
+    infoModalOpen = document.getElementById('infomodalopen'),
+    achievementsEl = document.getElementById('achievements');
 
 function updateJoinButtons() {
     const playerName = document.getElementById('name').value;
@@ -126,9 +127,9 @@ function updateJoinButtons() {
         }
     }
     if (didMatchAny) {
-        createTeamButton.innerHTML = 'Join existing team';
+        createTeamButton.innerHTML = '<i class="bi bi-people"></i> Join existing team';
     } else {
-        createTeamButton.innerHTML = 'Create team';
+        createTeamButton.innerHTML = '<i class="bi bi-people"></i> Create team';
     }
 
     if (playerNameValid) {
@@ -166,7 +167,13 @@ minusD.addEventListener('click', () => minusOption('d'));
 addD.addEventListener('click', () => addOption('d'));
 
 reset.addEventListener('click', () => resetState());
-lockIn.addEventListener('click', () => setLockedIn());
+lockIn.addEventListener('click', () => {
+
+    let r = confirm('Are you sure you want to lock in?');
+    if (r) {
+        setLockedIn();
+    }    
+});
 
 addRemainingA.addEventListener('click', () => addRemaining('a'));
 addRemainingB.addEventListener('click', () => addRemaining('b'));
@@ -188,7 +195,7 @@ loveReactButton3.addEventListener('click', () => sendReaction(REACTIONS.LOVE));
 
 showPreImageButton.addEventListener('click', () => {
     showPreImage = !showPreImage;
-    showPreImageButton.innerHTML = showPreImage ? 'Hide image' : 'Show image';
+    showPreImageButton.innerHTML = showPreImage ? '<i class="bi bi-image-alt"></i> Hide image' : '<i class="bi bi-image"></i> Show image';
     updateUI();
 });
 
@@ -198,7 +205,10 @@ sendChatMessage.addEventListener('click', () => {
 });
 
 useHintButton.addEventListener('click', () => {
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id); 
+    let r = confirm('Are you sure you want to use a hint?');
+    if (r) {
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id); 
+    }
 });
 
 infoModalClose.addEventListener('click', () => {
@@ -478,7 +488,7 @@ function updateUI() {
             thenText.hidden = true;
             enterNamePrompt.hidden = true;
             enterTeamNamePrompt.hidden = true;
-            pregameStatusWidgetReadyButton.innerHTML = ready ? 'I\'m not ready' : 'I\'m ready';
+            pregameStatusWidgetReadyButton.innerHTML = ready ? '<i class="bi bi-x-circle"></i> I\'m not ready' : '<i class="bi bi-check-circle"></i> I\'m ready';
         } else {
             document.getElementById('name').hidden = false;
             document.getElementById('team').hidden = false;
@@ -512,8 +522,8 @@ function updateUI() {
                 numSolos++;
             } else {
                 wasTeamAvailableToJoin |= _team.members.length !== MAX_TEAM_SIZE;
-                let joinButtonHTML = _team.members.length !== MAX_TEAM_SIZE ? `<button class="teambutton" data-team="${_team.teamName}">Join Team</button>` : '';
-                let leaveButtonHTML = '<button class="leavebutton">Leave Team</button>';
+                let joinButtonHTML = _team.members.length !== MAX_TEAM_SIZE ? `<button class="teambutton" data-team="${_team.teamName}"><i class="bi bi-people"></i> Join Team</button>` : '';
+                let leaveButtonHTML = '<button class="leavebutton"><i class="bi bi-box-arrow-left"></i> Leave Team</button>';
                 let membersHTML = '';
                 let isAlreadyInTeam = false;
                 for (let tm of _team.members) {
@@ -781,21 +791,41 @@ function updateUI() {
         clearInterval(timerBarInterval);
         timerBarInterval = -1;
 
-        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th></th></tr></thead><tbody>';
+        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th>Change</th><th></th></tr></thead><tbody>';
         gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
         for (let i = 0; i < gameState.teams.length; i++) {
             let scoreDidChange = gameState.teams[i].lastChange !== 0;
             let changeIconHtml = '';
+            let changeAmountHtml = '-';
+            let changeClass = '';
             if (scoreDidChange) {
-                let largeChange = Math.abs(gameState.teams[i].lastChange) > gameState.teams[i].lastMoney / 2;
+                // let largeChange = Math.abs(gameState.teams[i].lastChange) > gameState.teams[i].lastMoney / 2;
+                const placesMoved = gameState.teams[i].placesMoved;
+                const largeChange = Math.abs(placesMoved) > 4;
+                
+                if (placesMoved < 0) {
+                    changeIconHtml = `<i class="bi bi-chevron${largeChange ? '-double' : ''}-down red"></i>`;
+                } else if (placesMoved > 0) {
+                    changeIconHtml = `<i class="bi bi-chevron${largeChange ? '-double' : ''}-up green"></i>`;
+                }
 
                 if (gameState.teams[i].lastChange < 0) {
-                    changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-down red"/>`;
+                    changeClass = 'red';
+                    changeAmountHtml = `-£${numberWithCommas(Math.abs(gameState.teams[i].lastChange))}`;
                 } else {
-                    changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-up green"/>`;
+                    changeClass = 'green';
+                    changeAmountHtml = `+£${numberWithCommas(gameState.teams[i].lastChange)}`;
                 }
             }
-            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td>${changeIconHtml}</td></tr>`;
+
+            let fastestFingerIconHtml = '';
+            if (gameState.teams[i].teamName === gameState.fastestTeam) {
+                fastestFingerIconHtml = '<i class="bi bi-lightning-charge red"></i>';
+            }
+            if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
+                fastestFingerIconHtml = '<i class="bi bi-lightning-charge green"></i>';
+            }
+            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
@@ -816,6 +846,9 @@ function updateUI() {
         } else {
             winnerText.innerHTML = gameState.winners[0] === team ? 'You won!' : 'You lost!';
         }
+
+        let _team = getTeamByName(team);
+        achievementsEl.innerHTML = JSON.stringify(_team.achievements);
     }
 }
 

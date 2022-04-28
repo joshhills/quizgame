@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT } from './static/shared.js';
 
 import express from 'express';
 import fetch from 'node-fetch';
@@ -97,6 +97,7 @@ let allowHints = true;
 let numHints = 1;
 let secondsPerQuestion = 60;
 let incrementEachRound = 100;
+let fastestFingerBonus = 0;
 
 let state = GAME_STATE.PREGAME,
     questions = [],
@@ -116,7 +117,11 @@ let state = GAME_STATE.PREGAME,
     totalGainedThisRound = 0,
     teamsKnockedOutThisRound = [],
     totalAllocationAllThisRound = 0,
-    advanceTimer = -1;
+    advanceTimer = -1,
+    fastestTime = null,
+    fastestTeam = null,
+    fastestTimeCorrect = null,
+    fastestTeamCorrect = null;
 
 reset();
 
@@ -140,6 +145,10 @@ function reset() {
     totalGainedThisRound = 0;
     teamsKnockedOutThisRound = [];
     totalAllocationAllThisRound = 0;
+    fastestTime = null;
+    fastestTeam = null;
+    fastestTimeCorrect = null;
+    fastestTeamCorrect = null;
 }
 
 function broadcastGameState() {
@@ -175,7 +184,11 @@ function broadcastGameState() {
         totalGainedThisRound: totalGainedThisRound,
         teamsKnockedOutThisRound: teamsKnockedOutThisRound,
         totalAllocationAllThisRound: totalAllocationAllThisRound,
-        secondsPerQuestion: secondsPerQuestion
+        secondsPerQuestion: secondsPerQuestion,
+        fastestTime: fastestTime,
+        fastestTeam: fastestTeam,
+        fastestTimeCorrect: fastestTimeCorrect,
+        fastestTeamCorrect: fastestTeamCorrect
     };
 
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, {state: gameState});
@@ -205,6 +218,19 @@ function handleProgressState() {
         state = GAME_STATE.ANSWER;
         showImage = false;
         showAllocations = false;
+
+        // Set up historic data
+        if (!historicData.perTurn) {
+            historicData.perTurn = {};
+        }
+
+        historicData.perTurn[activeQuestionIndex] = {
+            teams: {},
+            allocations: {}
+        };
+        historicData.globalData = {
+            teams: {}
+        }
         
         // Compute total allocations for this round
         optionATotalAllocationThisRound = 0;
@@ -216,6 +242,16 @@ function handleProgressState() {
         totalGainedThisRound = 0;
 
         teamsKnockedOutThisRound = [];
+
+        const currentAnswer = activeQuestion.answer;
+        const currentAnswerTime = activeQuestion.timeBegan;
+
+        // Make sure values are reset
+        fastestTime = null;
+        fastestTeam = null;
+        let fastestTeamWasSloppy = false;
+        fastestTimeCorrect = null;
+        fastestTeamCorrect = null;
 
         for (let team of teams) {
             let wasAlive = false;
@@ -231,8 +267,12 @@ function handleProgressState() {
             // Compute new team totals
             let beforeDeduction = team.remainingMoney;
 
+            team.lastAllIn = beforeDeduction === team.optionsAllocated.a
+                || beforeDeduction === team.optionsAllocated.b
+                || beforeDeduction === team.optionsAllocated.c
+                || beforeDeduction === team.optionsAllocated.d;
+
             // team.remainingMoney = team.optionsAllocated[questions[activeQuestionIndex].answer];
-            let currentAnswer = questions[activeQuestionIndex].answer;
             let losses = 0;
             let winnings = team.optionsAllocated[currentAnswer];
             for (let option of ['a', 'b', 'c', 'd']) {
@@ -247,20 +287,110 @@ function handleProgressState() {
             totalLostThisRound += losses;
             totalGainedThisRound += winnings;
 
+            let wasKnockedOut = false;
             // Compute those who were knocked out this round
             if (wasAlive && team.remainingMoney === 0) {
                 teamsKnockedOutThisRound.push(team.teamName);
+                wasKnockedOut = true;
             }
 
             // Log whether or not the team gained or lost money
             team.lastMoney = beforeDeduction;
             team.lastChange = team.remainingMoney - beforeDeduction;
+
+            // Eligibility for fastest finger
+            if (team.lockedIn) {
+                // If nobody's been set yet
+                const elapsed = team.lockedInTime - currentAnswerTime;
+
+                if (team.lastChange !== 0 && ((fastestTeam === null || fastestTime === null) || elapsed < fastestTime)) {
+                    fastestTime = elapsed;
+                    fastestTeam = team.teamName;
+
+                    fastestTeamWasSloppy = team.lastChange < 0;
+                }
+
+                if (team.lastChange > 0 && ((fastestTeamCorrect === null || fastestTimeCorrect === null) || elapsed < fastestTimeCorrect)) {
+                    fastestTimeCorrect = elapsed;
+                    fastestTeamCorrect = team.teamName;
+                }
+            }
+
+            // Tally per-turn data
+            historicData.perTurn[activeQuestionIndex].teams[team.teamName] = {
+                before: beforeDeduction,
+                change: team.lastChange,
+                after: team.remainingMoney,
+                usedHint: team.activeHint !== null,
+                wentAllIn: team.lastAllIn,
+                wasKnockedOut: wasKnockedOut
+            };
+
+            // Init global data
+            if (!historicData.globalData.teams[team.teamName]) {
+                historicData.globalData.teams[team.teamName] = {
+                    numTurnsUsedHints: 0,
+                    numTimesKnockedOut: 0,
+                    numTurnsSloppiestFinger: 0,
+                    numTurnsFastestFinger: 0,
+                    totalMoneyGained: 0,
+                    totalMoneyLost: 0,
+                    longestGainStreak: 0,
+                    numTurnsWentAllIn: 0
+                };
+            }
+
+            // Tally global data
+            if (team.activeHint !== null) {
+                historicData.globalData.teams[team.teamName].numTurnsUsedHints ++;
+            }
+            if (wasKnockedOut) {
+                historicData.globalData.teams[team.teamName].numTimesKnockedOut++;
+            }
+            if (team.lastAllIn) {
+                historicData.globalData.teams[team.teamName].numTurnsWentAllIn++;
+            }
+
+            if (team.lastChange > 0) {
+                team.currentGainStreak++;
+            } else {
+                historicData.globalData.teams[team.teamName].longestGainStreak = team.currentGainStreak;
+                team.currentGainStreak = 0;
+            }
+
+            historicData.globalData.teams[team.teamName].totalMoneyGained += winnings;
+            historicData.globalData.teams[team.teamName].totalMoneyLost += losses;
+        }
+
+        if (fastestTeam && fastestTeamWasSloppy) {
+            historicData.globalData.teams[fastestTeam].numTurnsSloppiestFinger++;
+        }
+        if (fastestTeamCorrect) {
+            historicData.globalData.teams[fastestTeamCorrect].numTurnsFastestFinger++;
         }
 
         totalAllocationAllThisRound = optionATotalAllocationThisRound
             + optionBTotalAllocationThisRound
             + optionCTotalAllocationThisRound
             + optionDTotalAllocationThisRound;
+
+        historicData.perTurn[activeQuestionIndex].allocations = {
+            optionATotalAllocation: optionATotalAllocationThisRound,
+            optionBTotalAllocation: optionBTotalAllocationThisRound,
+            optionCTotalAllocation: optionCTotalAllocationThisRound,
+            optionDTotalAllocation: optionDTotalAllocationThisRound,
+            allTotalAllocation: totalAllocationAllThisRound
+        };
+
+        // Sort teams by new scores
+        teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
+        for (let i = 0; i < teams.length; i++) {
+            if (teams[i].lastPlace !== null) {
+                teams[i].placesMoved = teams[i].lastPlace - i;
+            }
+
+            teams[i].lastPlace = i;
+        }
 
         clearTimeout(advanceTimer);
         advanceTimer = -1;
@@ -286,6 +416,7 @@ function handleProgressState() {
             state = GAME_STATE.FINISH;
             
             winners = getTeamsWithMostMoney();
+            computeAchievements();
         } else {
             activeQuestionIndex++;
             activeQuestion = questions[activeQuestionIndex];
@@ -305,6 +436,12 @@ function handleProgressState() {
                     team.remainingMoney += incrementEachRound;    
                 }
 
+                // Apply fastest finger bonus...
+                // TODO: Do we want this?
+                if (team.teamName === fastestTeamCorrect) {
+                    team.remainingMoney += fastestFingerBonus;
+                }
+
                 team.optionsAllocated = {
                     a: 0,
                     b: 0,
@@ -312,6 +449,7 @@ function handleProgressState() {
                     d: 0
                 };
                 team.lockedIn = false;
+                team.lockedInTime = null;
                 team.activeHint = null;
             }
 
@@ -335,6 +473,7 @@ function handleLockIn(data) {
     let team = getTeamByName(data.team);
 
     team.lockedIn = true;
+    team.lockedInTime = Date.now();
     
     // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
@@ -436,9 +575,16 @@ function handleCreateTeam(data) {
                 d: 0
             },
             lockedIn: false,
+            lockedInTime: null,
             solo: false,
             remainingHints: numHints,
-            activeHint: null
+            activeHint: null,
+            lastChange: null,
+            lastAllIn: false,
+            currentGainStreak: 0,
+            lastPlace: null,
+            placesMoved: 0,
+            achievements: []
         }
     );
 
@@ -613,9 +759,16 @@ function handleJoinSolo(data) {
                 d: 0
             },
             lockedIn: false,
+            lockedInTime: null,
             solo: true,
             remainingHints: numHints,
-            activeHint: null
+            activeHint: null,
+            lastChange: null,
+            lastAllIn: false,
+            currentGainStreak: 0,
+            lastPlace: null,
+            placesMoved: 0,
+            achievements: []
         }
     );
 
@@ -972,7 +1125,10 @@ function getDenomination(teamName) {
     if (team.remainingMoney < 50000) {
         return 1000;
     }
-    return 5000;
+    if (team.remainingMoney < 100000) {
+        return 5000;
+    }
+    return 10000;
 }
 
 // Utility method for money remaining per turn
@@ -1036,4 +1192,116 @@ function getTeamsWithMostMoney() {
     }
 
     return teamsWithMostMoney;
+}
+
+function computeAchievements() {
+    console.log('Processing historic data');
+    console.log(JSON.stringify(historicData));
+
+    let highestNumTimesKnockedOut = -1;
+    let prospectiveHighestNumTimesKnockedOut = [];
+
+    let highestNumTurnsSloppiestFinger = -1;
+    let prospectiveHighestNumTurnsSloppiestFinger = [];
+
+    let highestNumTurnsFastestFinger = -1;
+    let prospectiveHighestNumTurnsFastestFinger = [];
+
+    let highestTotalMoneyGained = -1;
+    let prospectiveHighestTotalMoneyGained = [];
+
+    let highestTotalMoneyLost = -1;
+    let prospectiveHighestTotalMoneyLost = [];
+
+    let highestNumTurnsWentAllIn = -1;
+    let prospectiveHighestNumTurnsWentAllIn = [];
+
+    for (let team of teams) {
+
+        // Compute winner
+        if (winners.contains(team.teamName)) {
+            team.achievements.push(ACHIEVEMENT.WINNER);
+        }
+
+        // Compute streaks
+        const longestStreak = historicData.globalData.teams[team.teamName].longestGainStreak;
+        if (longestStreak === questions.length) {
+            team.achievements.push(ACHIEVEMENT.ALL_CORRECT);
+        }
+        if (longestStreak >= 15) {
+            team.achievements.push(ACHIEVEMENT.FIFTEEN_IN_A_ROW);
+        }
+        if (longestStreak >= 10) {
+            team.achievements.push(ACHIEVEMENT.TEN_IN_A_ROW);
+        }
+        if (longestStreak >= 5) {
+            team.achievements.push(ACHIEVEMENT.FIVE_IN_A_ROW);
+        }
+        
+        // Compute hints
+        if (historicData.globalData.teams[team.teamName].numTurnsUsedHints === 0) {
+            team.achievements.push(ACHIEVEMENT.NO_HINTS_USED);
+        }
+
+        // Store totals
+        if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > highestNumTimesKnockedOut) {
+            prospectiveHighestNumTimesKnockedOut = [team.teamName];
+        } else if (historicData.globalData.teams[team.teamName].numTimesKnockedOut === highestNumTimesKnockedOut) {
+            prospectiveHighestNumTimesKnockedOut.push(team.teamName);
+        }
+
+        if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > highestNumTurnsSloppiestFinger) {
+            prospectiveHighestNumTurnsSloppiestFinger = [team.teamName];
+        } else if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger === highestNumTurnsSloppiestFinger) {
+            prospectiveHighestNumTurnsSloppiestFinger.push(team.teamName);
+        }
+
+        if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger > highestNumTurnsFastestFinger) {
+            prospectiveHighestNumTurnsFastestFinger = [team.teamName];
+        } else if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger === highestNumTurnsFastestFinger) {
+            prospectiveHighestNumTurnsFastestFinger.push(team.teamName);
+        }
+
+        if (historicData.globalData.teams[team.teamName].totalMoneyGained > highestTotalMoneyGained) {
+            prospectiveHighestTotalMoneyGained = [team.teamName];
+        } else if (historicData.globalData.teams[team.teamName].totalMoneyGained === highestTotalMoneyGained) {
+            prospectiveHighestTotalMoneyGained.push(team.teamName);
+        }
+
+        if (historicData.globalData.teams[team.teamName].totalMoneyLost > highestTotalMoneyLost) {
+            prospectiveHighestTotalMoneyLost = [team.teamName];
+        } else if (historicData.globalData.teams[team.teamName].totalMoneyLost === highestTotalMoneyLost) {
+            prospectiveHighestTotalMoneyLost.push(team.teamName);
+        }
+
+        if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn > highestNumTurnsWentAllIn) {
+            prospectiveHighestNumTurnsWentAllIn = [team.teamName];
+        } else if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn === highestNumTurnsWentAllIn) {
+            prospectiveHighestNumTurnsWentAllIn.push(team.teamName);
+        }
+    }
+
+    for (const team of prospectiveHighestNumTimesKnockedOut) {
+        team.achievements.push(ACHIEVEMENT.MOST_KNOCKED_OUT);
+    }
+
+    for (const team of prospectiveHighestNumTurnsSloppiestFinger) {
+        team.achievements.push(ACHIEVEMENT.MOST_CLUMSY_FINGERS);
+    }
+
+    for (const team of prospectiveHighestNumTurnsFastestFinger) {
+        team.achievements.push(ACHIEVEMENT.MOST_FASTEST_FINGERS);
+    }
+
+    for (const team of prospectiveHighestTotalMoneyGained) {
+        team.achievements.push(ACHIEVEMENT.HIGHEST_GAINS);
+    }
+
+    for (const team of prospectiveHighestTotalMoneyLost) {
+        team.achievements.push(ACHIEVEMENT.HIGHEST_LOSSES);
+    }
+
+    for (const team of prospectiveHighestNumTurnsWentAllIn) {
+        team.achievements.push(ACHIEVEMENT.MOST_ALL_INS);
+    }
 }

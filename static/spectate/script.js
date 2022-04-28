@@ -291,21 +291,41 @@ function updateUI() {
             }
             options.className = 'options hidden';
 
-            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th></th></tr></thead><tbody>';
+            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th>Change</th><th></th></tr></thead><tbody>';
             gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
             for (let i = 0; i < gameState.teams.length; i++) {
                 let scoreDidChange = gameState.teams[i].lastChange !== 0;
                 let changeIconHtml = '';
+                let changeAmountHtml = '-';
+                let changeClass = '';
                 if (scoreDidChange) {
-                    let largeChange = Math.abs(gameState.teams[i].lastChange) > gameState.teams[i].lastMoney / 2;
-    
+                    // let largeChange = Math.abs(gameState.teams[i].lastChange) > gameState.teams[i].lastMoney / 2;
+                    const placesMoved = gameState.teams[i].placesMoved;
+                    const largeChange = Math.abs(placesMoved) > 4;
+                    
+                    if (placesMoved < 0) {
+                        changeIconHtml = `<i class="bi bi-chevron${largeChange ? '-double' : ''}-down red"></i>`;
+                    } else if (placesMoved > 0) {
+                        changeIconHtml = `<i class="bi bi-chevron${largeChange ? '-double' : ''}-up green"></i>`;
+                    }
+
                     if (gameState.teams[i].lastChange < 0) {
-                        changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-down red"/>`;
+                        changeClass = 'red';
+                        changeAmountHtml = `-£${numberWithCommas(Math.abs(gameState.teams[i].lastChange))}`;
                     } else {
-                        changeIconHtml = `<span class="bi bi-chevron${largeChange ? '-double' : ''}-up green"/>`;
+                        changeClass = 'green';
+                        changeAmountHtml = `+£${numberWithCommas(gameState.teams[i].lastChange)}`;
                     }
                 }
-                scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td>${changeIconHtml}</td></tr>`;
+
+                let fastestFingerIconHtml = '';
+                if (gameState.teams[i].teamName === gameState.fastestTeam) {
+                    fastestFingerIconHtml = '<i class="bi bi-lightning-charge red"></i>';
+                }
+                if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
+                    fastestFingerIconHtml = '<i class="bi bi-lightning-charge green"></i>';
+                }
+                scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
             }
             scoresTableHtml + '</tbody>';
             scoresTable.innerHTML = scoresTableHtml;

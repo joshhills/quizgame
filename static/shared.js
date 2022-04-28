@@ -72,6 +72,85 @@ export const QUESTION_BUFFER_TIME_MS = 3000;
 
 export const SHOW_ALLOCATIONS_TIMER_MS = 8000;
 
+// Game achievements
+export const ACHIEVEMENT = {
+    WINNER: 'winner', 
+    FIVE_IN_A_ROW: 'fiveInARow', //
+    TEN_IN_A_ROW: 'tenInARow', //
+    FIFTEEN_IN_A_ROW: 'fifteenInARow', //
+    ALL_CORRECT: 'allCorrect', //
+    MOST_FASTEST_FINGERS: 'mostFastestFingers',
+    MOST_CLUMSY_FINGERS: 'mostClumsyFingers',
+    HIGHEST_GAINS: 'highestGains',
+    HIGHEST_LOSSES: 'highestLosses',
+    MOST_ALL_INS: 'mostAllIns',
+    MOST_KNOCKED_OUT: 'mostKnockedOut',
+    NO_HINTS_USED: 'noHintsUsed' //
+}
+
+export const ACHIEVEMENT_DATA = {
+    [ACHIEVEMENT.WINNER]: {
+        title: 'Winner',
+        description: 'You won the quiz',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.FIVE_IN_A_ROW]: {
+        title: 'Five In A Row',
+        description: 'You gained money five times in a row',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.TEN_IN_A_ROW]: {
+        title: 'Ten In A Row',
+        description: '',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.FIFTEEN_IN_A_ROW]: {
+        title: 'Fifteen In A Row',
+        description: 'You won the quiz!',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.ALL_CORRECT]: {
+        title: 'Star Pupil',
+        description: 'You gained money on all questions',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.MOST_FASTEST_FINGERS]: {
+        title: 'Fastest Fingers',
+        description: 'You locked in the fastest and gained money, the most amount of times',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.MOST_CLUMSY_FINGERS]: {
+        title: 'Clumsiest Thumbs',
+        description: 'You locked in the fastest and lost money, the most amount of times',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.HIGHEST_GAINS]: {
+        title: 'On The Up',
+        description: 'You gained the most money overall',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.HIGHEST_LOSSES]: {
+        title: 'Biggest Loser',
+        description: 'You lost the most money overall',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.MOST_ALL_INS]: {
+        title: 'Riskiest Strategy',
+        description: 'You went all-in on a single answer the most amount of times',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.MOST_KNOCKED_OUT]: {
+        title: 'Hard Knocks',
+        description: 'You lost all your money the most amount of times',
+        imagePath: ''
+    },
+    [ACHIEVEMENT.NO_HINTS_USED]: {
+        title: 'No Help Needed',
+        description: 'You never used any hints',
+        imagePath: ''
+    }
+}
+
 /**
  * Send an object over a websocket
  * 
@@ -122,7 +201,7 @@ export function handleMessage(ws, data, typeMap, callback) {
 
     let parsedData = JSON.parse(data);
 
-    console.info(`Received a message of type: ${parsedData.messageType}`);
+    // console.info(`Received a message of type: ${parsedData.messageType}`);
     
     if (parsedData.messageType) {
         
