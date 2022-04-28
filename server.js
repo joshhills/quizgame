@@ -353,6 +353,10 @@ function handleProgressState() {
 
             if (team.lastChange > 0) {
                 team.currentGainStreak++;
+
+                if (team.currentGainStreak > historicData.globalData.teams[team.teamName].longestGainStreak) {
+                    historicData.globalData.teams[team.teamName].longestGainStreak = team.currentGainStreak;
+                }
             } else {
                 historicData.globalData.teams[team.teamName].longestGainStreak = team.currentGainStreak;
                 team.currentGainStreak = 0;
@@ -1219,7 +1223,7 @@ function computeAchievements() {
     for (let team of teams) {
 
         // Compute winner
-        if (winners.contains(team.teamName)) {
+        if (winners.indexOf(team.teamName) !== -1) {
             team.achievements.push(ACHIEVEMENT.WINNER);
         }
 
