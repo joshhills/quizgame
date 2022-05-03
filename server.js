@@ -11,7 +11,7 @@ import url from 'url';
 const PORT = process.env.PORT || 3000;
 
 let server = express()
-  .use(express.static('./static'))
+  .use('/quiz', express.static('./static'))
   .use(fileUpload());
 
 // Support quiz file upload
