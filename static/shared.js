@@ -92,62 +92,62 @@ export const ACHIEVEMENT_DATA = {
     [ACHIEVEMENT.WINNER]: {
         title: 'Winner',
         description: 'You won the quiz',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.FIVE_IN_A_ROW]: {
         title: 'Five In A Row',
         description: 'You gained money five times in a row',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.TEN_IN_A_ROW]: {
         title: 'Ten In A Row',
         description: '',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.FIFTEEN_IN_A_ROW]: {
         title: 'Fifteen In A Row',
         description: 'You won the quiz!',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.ALL_CORRECT]: {
         title: 'Star Pupil',
         description: 'You gained money on all questions',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.MOST_FASTEST_FINGERS]: {
         title: 'Fastest Fingers',
         description: 'You locked in the fastest and gained money, the most amount of times',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.MOST_CLUMSY_FINGERS]: {
         title: 'Clumsiest Thumbs',
         description: 'You locked in the fastest and lost money, the most amount of times',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.HIGHEST_GAINS]: {
         title: 'On The Up',
         description: 'You gained the most money overall',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.HIGHEST_LOSSES]: {
         title: 'Biggest Loser',
         description: 'You lost the most money overall',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.MOST_ALL_INS]: {
         title: 'Riskiest Strategy',
         description: 'You went all-in on a single answer the most amount of times',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.MOST_KNOCKED_OUT]: {
         title: 'Hard Knocks',
         description: 'You lost all your money the most amount of times',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     },
     [ACHIEVEMENT.NO_HINTS_USED]: {
         title: 'No Help Needed',
         description: 'You never used any hints',
-        imagePath: ''
+        imagePath: '/images/achievements/placeholder-achievement.png'
     }
 }
 

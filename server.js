@@ -1248,37 +1248,43 @@ function computeAchievements() {
         }
 
         // Store totals
-        if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > highestNumTimesKnockedOut) {
+        if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > 0 &&
+            historicData.globalData.teams[team.teamName].numTimesKnockedOut > highestNumTimesKnockedOut) {
             prospectiveHighestNumTimesKnockedOut = [team.teamName];
         } else if (historicData.globalData.teams[team.teamName].numTimesKnockedOut === highestNumTimesKnockedOut) {
             prospectiveHighestNumTimesKnockedOut.push(team.teamName);
         }
 
-        if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > highestNumTurnsSloppiestFinger) {
+        if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > 0 &&
+            historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > highestNumTurnsSloppiestFinger) {
             prospectiveHighestNumTurnsSloppiestFinger = [team.teamName];
         } else if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger === highestNumTurnsSloppiestFinger) {
             prospectiveHighestNumTurnsSloppiestFinger.push(team.teamName);
         }
 
-        if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger > highestNumTurnsFastestFinger) {
+        if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger > 0 &&
+            historicData.globalData.teams[team.teamName].numTurnsFastestFinger > highestNumTurnsFastestFinger) {
             prospectiveHighestNumTurnsFastestFinger = [team.teamName];
         } else if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger === highestNumTurnsFastestFinger) {
             prospectiveHighestNumTurnsFastestFinger.push(team.teamName);
         }
 
-        if (historicData.globalData.teams[team.teamName].totalMoneyGained > highestTotalMoneyGained) {
+        if (historicData.globalData.teams[team.teamName].totalMoneyGained > 0 &&
+            historicData.globalData.teams[team.teamName].totalMoneyGained > highestTotalMoneyGained) {
             prospectiveHighestTotalMoneyGained = [team.teamName];
         } else if (historicData.globalData.teams[team.teamName].totalMoneyGained === highestTotalMoneyGained) {
             prospectiveHighestTotalMoneyGained.push(team.teamName);
         }
 
-        if (historicData.globalData.teams[team.teamName].totalMoneyLost > highestTotalMoneyLost) {
+        if (historicData.globalData.teams[team.teamName].totalMoneyLost > 0 &&
+            historicData.globalData.teams[team.teamName].totalMoneyLost > highestTotalMoneyLost) {
             prospectiveHighestTotalMoneyLost = [team.teamName];
         } else if (historicData.globalData.teams[team.teamName].totalMoneyLost === highestTotalMoneyLost) {
             prospectiveHighestTotalMoneyLost.push(team.teamName);
         }
 
-        if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn > highestNumTurnsWentAllIn) {
+        if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn > 0 &&
+            historicData.globalData.teams[team.teamName].numTurnsWentAllIn > highestNumTurnsWentAllIn) {
             prospectiveHighestNumTurnsWentAllIn = [team.teamName];
         } else if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn === highestNumTurnsWentAllIn) {
             prospectiveHighestNumTurnsWentAllIn.push(team.teamName);
@@ -1286,26 +1292,32 @@ function computeAchievements() {
     }
 
     for (const team of prospectiveHighestNumTimesKnockedOut) {
-        team.achievements.push(ACHIEVEMENT.MOST_KNOCKED_OUT);
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.MOST_KNOCKED_OUT);
     }
 
     for (const team of prospectiveHighestNumTurnsSloppiestFinger) {
-        team.achievements.push(ACHIEVEMENT.MOST_CLUMSY_FINGERS);
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.MOST_CLUMSY_FINGERS);
     }
 
     for (const team of prospectiveHighestNumTurnsFastestFinger) {
-        team.achievements.push(ACHIEVEMENT.MOST_FASTEST_FINGERS);
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.MOST_FASTEST_FINGERS);
     }
 
     for (const team of prospectiveHighestTotalMoneyGained) {
-        team.achievements.push(ACHIEVEMENT.HIGHEST_GAINS);
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.HIGHEST_GAINS);
     }
 
     for (const team of prospectiveHighestTotalMoneyLost) {
-        team.achievements.push(ACHIEVEMENT.HIGHEST_LOSSES);
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.HIGHEST_LOSSES);
     }
 
     for (const team of prospectiveHighestNumTurnsWentAllIn) {
-        team.achievements.push(ACHIEVEMENT.MOST_ALL_INS);
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.MOST_ALL_INS);
     }
 }

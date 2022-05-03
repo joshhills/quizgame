@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE, interpolateColour } from './shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE, interpolateColour, ACHIEVEMENT_DATA } from './shared.js';
 
 // Connect to server
 
@@ -820,12 +820,12 @@ function updateUI() {
 
             let fastestFingerIconHtml = '';
             if (gameState.teams[i].teamName === gameState.fastestTeam) {
-                fastestFingerIconHtml = '<i class="bi bi-lightning-charge red"></i>';
+                fastestFingerIconHtml = '<i class="bi bi-lightning-charge red" title="Clumsiest thumbs"></i>';
             }
             if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
-                fastestFingerIconHtml = '<i class="bi bi-lightning-charge green"></i>';
+                fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
             }
-            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
+            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
@@ -848,7 +848,10 @@ function updateUI() {
         }
 
         let _team = getTeamByName(team);
-        achievementsEl.innerHTML = JSON.stringify(_team.achievements);
+        achievementsEl.innerHTML = '';
+        for (const achievement of _team.achievements) {
+            achievementsEl.innerHTML += `<div><img src="${ACHIEVEMENT_DATA[achievement].imagePath}" /><p>${ACHIEVEMENT_DATA[achievement].title}</p><p>${ACHIEVEMENT_DATA[achievement].description}</p></div>`;
+        }
     }
 }
 
