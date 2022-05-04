@@ -15,7 +15,7 @@ let server = express()
   .use(fileUpload());
 
 // Support quiz file upload
-server.post('/upload-quiz', async (req, res) => {
+server.post('/quiz/upload-quiz', async (req, res) => {
     try {
         if (!req.files) {
             res.send({
@@ -66,7 +66,7 @@ server.post('/upload-quiz', async (req, res) => {
     }
 });
 
-server.get('/imageExists', async(req, res) => {
+server.get('/quiz/imageExists', async(req, res) => {
     const imageUrl = decodeURIComponent(req.query.url);
 
     try {

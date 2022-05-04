@@ -28,7 +28,7 @@ async function imageExists(imageUrl) {
     }
 
     try {
-        return await fetch(`/imageExists?url=${encodeURIComponent(imageUrl)}`, { method: 'GET' })
+        return await fetch(`/quiz/imageExists?url=${encodeURIComponent(imageUrl)}`, { method: 'GET' })
         .then(res => {
             return res.status === 200;
         }).catch(() => false);

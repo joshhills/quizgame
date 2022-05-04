@@ -71,7 +71,7 @@ loadQuizButton.addEventListener('click', () => {
             let formData = new FormData();
             formData.append('quiz', file);
 
-            fetch('/upload-quiz', {
+            fetch('/quiz/upload-quiz', {
                 method: 'POST',
                 body: formData
             });
