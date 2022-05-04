@@ -88,7 +88,7 @@ server.get('/imageExists', async(req, res) => {
 
 server = server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
-const wss = new Server({ server });
+const wss = new Server({ server, path: '/quiz' });
 
 /** Bootstrap game state */
 

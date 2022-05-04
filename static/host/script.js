@@ -5,7 +5,7 @@ import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage } from '../shared.
 let ws;
 
 function connect() {
-    ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+    ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/quiz');
 }
 
 connect();

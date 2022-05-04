@@ -5,7 +5,7 @@ import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, interpolateColour
 let ws;
 
 function connect() {
-    ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '?spectate=true');
+    ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/quiz?spectate=true');
 }
 
 connect();

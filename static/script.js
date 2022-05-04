@@ -8,9 +8,9 @@ function connect() {
     id = JSON.parse(window.localStorage.getItem('id'));
 
     if (id !== null) {
-        ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `?id=${id.id}`);
+        ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `/quiz?id=${id.id}`);
     } else {
-        ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+        ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/quiz');
     }
 }
 
