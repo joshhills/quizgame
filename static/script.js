@@ -1,5 +1,28 @@
 import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE, interpolateColour, ACHIEVEMENT_DATA, LOG_TYPE } from './shared.js';
 
+// Constants
+const ERROR_TIMEOUT_MS = 3000;
+
+// Initialize notification handling
+const notifier = new AWN({
+    durations: {
+        error: ERROR_TIMEOUT_MS
+    },
+    maxNotifications: 5,
+    icons: {
+        prefix: '<i class="bi bi-',
+        suffix: '"></i>',
+        tip: 'chat-dots',
+        info: 'info-circle',
+        success: 'check-circle',
+        warning: 'slash-circle',
+        alert: 'exclamation-circle',
+        confirm: 'check-circle'
+    }
+});
+let lastAlert = null,
+    lastInfo = null;
+
 // Connect to server
 
 let ws;
@@ -16,14 +39,9 @@ function connect() {
 
 connect();
 
-// Constants
-const ERROR_TIMEOUT_MS = 3000;
-
 // Get elements
 var pregameContainer = document.getElementById('pregame'),
     gameContainer = document.getElementById('game'),
-    errorMessage = document.getElementById('errormessage'),
-    notification = document.getElementById('notification'),
     inProgMessage = document.getElementById('inprogmessage'),
     inProgJoinTeam = document.getElementById('inprogjointeam'),
     inProgNoTeam  = document.getElementById('inprognoteam'),
@@ -263,7 +281,6 @@ var id = null,
         init: true
     },
     currentErrorMessage = null,
-    currentErrorMessageTimeout = null,
     currentNotification = null,
     showPreImage = false;
 
@@ -314,35 +331,45 @@ function handleReset() {
         log.removeChild(log.firstChild);
     }
     currentErrorMessage = '';
-    currentErrorMessageTimeout = null;
     currentNotification = null;
 }
 
 function handleErrorMessage(data) {
-    currentErrorMessage = data.message;
-    errorMessage.innerHTML = currentErrorMessage;
-    errorMessage.hidden = false;
-
-    if (currentErrorMessageTimeout !== null) {
-        clearTimeout(currentErrorMessageTimeout);
+    if (currentErrorMessage && data.message === currentErrorMessage && !(lastAlert && !lastAlert.parentElement)) {
+        // Skip duplicate errors
+        return;
     }
 
-    currentErrorMessageTimeout = setTimeout(() => {
-        errorMessage.hidden = true;
-        currentErrorMessageTimeout = null;
-    }, ERROR_TIMEOUT_MS);
+    currentErrorMessage = data.message;
+
+    if (lastAlert && lastAlert.parentElement) {
+        notifier.container.removeChild(lastAlert);
+    }
+
+    lastAlert = notifier.alert(currentErrorMessage, {durations: {alert: 0}});
 }
 
 function handleNotify(data) {
+    if (currentNotification && data.message === currentNotification && !(lastInfo && !lastInfo.parentElement)) {
+        // Skip duplicate notifications
+        return;
+    }
+
     currentNotification = data.message;
-    notification.innerHTML = currentNotification;
-    notification.hidden = false;
+
+    if (lastInfo && lastInfo.parentElement) {
+        notifier.container.removeChild(lastInfo);
+    }
+
+    lastInfo = notifier.info(currentNotification, {durations: {info: 0}});
 }
 
 function handleRemoveNotify() {
     currentNotification = null;
-    notification.innerHTML = '';
-    notification.hidden = true;
+
+    if (lastInfo && lastInfo.parentElement) {
+        notifier.container.removeChild(lastInfo);
+    }
 }
 
 function handleChatMessage(data) {
@@ -508,14 +535,6 @@ function updateUI() {
 
     if (gameState.init) {
         return;
-    }
-    
-    if (!currentErrorMessageTimeout) {
-        errorMessage.hidden = true;
-    }
-    
-    if (currentNotification === null) {
-        notification.hidden = true;
     }
 
     if (gameState.scene === 'pregame' || playerName === null) {

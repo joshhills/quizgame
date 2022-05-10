@@ -1,0 +1,22 @@
+{
+    "name": "Wager Up",
+    "short_name": "Wager Up",
+    "theme_color": "#ea3b3b",
+    "background_color": "#753838",
+    "display": "minimal-ui",
+    "scope": "/quiz",
+    "start_url": "/quiz",
+    "description": "The interactive quiz game with a twist",
+    "icons": [
+        {
+            "src": "/quiz/images/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/quiz/images/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
