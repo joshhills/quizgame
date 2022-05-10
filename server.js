@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT, sanitizeHTML } from './static/shared.js';
 
 import express from 'express';
 import fetch from 'node-fetch';
@@ -474,7 +474,7 @@ function handleProgressState() {
 }
 
 function handleLockIn(data) {
-    let team = getTeamByName(data.team);
+    let team = getTeamByName(sanitizeHTML(data.team));
 
     team.lockedIn = true;
     team.lockedInTime = Date.now();
@@ -489,7 +489,7 @@ function handleLockIn(data) {
 }
 
 function handleResetAllocation(data) {
-    let team = getTeamByName(data.team);
+    let team = getTeamByName(sanitizeHTML(data.team));
 
     team.optionsAllocated = {
         a: 0,
@@ -508,15 +508,15 @@ function handleResetAllocation(data) {
 }
 
 function handleAddOption(data) {
-    let team = getTeamByName(data.team);
+    let team = getTeamByName(sanitizeHTML(data.team));
 
     if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
         return;
     }
 
-    let step = getDenomination(data.team);
-    if (moneyRemainingThisTurn(data.team) >= step) {
+    let step = getDenomination(sanitizeHTML(data.team));
+    if (moneyRemainingThisTurn(sanitizeHTML(data.team)) >= step) {
         team.optionsAllocated[data.option] += step;
     }
 
@@ -534,8 +534,8 @@ function handleCreateTeam(data) {
 
     let tws = getClientById(wss, data.id.id);
 
-    let teamName = data.team;
-    let playerName = data.as;
+    let teamName = sanitizeHTML(data.team);
+    let playerName = sanitizeHTML(data.as);
 
     if (!teamName || /^\s*$/.test(teamName)) {
         sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty team name!" });
@@ -634,7 +634,7 @@ function handleTeamChat(data) {
 
     for (let tm of team.members) {
         let _tws = getClientById(wss, tm.id);
-        sendMessage(_tws, MESSAGE_TYPE.SERVER.TEAM_CHAT, { name: player.name, message: data.message });
+        sendMessage(_tws, MESSAGE_TYPE.SERVER.TEAM_CHAT, { name: player.name, message: sanitizeHTML(data.message.substring(0, 256)) });
     }
 }
 
@@ -642,8 +642,8 @@ function handleJoinTeam(data) {
 
     let tws = getClientById(wss, data.id.id);
     
-    let teamName = data.team;
-    let playerName = data.as;
+    let teamName = sanitizeHTML(data.team);
+    let playerName = sanitizeHTML(data.as);
 
     if (!teamName || /^\s*$/.test(teamName)) {
         sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty name!" });
@@ -688,7 +688,7 @@ function handleJoinTeam(data) {
                 ready: false
             });
 
-            sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: data.as });
+            sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as) });
             broadcastGameState();
             return;
         }
@@ -700,7 +700,7 @@ function handleJoinTeam(data) {
 function handleJoinSolo(data) {
 
     let tws = getClientById(wss, data.id.id);
-    let teamName = data.as;
+    let teamName = sanitizeHTML(data.as);
 
     if (state !== GAME_STATE.PREGAME) {
         sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a quiz in progress as a solo player" });
@@ -750,7 +750,7 @@ function handleJoinSolo(data) {
             teamName: teamName,
             members: [
                 {
-                    name: data.as,
+                    name: sanitizeHTML(data.as),
                     id: data.id.id,
                     ready: false
                 }
@@ -777,9 +777,9 @@ function handleJoinSolo(data) {
     );
 
     if (didRename) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${data.as}'` });
+        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${sanitizeHTML(data.as)}'` });
     }
-    sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: data.as, solo: true });
+    sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as), solo: true });
     broadcastGameState();
 }
 
@@ -862,15 +862,15 @@ function handleToggleReady(data) {
 }
 
 function handleAddRemaining(data) {
-    let team = getTeamByName(data.team); 
+    let team = getTeamByName(sanitizeHTML(data.team)); 
     
     if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
         return;
     }
 
-    if (moneyRemainingThisTurn(data.team) > 0) {
-        team.optionsAllocated[data.option] += moneyRemainingThisTurn(data.team);
+    if (moneyRemainingThisTurn(sanitizeHTML(data.team)) > 0) {
+        team.optionsAllocated[data.option] += moneyRemainingThisTurn(sanitizeHTML(data.team));
     }
 
     // TODO: only send to teammates
@@ -883,9 +883,24 @@ function handleAddRemaining(data) {
     broadcastGameState();
 }
 
+function handleRemoveAll(data) {
+    let team = getTeamByName(sanitizeHTML(data.team)); 
+
+    team.optionsAllocated[data.option] = 0;
+
+    // TODO: only send to teammates
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: 'remove',
+        option: data.option
+    });
+
+    broadcastGameState();
+}
+
 function handleMinusOption(data) {
-    let step = getDenomination(data.team);
-    let team = getTeamByName(data.team);
+    let step = getDenomination(sanitizeHTML(data.team));
+    let team = getTeamByName(sanitizeHTML(data.team));
     if (team.optionsAllocated[data.option] != 0) {
         team.optionsAllocated[data.option] -= step;
     }
@@ -1022,7 +1037,7 @@ function handleUseHint(data) {
 
 // Handle disconnection
 function handleClose() {
-    console.log(`Client ${this.id} disconnected`);
+    // console.log(`Client ${this.id} disconnected`);
 }
   
 function handlePing(data) {
@@ -1069,17 +1084,18 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true } },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 2000 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
         [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: { handler: handleAddRemaining },
+        [MESSAGE_TYPE.CLIENT.REMOVE_ALL]: { handler: handleRemoveAll },
         [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: { handler: handleMinusOption },
         [MESSAGE_TYPE.CLIENT.RESET]: { handler: handleReset },
         [MESSAGE_TYPE.CLIENT.KICK]: { handler: handleKick },
         [MESSAGE_TYPE.CLIENT.NOTIFY]: { handler: handleNotify },
         [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
-        [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat },
+        [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat, rateLimit: { rate: { hits: 2, perMs: 1500 } } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage },
         [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations },
         [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } },
@@ -1199,8 +1215,6 @@ function getTeamsWithMostMoney() {
 }
 
 function computeAchievements() {
-    console.log('Processing historic data');
-    console.log(JSON.stringify(historicData));
 
     let highestNumTimesKnockedOut = -1;
     let prospectiveHighestNumTimesKnockedOut = [];

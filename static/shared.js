@@ -32,6 +32,7 @@ export const MESSAGE_TYPE = {
         RESET_ALLOCATION: 'resetAllocation',
         ADD_OPTION: 'addOption',
         ADD_REMAINING: 'addRemaining',
+        REMOVE_ALL: 'removeAll',
         MINUS_OPTION: 'minusOption',
         RESET: 'reset',
         KICK: 'kick',
@@ -151,6 +152,14 @@ export const ACHIEVEMENT_DATA = {
     }
 }
 
+export const LOG_TYPE = {
+    CHAT: 'chat',
+    ADD: 'add',
+    MINUS: 'minus',
+    LOCK: 'lock',
+    RESET: 'resetAllocation'
+};
+
 /**
  * Send an object over a websocket
  * 
@@ -229,10 +238,12 @@ export function handleMessage(ws, data, typeMap, callback) {
             // If there is no rate limit info, this is the first time
             // Or, if there is rate limit info, it's not being actively rate limited, and the initial time period has passed, then reset it
             if (!rateLimitInfo || ((!rateLimitInfo.unlock || now > rateLimitInfo.unlock) && now > rateLimitInfo.firstTimestamp + config.rateLimit.rate.perMs)) {
+
                 RateLimitCache[rateLimitKey] = {
                     firstTimestamp: Date.now(),
                     hits: 1,
-                    unlock: null
+                    unlock: null,
+                    atomicLocked: false
                 };
             }
             // If there is rate limit info and we're being rate limited, update that
@@ -247,7 +258,6 @@ export function handleMessage(ws, data, typeMap, callback) {
         }
 
         if (handler && !rateLimited) {
-            
             let wasAtomic = false;
 
             // If we're treating this function as atomic...
@@ -255,12 +265,22 @@ export function handleMessage(ws, data, typeMap, callback) {
                 wasAtomic = true;
 
                 // If it's currently locked, skip
-                if (RateLimitCache[rateLimitKey]) {
+                if (RateLimitCache[rateLimitKey] && RateLimitCache[rateLimitKey].atomicLocked) {
                     rateLimited = true;
                 }
                 // Otherwise, lock it and call the handler
                 else {
-                    RateLimitCache[rateLimitKey] = Date.now();
+                    if (!RateLimitCache[rateLimitKey]) {
+                        RateLimitCache[rateLimitKey] = {
+                            firstTimestamp: Date.now(),
+                            hits: 1,
+                            unlock: null,
+                            atomicLocked: true
+                        }
+                    } else {
+                        RateLimitCache[rateLimitKey].atomicLocked = true;
+                    }
+
                     handler(parsedData);
                 }
             } else {
@@ -268,8 +288,8 @@ export function handleMessage(ws, data, typeMap, callback) {
             }
 
             // Release the lock
-            if (wasAtomic) {
-                RateLimitCache[rateLimitKey] = null;
+            if (wasAtomic && !rateLimited) {
+                RateLimitCache[rateLimitKey].atomicLocked = false;
             }
         } else if (!handler) {
             console.warn(`No callback registered for message type: ${parsedData.messageType}`);
@@ -324,4 +344,16 @@ export function interpolateColour(colorA, colorB, intval) {
     const colorVal = (prop) =>
         Math.round(rgbA[prop] * (1 - intval) + rgbB[prop] * intval);
     return `rgb(${colorVal('r')}, ${colorVal('g')}, ${colorVal('b')})`;
+}
+
+export function sanitizeHTML(unsafe) {
+    // const decoder = document.createElement('div');
+    // decoder.innerHTML = unsafe;
+    // return decoder.textContent;
+    return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
 }

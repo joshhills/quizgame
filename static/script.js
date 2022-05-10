@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE, interpolateColour, ACHIEVEMENT_DATA } from './shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage, REACTIONS, MAX_TEAM_SIZE, interpolateColour, ACHIEVEMENT_DATA, LOG_TYPE } from './shared.js';
 
 // Connect to server
 
@@ -23,12 +23,12 @@ const ERROR_TIMEOUT_MS = 3000;
 var pregameContainer = document.getElementById('pregame'),
     gameContainer = document.getElementById('game'),
     errorMessage = document.getElementById('errormessage'),
-    notification  = document.getElementById('notification'),
-    inProgMessage  = document.getElementById('inprogmessage'),
-    inProgJoinTeam  = document.getElementById('inprogjointeam'),
+    notification = document.getElementById('notification'),
+    inProgMessage = document.getElementById('inprogmessage'),
+    inProgJoinTeam = document.getElementById('inprogjointeam'),
     inProgNoTeam  = document.getElementById('inprognoteam'),
     quizName = document.getElementById('quizname'),
-    teamName = document.getElementById('teamname'),
+    // teamName = document.getElementById('teamname'),
     questionNumber = document.getElementById('questionnumber'),
     questionText = document.getElementById('questiontext'),
     remaining = document.getElementById('remaining'),
@@ -52,6 +52,10 @@ var pregameContainer = document.getElementById('pregame'),
     addRemainingB = document.getElementById('addremainingb'),
     addRemainingC = document.getElementById('addremainingc'),
     addRemainingD = document.getElementById('addremainingd'),
+    removeAllA = document.getElementById('removealla'),
+    removeAllB = document.getElementById('removeallb'),
+    removeAllC = document.getElementById('removeallc'),
+    removeAllD = document.getElementById('removealld'),
     reset = document.getElementById('reset'),
     lockIn = document.getElementById('lockin'),
     help = document.getElementById('help'),
@@ -82,8 +86,7 @@ var pregameContainer = document.getElementById('pregame'),
     finish = document.getElementById('finish'),
     winnerText = document.getElementById('winnertext'),
     log = document.getElementById('log'),
-    teamMembers = document.getElementById('teammembers'),
-    containerino = document.getElementById('containerino'),
+    // teamMembers = document.getElementById('teammembers'),
     chatMessage = document.getElementById('chatmessage'),
     sendChatMessage = document.getElementById('sendchatmessage'),
     laughReactButton = document.getElementById('laugh'),
@@ -111,7 +114,8 @@ var pregameContainer = document.getElementById('pregame'),
     infoModal = document.getElementById('infomodal'),
     infoModalClose = document.getElementById('infomodalclose'),
     infoModalOpen = document.getElementById('infomodalopen'),
-    achievementsEl = document.getElementById('achievements');
+    achievementsEl = document.getElementById('achievements'),
+    logHint = document.getElementById('loghint');
 
 function updateJoinButtons() {
     const playerName = document.getElementById('name').value;
@@ -180,6 +184,11 @@ addRemainingB.addEventListener('click', () => addRemaining('b'));
 addRemainingC.addEventListener('click', () => addRemaining('c'));
 addRemainingD.addEventListener('click', () => addRemaining('d'));
 
+removeAllA.addEventListener('click', () => removeAll('a'));
+removeAllB.addEventListener('click', () => removeAll('b'));
+removeAllC.addEventListener('click', () => removeAll('c'));
+removeAllD.addEventListener('click', () => removeAll('d'));
+
 laughReactButton.addEventListener('click', () => sendReaction(REACTIONS.LAUGH));
 cryReactButton.addEventListener('click', () => sendReaction(REACTIONS.CRY));
 shockReactButton.addEventListener('click', () => sendReaction(REACTIONS.SHOCK));
@@ -201,7 +210,31 @@ showPreImageButton.addEventListener('click', () => {
 
 sendChatMessage.addEventListener('click', () => {
     const msg = chatMessage.value;
+    if (!msg || /^\s*$/.test(msg)) {
+        return;
+    }
     sendMessage(ws, MESSAGE_TYPE.CLIENT.TEAM_CHAT, { message: msg }, id);
+    // Clear the textbox after sending
+    chatMessage.value = '';
+});
+
+chatMessage.addEventListener('keyup', (e) => {
+    const msg = chatMessage.value;
+    const isEmpty = !msg || /^\s*$/.test(msg);
+
+    if (isEmpty) {
+        sendChatMessage.disabled = true;
+        return;
+    } else {
+        sendChatMessage.disabled = false;
+    }
+
+    if (e.key === 'Enter') {        
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.TEAM_CHAT, { message: msg }, id);
+        // Clear the textbox after sending
+        chatMessage.value = '';
+        sendChatMessage.disabled = true;
+    }
 });
 
 useHintButton.addEventListener('click', () => {
@@ -254,7 +287,9 @@ function handleConnectionId(data) {
 function handleStateChange(data) {
 
     if (gameState.scene === GAME_STATE.SCORES && data.state.scene === GAME_STATE.GAME) {
-        log.innerHTML = '';
+        while (log.firstChild !== log.lastChild) {
+            log.removeChild(log.firstChild);
+        }
     }
     
     gameState = data.state;
@@ -275,7 +310,9 @@ function handleReset() {
     team = null;
     solo = null;
     ready = false;
-    log.innerHTML = '';
+    while (log.firstChild !== log.lastChild) {
+        log.removeChild(log.firstChild);
+    }
     currentErrorMessage = '';
     currentErrorMessageTimeout = null;
     currentNotification = null;
@@ -309,7 +346,9 @@ function handleRemoveNotify() {
 }
 
 function handleChatMessage(data) {
-    log.innerHTML = `${data.name} said: ${data.message}\n` + log.innerHTML;
+    // log.innerHTML = `${data.name} said: ${data.message}\n` + log.innerHTML;
+
+    addMessageToLog(LOG_TYPE.CHAT, `${data.name}: `, data.message);
 }
 
 function handleLog(data) {
@@ -329,16 +368,32 @@ function handleLog(data) {
 
     let logText;
     if (data.type === 'add') {
-        logText = `${p} added money to option ${data.option}`;
+        logText = `added money to option ${data.option}`;
     } else if (data.type === 'minus') {
-        logText = `${p} subtracted money from option ${data.option}`;
+        logText = `subtracted money from option ${data.option}`;
     } else if (data.type === 'resetAllocation') {
-        logText = `${p} reset all money allocations`;
+        logText = `reset all money allocations`;
     } else if (data.type === 'lock') {
-        logText = `${p} locked us in`;
+        logText = `locked us in`;
     }
 
-    log.innerHTML = logText + '\n' + log.innerHTML;
+    // log.innerHTML = logText + '\n' + log.innerHTML;
+    addMessageToLog(data.type, `${p}`, logText);
+}
+
+function addMessageToLog(logType, subject, message) {
+    let icon = 'bi-chat';
+    if (logType === LOG_TYPE.ADD || logType === LOG_TYPE.MINUS) {
+        icon = 'bi-piggy-bank';
+    } else if (logType === LOG_TYPE.RESET) {
+        icon = 'bi-arrow-clockwise';
+    } else if (logType === LOG_TYPE.LOCK) {
+        icon = 'bi-lock';
+    }
+
+    log.innerHTML = `<div class="logmessage ${logType}">
+        <i class="bi ${icon}"></i> <span class="logmessagesubject">${subject} </span>${message}
+    </div>` + log.innerHTML;
 }
 
 function getTeamByName(teamName) {
@@ -421,6 +476,10 @@ function minusOption(optionChar) {
 
 function addRemaining(optionChar) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.ADD_REMAINING, { team: team, option: optionChar }, id);
+}
+
+function removeAll(optionChar) {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.REMOVE_ALL, { team: team, option: optionChar }, id);
 }
 
 function sendReaction(reaction) {
@@ -598,7 +657,7 @@ function updateUI() {
         finish.hidden = true;
         answer.hidden = true;
         scores.hidden = true;
-        log.hidden = chatMessage.hidden = sendChatMessage.hidden = teamMembers.hidden = solo || _team.members.length === 1;
+        log.hidden = chatMessage.hidden = sendChatMessage.hidden = solo || _team.members.length === 1;
         timerBar.hidden = false;
 
         if (timerBarInterval === -1 && getTimerBarWidth() !== 0) {
@@ -611,7 +670,8 @@ function updateUI() {
         }
 
         if (gameState.activeQuestion.imageUrl) {
-            showPreImageButton.hidden = false;
+            // showPreImageButton.hidden = false;
+            showPreImageButton.hidden = true; // DISABLE PRE-IMAGE BUTTON FOR NOW
             preImage.src = gameState.activeQuestion.imageUrl;
 
             if (showPreImage) {
@@ -624,16 +684,18 @@ function updateUI() {
             preImage.hidden = true;
         }
 
-        teamName.innerHTML = _team.teamName;
+        // teamName.innerHTML = _team.teamName;
         
         questionNumber.innerHTML = gameState.activeQuestionIndex + 1;
         questionText.innerHTML = gameState.activeQuestion.text;
 
-        let teamMembersHTML = '';
-        for (let tm of _team.members) {
-            teamMembersHTML += `<li>${tm.name}</li>`;
-        }
-        teamMembers.innerHTML = teamMembersHTML;
+        // let teamMembersHTML = '';
+        // for (let tm of _team.members) {
+        //     teamMembersHTML += `<li>${tm.name}</li>`;
+        // }
+        // teamMembers.innerHTML = teamMembersHTML;
+
+        logHint.innerHTML = `Playing as team '${_team.teamName}' with ${_team.members.map(tm => tm.name).join(', ')}. Messages will appear below...`;
 
         remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
 
@@ -647,6 +709,11 @@ function updateUI() {
         allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c']);
         allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d']);
 
+        removeAllA.disabled = _team.optionsAllocated['a'] === 0;
+        removeAllB.disabled = _team.optionsAllocated['b'] === 0;
+        removeAllC.disabled = _team.optionsAllocated['c'] === 0;
+        removeAllD.disabled = _team.optionsAllocated['d'] === 0;
+
         let mrtt = moneyRemainingThisTurn();
 
         if (mrtt === _team.remainingMoney) {
@@ -659,7 +726,7 @@ function updateUI() {
             help.innerHTML = '';
         }
         
-        if (getTimerBarWidth() < 40 && !_team.lockedIn) {
+        if (gameState.secondsPerQuestion && getTimerBarWidth() < 40 && !_team.lockedIn) {
             help.innerHTML += 'Heads up, you\'re running out of time';
         }
 
@@ -736,24 +803,28 @@ function updateUI() {
                         addA.disabled = true;
                         minusA.disabled = true;
                         addRemainingA.disabled = true;
+                        removeAllA.disabled = true;
                     }
                     if (hint === 'b') {
                         optionBBox.classList = 'option wrong';
                         addB.disabled = true;
                         minusB.disabled = true;
                         addRemainingB.disabled = true;
+                        removeAllB.disabled = true;
                     }
                     if (hint === 'c') {
                         optionCBox.classList = 'option wrong';
                         addC.disabled = true;
                         minusC.disabled = true;
                         addRemainingC.disabled = true;
+                        removeAllC.disabled = true;
                     }
                     if (hint === 'd') {
                         optionDBox.classList = 'option wrong';
                         addD.disabled = true;
                         minusD.disabled = true;
                         addRemainingD.disabled = true;
+                        removeAllD.disabled = true;
                     }
                 }
             }
