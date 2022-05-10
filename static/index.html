@@ -355,29 +355,6 @@
             .red {
                 color: #ea3c3b;
             }
-            #infomodal {
-                z-index: 1;
-                background-color: #ea3c3b;
-                position: absolute;
-                height: 100%;
-                width: 100%;
-                top: 0;
-                left: 0;
-            }
-            .modal {
-                position: relative;
-                display: block;
-                margin: 3rem;
-                width: calc(100% - 6rem);
-                height: calc(100% - 6rem);
-            }
-            #infomodalclose {
-                padding: 0;
-                border: none;
-                font-size: 1.2rem;
-                margin-left: 0.2rem;
-                position: relative;
-            }
 
             #scorestable i:not(:last-child) {
                 margin-right: 4px;
@@ -443,6 +420,12 @@
             .awn-toast-icon {
                 font-size: 1.75rem;
             }
+            .awn-popup-body {
+                color: black;
+            }
+            #awn-popup-wrapper {
+                overflow: auto;
+            }
         </style>
     </head>
     <body>
@@ -459,6 +442,7 @@
                     <br/>
                     <button id="pregamestatuswidgetleave"><i class="bi bi-box-arrow-left"></i> Leave team</button>
                     <button id="pregamestatuswidgetreadybutton"></button>
+                    <button id="helpbutton"><i class="bi bi-question-circle"></i> Help</button>
                 </div>
                 <h4 id="enternameprompt">Enter your player name</h4>
                 <input type="text" placeholder="Player" maxlength="16" id="name" />
@@ -487,36 +471,6 @@
                 <table class="styledtable" id="solos"></table>
             </div>
             <div id="game" hidden>
-                <div id="infomodal" hidden>
-                    <div class="modal">
-                        <button id="infomodalclose">
-                            <span class="bi bi-x-circle"></span>
-                        </button>
-                        <h2>How to play</h2>
-                        <p>
-                            Each round, you'll receive some money to allocate towards to answers you're most confident in.
-                            You may split your money between several answers, but be wary:
-                        </p>
-                        <p>
-                            <strong>
-                                money wagered on right answers is added to your final score,
-                                and money wagered on wrong answers deducted from your final score!
-                            </strong>
-                        </p>
-                        <h4><i class="bi bi-lightbulb"></i> Using Hints</h4>
-                        <p>
-                            </i> You may use hints, which will remove two incorrect answers.
-                        </p>
-                        <h4><i class="bi bi-lock"></i> Locking In</h4>
-                        <p>
-                            Locking in signals to the quiz-master that you're ready, and prevents your team from making further changes. It is not necessary.
-                        </p>
-                        <h4><i class="bi bi-chat"></i> Communication</h4>
-                        <p>
-                            You can use the chat to talk to your teammates. It will also tell you who's doing what.
-                        </p>
-                    </div>
-                </div>
                 <!-- <div>
                     <h1 id="teamname"></h1>
                     <ul id="teammembers"></ul>

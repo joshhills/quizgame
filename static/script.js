@@ -129,9 +129,8 @@ var pregameContainer = document.getElementById('pregame'),
     optionCBox = document.getElementById('optioncbox'),
     optionDBox = document.getElementById('optiondbox'),
     timerBar = document.getElementById('timerbar'),
-    infoModal = document.getElementById('infomodal'),
-    infoModalClose = document.getElementById('infomodalclose'),
     infoModalOpen = document.getElementById('infomodalopen'),
+    helpButton = document.getElementById('helpbutton'),
     achievementsEl = document.getElementById('achievements'),
     logHint = document.getElementById('loghint');
 
@@ -191,10 +190,12 @@ addD.addEventListener('click', () => addOption('d'));
 reset.addEventListener('click', () => resetState());
 lockIn.addEventListener('click', () => {
 
-    let r = confirm('Are you sure you want to lock in?');
-    if (r) {
-        setLockedIn();
-    }    
+    notifier.confirm(
+        'Are you sure you want to lock in?',
+        setLockedIn,
+        null,
+        { icons: { enabled: false }, labels: { confirm: '', confirmOk: 'Yes', confirmCancel: 'No' }}
+    );
 });
 
 addRemainingA.addEventListener('click', () => addRemaining('a'));
@@ -256,19 +257,43 @@ chatMessage.addEventListener('keyup', (e) => {
 });
 
 useHintButton.addEventListener('click', () => {
-    let r = confirm('Are you sure you want to use a hint?');
-    if (r) {
-        sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id); 
-    }
+    notifier.confirm(
+        'Are you sure you want to use a hint?',
+        () => sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id),
+        null,
+        { icons: { enabled: false }, labels: { confirm: '', confirmOk: 'Yes', confirmCancel: 'No' }}
+    );
 });
 
-infoModalClose.addEventListener('click', () => {
-    infoModal.hidden = true;
-});
+infoModalOpen.addEventListener('click', openInfoModal);
+helpButton.addEventListener('click', openInfoModal);
 
-infoModalOpen.addEventListener('click', () => {
-    infoModal.hidden = false;
-});
+function openInfoModal() {
+    notifier.confirm(`
+        <p>
+            Each round, you'll receive some money.
+            Money wagered on right answers is added to your final score,
+            but money wagered on wrong answers is deducted!
+        </p>
+        <h4><i class="bi bi-lightbulb"></i> Using Hints</h4>
+        <p>
+            </i>You may have a limited number of hints, which remove two incorrect answers.
+        </p>
+        <h4><i class="bi bi-lock"></i> Locking In</h4>
+        <p>
+            Locking in prevents your team from making further changes.
+        </p>
+        <h4><i class="bi bi-chat"></i> Communication</h4>
+        <p>
+            You can use the chat to talk to your teammates and see who's doing what.
+        </p>
+        <h4><i class="bi bi-hourglass"></i> Timer</h4>
+        <p>
+            You may have a time limit.
+        </p>
+        <small>Made with sticks and glue by Josh Hills, 2022</small>
+    `, null, false, { icons: { enabled: false }, labels: { confirm: 'How to play' }});
+}
 
 // Game State
 var id = null,
@@ -790,6 +815,10 @@ function updateUI() {
             addRemainingB.disabled = true;
             addRemainingC.disabled = true;
             addRemainingD.disabled = true;
+            removeAllA.disabled = true;
+            removeAllB.disabled = true;
+            removeAllC.disabled = true;
+            removeAllD.disabled = true;
             reset.disabled = true;
             lockIn.disabled = true;
             
