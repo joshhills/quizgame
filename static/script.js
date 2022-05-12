@@ -191,7 +191,7 @@ reset.addEventListener('click', () => resetState());
 lockIn.addEventListener('click', () => {
 
     notifier.confirm(
-        'Are you sure you want to lock in?',
+        'Are you sure you want to lock in?<br/>You wont be able to make further changes.',
         setLockedIn,
         null,
         { icons: { enabled: false }, labels: { confirm: '', confirmOk: 'Yes', confirmCancel: 'No' }}
@@ -258,7 +258,7 @@ chatMessage.addEventListener('keyup', (e) => {
 
 useHintButton.addEventListener('click', () => {
     notifier.confirm(
-        'Are you sure you want to use a hint?',
+        'Are you sure you want to use a hint?<br/>This will remove two incorrect answers at random.',
         () => sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id),
         null,
         { icons: { enabled: false }, labels: { confirm: '', confirmOk: 'Yes', confirmCancel: 'No' }}
@@ -275,23 +275,11 @@ function openInfoModal() {
             Money wagered on right answers is added to your final score,
             but money wagered on wrong answers is deducted!
         </p>
-        <h4><i class="bi bi-lightbulb"></i> Using Hints</h4>
-        <p>
-            </i>You may have a limited number of hints, which remove two incorrect answers.
-        </p>
-        <h4><i class="bi bi-lock"></i> Locking In</h4>
-        <p>
-            Locking in prevents your team from making further changes.
-        </p>
-        <h4><i class="bi bi-chat"></i> Communication</h4>
-        <p>
-            You can use the chat to talk to your teammates and see who's doing what.
-        </p>
-        <h4><i class="bi bi-hourglass"></i> Timer</h4>
-        <p>
-            You may have a time limit.
-        </p>
-        <small>Made with sticks and glue by Josh Hills, 2022</small>
+        <h4><i class="bi bi-lightbulb"></i> Use hints to remove incorrect answers</h4>
+        <h4><i class="bi bi-lock"></i> Lock in quick to win 'fastest fingers'</h4>
+        <h4><i class="bi bi-chat"></i> Chat with your team and see who's doing what</h4>
+        <h4><i class="bi bi-hourglass"></i> Don't run out of time!</h4>
+        <small>Made for fun by <a href="https://joshhills.dev/">Josh Hills</a>, 2022 • <a href="/quiz/privacy" target="_blank">Privacy policy</a></small>
     `, null, false, { icons: { enabled: false }, labels: { confirm: 'How to play' }});
 }
 
@@ -825,7 +813,11 @@ function updateUI() {
             if (mrtt === _team.remainingMoney) {
                 help.innerHTML = 'You skipped this question.';
             } else {
-                help.innerHTML = 'You\'re locked in!';
+                help.innerHTML = 'You\'re locked in.';
+
+                if (mrtt === 0) {
+                    help.innerHTML += ' You went all in!';
+                }
             }
         }
 
@@ -944,7 +936,7 @@ function updateUI() {
             if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                 fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
             }
-            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
+            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;

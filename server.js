@@ -86,6 +86,11 @@ server.get('/quiz/imageExists', async(req, res) => {
     }
 });
 
+server.use((_req, res) => {
+    // Handle 404s
+    res.redirect('/quiz');
+});
+
 server = server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const wss = new Server({ server, path: '/quiz' });
@@ -266,6 +271,9 @@ function handleProgressState() {
 
             // Compute new team totals
             let beforeDeduction = team.remainingMoney;
+
+            team.lastWagered = team.optionsAllocated.a + team.optionsAllocated.b
+                + team.optionsAllocated.c + team.optionsAllocated.d; 
 
             team.lastAllIn = beforeDeduction === team.optionsAllocated.a
                 || beforeDeduction === team.optionsAllocated.b
@@ -584,6 +592,8 @@ function handleCreateTeam(data) {
             remainingHints: numHints,
             activeHint: null,
             lastChange: null,
+            lastMoney: null,
+            lastWagered: null,
             lastAllIn: false,
             currentGainStreak: 0,
             lastPlace: null,
@@ -768,6 +778,8 @@ function handleJoinSolo(data) {
             remainingHints: numHints,
             activeHint: null,
             lastChange: null,
+            lastMoney: null,
+            lastWagered: null,
             lastAllIn: false,
             currentGainStreak: 0,
             lastPlace: null,

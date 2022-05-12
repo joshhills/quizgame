@@ -106,6 +106,13 @@
             .option {
                 padding: 10px;
                 border: 2px solid white;
+                height: calc(100% - 20px);
+                display: flex;
+                flex-direction: column;
+            }
+
+            .optioncontrols {
+                margin-top: auto;
             }
 
             .option:nth-child(1) {
@@ -329,11 +336,16 @@
                 background: linear-gradient(315deg, rgba(28,29,31,0) 7%, rgba(234,60,59,1) 90%);
             }
 
+            .optiontext {
+                margin-bottom: 0;
+            }
+
             .allocation {
                 margin-bottom: 0;
             }
             .moneycontrol {
                 margin-top: 1.5rem;
+                margin-bottom: 1rem;
             }
             #timer {
                 width: 100%;
@@ -426,6 +438,12 @@
             #awn-popup-wrapper {
                 overflow: auto;
             }
+            .awn-btn-success {
+                background: #009879 !important;
+            }
+            .awn-btn-cancel {
+                background: #ea3c3b !important;
+            }
         </style>
     </head>
     <body>
@@ -435,7 +453,7 @@
             </div>
             <div id="pregame">
                 <img src="./images/logo.png" class="logo" alt="Wager Up logo" />
-                <h1 class="welcome">Welcome to the <span class="red" id="quizname">Quiz</span></h1>
+                <h1 class="welcome"><span class="red" id="quizname">Loading quiz...</span></h1>
                 <div id="pregamestatuswidget">
                     <span id="pregamestatuswidgetready"></span> as '<span id="pregamestatuswidgetname"></span>' in <span id="pregamestatuswidgetsolo">solo </span>team '<span id="pregamestatuswidgetteam"></span>'
                     <br/>
@@ -482,44 +500,52 @@
                     <img src="" class="imagehint" id="preimage"/>
                 </div>
                 <div>
-                    <h3>£<span id="remaining"></span> remaining</h3>
+                    <h4>£<span id="remaining"></span> remaining</h4>
                 </div>
                 <div class="options">
                     <div class="option" id="optionabox">
                         <!-- <p>A</p> -->
-                        <p id="optiona"></p>
-                        <p class="allocation">£<span id="allocateda">0</span></p>
-                        <button class="moneycontrol" id="removealla">--</button>
-                        <button class="moneycontrol" id="minusa">-</button>
-                        <button class="moneycontrol" id="adda">+</button>
-                        <button class="moneycontrol" id="addremaininga">++</button>
+                        <p class="optiontext" id="optiona"></p>
+                        <div class="optioncontrols">
+                            <p class="allocation">£<span id="allocateda">0</span></p>
+                            <button class="moneycontrol" id="removealla"><i class="bi bi-chevron-double-down"></i></button>
+                            <button class="moneycontrol" id="minusa"><i class="bi bi-chevron-down"></i></button>
+                            <button class="moneycontrol" id="adda"><i class="bi bi-chevron-up"></i></button>
+                            <button class="moneycontrol" id="addremaininga"><i class="bi bi-chevron-double-up"></i></button>
+                        </div>
                     </div>
                     <div class="option" id="optionbbox">
                         <!-- <p>B</p> -->
-                        <p id="optionb"></p>
-                        <p class="allocation">£<span id="allocatedb">0</span></p>
-                        <button class="moneycontrol" id="removeallb">--</button>
-                        <button class="moneycontrol" id="minusb">-</button>
-                        <button class="moneycontrol" id="addb">+</button>
-                        <button class="moneycontrol" id="addremainingb">++</button>
+                        <p class="optiontext" id="optionb"></p>
+                        <div class="optioncontrols">
+                            <p class="allocation">£<span id="allocatedb">0</span></p>
+                            <button class="moneycontrol" id="removeallb"><i class="bi bi-chevron-double-down"></i></button>
+                            <button class="moneycontrol" id="minusb"><i class="bi bi-chevron-down"></i></button>
+                            <button class="moneycontrol" id="addb"><i class="bi bi-chevron-up"></i></button>
+                            <button class="moneycontrol" id="addremainingb"><i class="bi bi-chevron-double-up"></i></button>
+                        </div>
                     </div>
                     <div class="option" id="optioncbox">
                         <!-- <p>C</p> -->
-                        <p id="optionc"></p>
-                        <p class="allocation">£<span id="allocatedc">0</span></p>
-                        <button class="moneycontrol" id="removeallc">--</button>
-                        <button class="moneycontrol" id="minusc">-</button>
-                        <button class="moneycontrol" id="addc">+</button>
-                        <button class="moneycontrol" id="addremainingc">++</button>
+                        <p class="optiontext" id="optionc"></p>
+                        <div class="optioncontrols">
+                            <p class="allocation">£<span id="allocatedc">0</span></p>
+                            <button class="moneycontrol" id="removeallc"><i class="bi bi-chevron-double-down"></i></button>
+                            <button class="moneycontrol" id="minusc"><i class="bi bi-chevron-down"></i></button>
+                            <button class="moneycontrol" id="addc"><i class="bi bi-chevron-up"></i></button>
+                            <button class="moneycontrol" id="addremainingc"><i class="bi bi-chevron-double-up"></i></button>
+                        </div>
                     </div>
                     <div class="option" id="optiondbox">
                         <!-- <p>D</p> -->
-                        <p id="optiond"></p>
-                        <p class="allocation">£<span id="allocatedd">0</span></p>
-                        <button class="moneycontrol" id="removealld">--</button>
-                        <button class="moneycontrol" id="minusd">-</button>
-                        <button class="moneycontrol" id="addd">+</button>
-                        <button class="moneycontrol" id="addremainingd">++</button>
+                        <p class="optiontext" id="optiond"></p>
+                        <div class="optioncontrols">
+                            <p class="allocation">£<span id="allocatedd">0</span></p>
+                            <button class="moneycontrol" id="removealld"><i class="bi bi-chevron-double-down"></i></button>
+                            <button class="moneycontrol" id="minusd"><i class="bi bi-chevron-down"></i></button>
+                            <button class="moneycontrol" id="addd"><i class="bi bi-chevron-up"></i></button>
+                            <button class="moneycontrol" id="addremainingd"><i class="bi bi-chevron-double-up"></i></button>
+                        </div>
                     </div>
                 </div>
                 <div>
