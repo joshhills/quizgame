@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT, sanitizeHTML } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT, sanitizeHTML, LOG_TYPE } from './static/shared.js';
 
 import express from 'express';
 import fetch from 'node-fetch';
@@ -31,13 +31,14 @@ server.post('/quiz/upload-quiz', async (req, res) => {
                 let quizObj = JSON.parse(quiz.data.toString());
 
                 if (quizObj.name && quizObj.questions && quizObj.questions.length > 0) {
-                    quizName = quizObj.name;
-                    questions = quizObj.questions;
-                    allowHints = quizObj.allowHints;
-                    numHints = quizObj.numHints;
-                    secondsPerQuestion = quizObj.secondsPerQuestion;
-                    startingMoney = quizObj.startingMoney;
-                    incrementEachRound = quizObj.incrementEachRound;
+                    quizName = quizObj.name || "Quiz";
+                    questions = quizObj.questions || [];
+                    allowHints = quizObj.allowHints || false;
+                    numHints = quizObj.numHints || 0;
+                    secondsPerQuestion = quizObj.secondsPerQuestion || 0;
+                    startingMoney = quizObj.startingMoney || 100;
+                    incrementEachRound = quizObj.incrementEachRound || 0;
+                    bonusValue = quizObj.bonusValue || 0;
 
                     if (state === GAME_STATE.PREGAME) {
                         for (let team of teams) {
@@ -101,10 +102,13 @@ let startingMoney  = 100;
 let allowHints = true;
 let numHints = 1;
 let secondsPerQuestion = 60;
-let incrementEachRound = 100;
-let fastestFingerBonus = 0;
+let incrementEachRound = 0;
+let bonusValue = 0;
 
-let state = GAME_STATE.PREGAME,
+let spectators = [],
+    hosts = [],
+    clients = [],
+    state = GAME_STATE.PREGAME,
     questions = [],
     quizName = null,
     activeQuestion = null,
@@ -156,8 +160,9 @@ function reset() {
     fastestTeamCorrect = null;
 }
 
-function broadcastGameState() {
+function broadcastGameState(options = {}) {
 
+    // TODO: Exclude the data from broadcast in the game state
     let _activeQuestion = null;
     if (activeQuestion) {
         _activeQuestion = {
@@ -196,7 +201,7 @@ function broadcastGameState() {
         fastestTeamCorrect: fastestTeamCorrect
     };
 
-    broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, {state: gameState});
+    broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, { state: gameState }, options);
 }
 
 function handleProgressState() {
@@ -259,8 +264,9 @@ function handleProgressState() {
         fastestTeamCorrect = null;
 
         for (let team of teams) {
+
             let wasAlive = false;
-            if (team.remainingMoney !== 0) {
+            if (team.score > 0) {
                 wasAlive = true;
             }
 
@@ -270,15 +276,16 @@ function handleProgressState() {
             optionDTotalAllocationThisRound += team.optionsAllocated.d;
 
             // Compute new team totals
-            let beforeDeduction = team.remainingMoney;
+            let beforeDeduction = team.score;
 
             team.lastWagered = team.optionsAllocated.a + team.optionsAllocated.b
                 + team.optionsAllocated.c + team.optionsAllocated.d; 
 
-            team.lastAllIn = beforeDeduction === team.optionsAllocated.a
-                || beforeDeduction === team.optionsAllocated.b
-                || beforeDeduction === team.optionsAllocated.c
-                || beforeDeduction === team.optionsAllocated.d;
+            team.lastAllIn = 
+                (startingMoney === team.optionsAllocated.a
+                || startingMoney === team.optionsAllocated.b
+                || startingMoney === team.optionsAllocated.c
+                || startingMoney === team.optionsAllocated.d);
 
             // team.remainingMoney = team.optionsAllocated[questions[activeQuestionIndex].answer];
             let losses = 0;
@@ -288,8 +295,8 @@ function handleProgressState() {
                     losses += team.optionsAllocated[option];
                 }
             }
-            team.remainingMoney -= losses;
-            team.remainingMoney += winnings;
+            team.score -= losses;
+            team.score += winnings;
 
             // Compute total lost for this round
             totalLostThisRound += losses;
@@ -297,14 +304,14 @@ function handleProgressState() {
 
             let wasKnockedOut = false;
             // Compute those who were knocked out this round
-            if (wasAlive && team.remainingMoney === 0) {
+            if (wasAlive && team.score < 0) {
                 teamsKnockedOutThisRound.push(team.teamName);
                 wasKnockedOut = true;
             }
 
             // Log whether or not the team gained or lost money
             team.lastMoney = beforeDeduction;
-            team.lastChange = team.remainingMoney - beforeDeduction;
+            team.lastChange = team.score - beforeDeduction;
 
             // Eligibility for fastest finger
             if (team.lockedIn) {
@@ -328,7 +335,7 @@ function handleProgressState() {
             historicData.perTurn[activeQuestionIndex].teams[team.teamName] = {
                 before: beforeDeduction,
                 change: team.lastChange,
-                after: team.remainingMoney,
+                after: team.score,
                 usedHint: team.activeHint !== null,
                 wentAllIn: team.lastAllIn,
                 wasKnockedOut: wasKnockedOut
@@ -395,7 +402,7 @@ function handleProgressState() {
         };
 
         // Sort teams by new scores
-        teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
+        teams.sort((a, b) => b.score - a.score);
         for (let i = 0; i < teams.length; i++) {
             if (teams[i].lastPlace !== null) {
                 teams[i].placesMoved = teams[i].lastPlace - i;
@@ -445,13 +452,13 @@ function handleProgressState() {
             for (let team of teams) {
                 // Give every team a base amount each turn
                 if (incrementEachRound) {
-                    team.remainingMoney += incrementEachRound;    
+                    team.score += incrementEachRound;    
                 }
 
                 // Apply fastest finger bonus...
                 // TODO: Do we want this?
                 if (team.teamName === fastestTeamCorrect) {
-                    team.remainingMoney += fastestFingerBonus;
+                    team.score += bonusValue;
                 }
 
                 team.optionsAllocated = {
@@ -463,6 +470,7 @@ function handleProgressState() {
                 team.lockedIn = false;
                 team.lockedInTime = null;
                 team.activeHint = null;
+                team.remainingMoney = startingMoney;
             }
 
             optionATotalAllocationThisRound = 0;
@@ -487,13 +495,12 @@ function handleLockIn(data) {
     team.lockedIn = true;
     team.lockedInTime = Date.now();
     
-    // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id.id,
-        type: 'lock'
-    });
+        type: LOG_TYPE.LOCK
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
-    broadcastGameState();
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 function handleResetAllocation(data) {
@@ -506,13 +513,12 @@ function handleResetAllocation(data) {
         d: 0
     };
 
-    // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id.id,
-        type: 'resetAllocation'
-    });
+        type: LOG_TYPE.RESET
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
-    broadcastGameState();
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 function handleAddOption(data) {
@@ -528,14 +534,13 @@ function handleAddOption(data) {
         team.optionsAllocated[data.option] += step;
     }
 
-    // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id.id,
-        type: 'add',
+        type: LOG_TYPE.ADD,
         option: data.option
-    });
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
-    broadcastGameState();
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 function handleCreateTeam(data) {
@@ -580,6 +585,7 @@ function handleCreateTeam(data) {
                 }
             ],
             remainingMoney: startingMoney,
+            score: 0,
             optionsAllocated: {
                 a: 0,
                 b: 0,
@@ -603,6 +609,7 @@ function handleCreateTeam(data) {
     );
 
     sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName });
+
     broadcastGameState();
 }
 
@@ -613,7 +620,7 @@ function handleNotify(data) {
 }
 
 function handleRemoveNotify() {
-    broadcast(MESSAGE_TYPE.SERVER.REMOVE_NOTIFY, {});
+    broadcast(MESSAGE_TYPE.SERVER.REMOVE_NOTIFY);
 }
 
 function handleTeamChat(data) {
@@ -642,10 +649,15 @@ function handleTeamChat(data) {
         return;
     }
 
-    for (let tm of team.members) {
-        let _tws = getClientById(wss, tm.id);
-        sendMessage(_tws, MESSAGE_TYPE.SERVER.TEAM_CHAT, { name: player.name, message: sanitizeHTML(data.message.substring(0, 256)) });
-    }
+    // Send log message to the team
+    broadcast(
+        MESSAGE_TYPE.SERVER.TEAM_CHAT,
+        {
+            name: player.name,
+            message: sanitizeHTML(data.message.substring(0, 256))
+        },
+        { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 }
+    );
 }
 
 function handleJoinTeam(data) {
@@ -699,7 +711,17 @@ function handleJoinTeam(data) {
             });
 
             sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as) });
+
             broadcastGameState();
+
+            // If game is in progress, inform team members explicitly
+            if (state === GAME_STATE.GAME) {
+                broadcast(MESSAGE_TYPE.SERVER.LOG, {
+                    id: data.id.id,
+                    type: LOG_TYPE.JOIN
+                }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
+            }
+
             return;
         }
     }
@@ -766,6 +788,7 @@ function handleJoinSolo(data) {
                 }
             ],
             remainingMoney: startingMoney,
+            score: 0,
             optionsAllocated: {
                 a: 0,
                 b: 0,
@@ -885,14 +908,13 @@ function handleAddRemaining(data) {
         team.optionsAllocated[data.option] += moneyRemainingThisTurn(sanitizeHTML(data.team));
     }
 
-    // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id.id,
-        type: 'add',
+        type: LOG_TYPE.ADD,
         option: data.option
-    });
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
-    broadcastGameState();
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 function handleRemoveAll(data) {
@@ -900,14 +922,13 @@ function handleRemoveAll(data) {
 
     team.optionsAllocated[data.option] = 0;
 
-    // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id.id,
-        type: 'remove',
+        type: LOG_TYPE.MINUS,
         option: data.option
-    });
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
-    broadcastGameState();
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 function handleMinusOption(data) {
@@ -917,19 +938,18 @@ function handleMinusOption(data) {
         team.optionsAllocated[data.option] -= step;
     }
     
-    // TODO: only send to teammates
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id.id,
-        type: 'minus',
+        type: LOG_TYPE.MINUS,
         option: data.option
-    });
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
-    broadcastGameState();
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 function handleReset() {
     reset();
-    broadcast(MESSAGE_TYPE.SERVER.RESET, {});
+    broadcast(MESSAGE_TYPE.SERVER.RESET);
     broadcastGameState();
 }
 
@@ -969,7 +989,7 @@ function handleKick(data) {
     });
 
     // Reset that person's client
-    sendMessage(tws, MESSAGE_TYPE.SERVER.RESET, {});
+    sendMessage(tws, MESSAGE_TYPE.SERVER.RESET);
 
     broadcastGameState();
 }
@@ -977,20 +997,23 @@ function handleKick(data) {
 function handleToggleImage() {
     showImage = !showImage;
 
-    // TODO: Only send update to spectators...
-    broadcastGameState();
+    broadcastGameState({ clientArray: spectators.concat(hosts),
+        predicate: (c) => c.isHost || c.isSpectator });
 }
 
 function handleToggleAllocations() {
     showAllocations = !showAllocations;
 
-    // TODO: Only send update to spectators...
-    broadcastGameState();
+    // Only send to spectator and host
+    broadcastGameState({ clientArray: spectators.concat(hosts),
+        predicate: (c) => c.isHost || c.isSpectator });
 }
 
 function handleEmote(data) {
     if (data.emote) {
-        broadcast(MESSAGE_TYPE.SERVER.EMOTE, { emote: data.emote }, (c) => c.isSpectator);
+        // Only send to spectator
+        broadcast(MESSAGE_TYPE.SERVER.EMOTE,
+            { emote: data.emote }, { clientArray: spectators, predicate: (c) => c.isSpectator });
     }
 }
 
@@ -1027,7 +1050,6 @@ function handleUseHint(data) {
     }
 
     // Randomise their hint and apply it to their team data
-    // TODO: Exclude the data from broadcast in the game state
     const answer = activeQuestion.answer;
     const hint = Object.keys(activeQuestion.options)
         .filter(val => val !== answer)
@@ -1042,14 +1064,34 @@ function handleUseHint(data) {
     team.optionsAllocated[team.activeHint[0]] = 0;
     team.optionsAllocated[team.activeHint[1]] = 0;
 
-    // Broadcast the state to the team
-    // TODO: Only send to teammates
-    broadcastGameState();
+    // Send log message to the team
+    broadcast(MESSAGE_TYPE.SERVER.LOG, {
+        id: data.id.id,
+        type: LOG_TYPE.HINT
+    }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
+
+    // Broadcast the state to the team and the host
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
 // Handle disconnection
 function handleClose() {
-    // console.log(`Client ${this.id} disconnected`);
+
+    // Remove from spectators list if was spectator
+    if (this.isSpectator) {
+        const ix = spectators.indexOf(this);
+        if (ix !== -1) {
+            spectators.splice(ix, 1);
+        }
+    }
+
+    // Remove from hosts list if was host
+    if (this.isSpectator) {
+        const ix = spectators.indexOf(this);
+        if (ix !== -1) {
+            spectators.splice(ix, 1);
+        }
+    }
 }
   
 function handlePing(data) {
@@ -1062,6 +1104,7 @@ wss.on('connection', (ws, req) => {
 
     let preId = url.parse(req.url, true).query.id;
     let isSpectator = url.parse(req.url, true).query.spectate;
+    let isHost = url.parse(req.url, true).query.host;
     let found = false;
     let player = null;
     if (preId !== null) {
@@ -1086,6 +1129,17 @@ wss.on('connection', (ws, req) => {
 
     if (isSpectator) {
         ws.isSpectator = true;
+        spectators.push(ws);
+    }
+
+    // Note: This isn't secure per-se, operates on good-faith basis
+    if (isHost) {
+        ws.isHost = true;
+        hosts = hosts.push(ws);;
+    }
+
+    if (!isHost && !isSpectator) {
+        clients.push(ws);
     }
   
     ws.on('close', handleClose);
@@ -1095,8 +1149,8 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.JOIN_TEAM]: { handler: handleJoinTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
-        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true } },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 2000 } } },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true, rate: { hits: 2, perMs: 1000 } } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
@@ -1124,12 +1178,21 @@ wss.on('connection', (ws, req) => {
  * 
  * @param {MESSAGE_TYPE} type to inject into message 
  * @param {any} obj to encode and send
- * @param {function} predicate a filter rule for clients
+ * @param {object} options further filter rules for clients
  */
-function broadcast(type, obj = {}, predicate = null) {
+function broadcast(type, obj = {}, options = {}) {
+
     let blobStr = formatMessage(type, obj);
-    wss.clients.forEach((c) => {
-        if (predicate === null || predicate(c)) {
+
+    let clientArray = [];
+    if (options.clientArray) {
+        clientArray = options.clientArray;
+    } else {
+        clientArray = wss.clients;
+    }
+
+    clientArray.forEach((c) => {
+        if (options.predicate === null || options.predicate === undefined || options.predicate(c)) {
             c.send(blobStr);
         }
     });
@@ -1202,7 +1265,7 @@ function allTeamsOrAllButOneBankrupt() {
     let numTeamsWithMoney = 0;
 
     for (let team of teams) {
-        if (team.remainingMoney > 0) {
+        if (team.score > 0) {
             numTeamsWithMoney++;
         }   
     }
@@ -1215,10 +1278,10 @@ function getTeamsWithMostMoney() {
 
     let highestSoFar = 0;
     for (let team of teams) {
-        if (team.remainingMoney > highestSoFar) {
+        if (team.score > highestSoFar) {
             teamsWithMostMoney = [team.teamName];
-            highestSoFar = team.remainingMoney;
-        } else if (highestSoFar !== 0 && team.remainingMoney === highestSoFar) {
+            highestSoFar = team.score;
+        } else if (highestSoFar !== 0 && team.score === highestSoFar) {
             teamsWithMostMoney.push(team.teamName);
         }
     }
@@ -1273,47 +1336,49 @@ function computeAchievements() {
             team.achievements.push(ACHIEVEMENT.NO_HINTS_USED);
         }
 
-        // Store totals
-        if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > 0 &&
-            historicData.globalData.teams[team.teamName].numTimesKnockedOut > highestNumTimesKnockedOut) {
-            prospectiveHighestNumTimesKnockedOut = [team.teamName];
-        } else if (historicData.globalData.teams[team.teamName].numTimesKnockedOut === highestNumTimesKnockedOut) {
-            prospectiveHighestNumTimesKnockedOut.push(team.teamName);
-        }
-
-        if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > 0 &&
-            historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > highestNumTurnsSloppiestFinger) {
-            prospectiveHighestNumTurnsSloppiestFinger = [team.teamName];
-        } else if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger === highestNumTurnsSloppiestFinger) {
-            prospectiveHighestNumTurnsSloppiestFinger.push(team.teamName);
-        }
-
-        if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger > 0 &&
-            historicData.globalData.teams[team.teamName].numTurnsFastestFinger > highestNumTurnsFastestFinger) {
-            prospectiveHighestNumTurnsFastestFinger = [team.teamName];
-        } else if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger === highestNumTurnsFastestFinger) {
-            prospectiveHighestNumTurnsFastestFinger.push(team.teamName);
-        }
-
-        if (historicData.globalData.teams[team.teamName].totalMoneyGained > 0 &&
-            historicData.globalData.teams[team.teamName].totalMoneyGained > highestTotalMoneyGained) {
-            prospectiveHighestTotalMoneyGained = [team.teamName];
-        } else if (historicData.globalData.teams[team.teamName].totalMoneyGained === highestTotalMoneyGained) {
-            prospectiveHighestTotalMoneyGained.push(team.teamName);
-        }
-
-        if (historicData.globalData.teams[team.teamName].totalMoneyLost > 0 &&
-            historicData.globalData.teams[team.teamName].totalMoneyLost > highestTotalMoneyLost) {
-            prospectiveHighestTotalMoneyLost = [team.teamName];
-        } else if (historicData.globalData.teams[team.teamName].totalMoneyLost === highestTotalMoneyLost) {
-            prospectiveHighestTotalMoneyLost.push(team.teamName);
-        }
-
-        if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn > 0 &&
-            historicData.globalData.teams[team.teamName].numTurnsWentAllIn > highestNumTurnsWentAllIn) {
-            prospectiveHighestNumTurnsWentAllIn = [team.teamName];
-        } else if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn === highestNumTurnsWentAllIn) {
-            prospectiveHighestNumTurnsWentAllIn.push(team.teamName);
+        // Store totals of not a solo game
+        if (teams.length > 1) {
+            if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > 0 &&
+                historicData.globalData.teams[team.teamName].numTimesKnockedOut > highestNumTimesKnockedOut) {
+                prospectiveHighestNumTimesKnockedOut = [team.teamName];
+            } else if (historicData.globalData.teams[team.teamName].numTimesKnockedOut === highestNumTimesKnockedOut) {
+                prospectiveHighestNumTimesKnockedOut.push(team.teamName);
+            }
+    
+            if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > 0 &&
+                historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger > highestNumTurnsSloppiestFinger) {
+                prospectiveHighestNumTurnsSloppiestFinger = [team.teamName];
+            } else if (historicData.globalData.teams[team.teamName].numTurnsSloppiestFinger === highestNumTurnsSloppiestFinger) {
+                prospectiveHighestNumTurnsSloppiestFinger.push(team.teamName);
+            }
+    
+            if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger > 0 &&
+                historicData.globalData.teams[team.teamName].numTurnsFastestFinger > highestNumTurnsFastestFinger) {
+                prospectiveHighestNumTurnsFastestFinger = [team.teamName];
+            } else if (historicData.globalData.teams[team.teamName].numTurnsFastestFinger === highestNumTurnsFastestFinger) {
+                prospectiveHighestNumTurnsFastestFinger.push(team.teamName);
+            }
+    
+            if (historicData.globalData.teams[team.teamName].totalMoneyGained > 0 &&
+                historicData.globalData.teams[team.teamName].totalMoneyGained > highestTotalMoneyGained) {
+                prospectiveHighestTotalMoneyGained = [team.teamName];
+            } else if (historicData.globalData.teams[team.teamName].totalMoneyGained === highestTotalMoneyGained) {
+                prospectiveHighestTotalMoneyGained.push(team.teamName);
+            }
+    
+            if (historicData.globalData.teams[team.teamName].totalMoneyLost > 0 &&
+                historicData.globalData.teams[team.teamName].totalMoneyLost > highestTotalMoneyLost) {
+                prospectiveHighestTotalMoneyLost = [team.teamName];
+            } else if (historicData.globalData.teams[team.teamName].totalMoneyLost === highestTotalMoneyLost) {
+                prospectiveHighestTotalMoneyLost.push(team.teamName);
+            }
+    
+            if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn > 0 &&
+                historicData.globalData.teams[team.teamName].numTurnsWentAllIn > highestNumTurnsWentAllIn) {
+                prospectiveHighestNumTurnsWentAllIn = [team.teamName];
+            } else if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn === highestNumTurnsWentAllIn) {
+                prospectiveHighestNumTurnsWentAllIn.push(team.teamName);
+            }
         }
     }
 
@@ -1346,4 +1411,6 @@ function computeAchievements() {
         let _team = getTeamByName(team);
         _team.achievements.push(ACHIEVEMENT.MOST_ALL_INS);
     }
+
+    console.log(JSON.stringify(historicData));
 }

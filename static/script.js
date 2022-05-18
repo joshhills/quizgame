@@ -392,19 +392,24 @@ function handleChatMessage(data) {
 }
 
 function handleLog(data) {
+
+    console.log('recieved log message');
     
+    // TODO: Remove this check
     const _team = getTeamByName(team);
 
-    let p = null;
+    let playerName = null;
     for (let tm of _team.members) {
         if (tm.id === data.id) {
-            p = tm.name;
+            playerName = tm.name;
         }
     }
 
-    if (p === null) {
+    if (playerName === null) {
+        // Couldn't find the player on their team
         return;
     }
+    //
 
     let logText;
     if (data.type === 'add') {
@@ -412,13 +417,16 @@ function handleLog(data) {
     } else if (data.type === 'minus') {
         logText = `subtracted money from option ${data.option}`;
     } else if (data.type === 'resetAllocation') {
-        logText = `reset all money allocations`;
+        logText = 'reset all money allocations';
+    } else if (data.type === 'hint') {
+        logText = 'used a hint';
     } else if (data.type === 'lock') {
-        logText = `locked us in`;
+        logText = 'locked us in';
+    } else if (data.type === 'join') {
+        logText = 'joined the team';
     }
 
-    // log.innerHTML = logText + '\n' + log.innerHTML;
-    addMessageToLog(data.type, `${p}`, logText);
+    addMessageToLog(data.type, `${playerName}`, logText);
 }
 
 function addMessageToLog(logType, subject, message) {
@@ -427,9 +435,15 @@ function addMessageToLog(logType, subject, message) {
         icon = 'bi-piggy-bank';
     } else if (logType === LOG_TYPE.RESET) {
         icon = 'bi-arrow-clockwise';
+    } else if (logType === LOG_TYPE.HINT) {
+        icon = 'bi-lightbulb';
     } else if (logType === LOG_TYPE.LOCK) {
         icon = 'bi-lock';
+    } else if (logType === LOG_TYPE.JOIN) {
+        icon = 'bi-person-plus';
     }
+
+    console.log(message);
 
     log.innerHTML = `<div class="logmessage ${logType}">
         <i class="bi ${icon}"></i> <span class="logmessagesubject">${subject} </span>${message}
@@ -443,7 +457,7 @@ function getTeamByName(teamName) {
         }
     }
 
-    console.error('Attempted to find a non-existent team!');
+    console.warn('Attempted to find a non-existent team!');
 }
 
 // Register event handlers
@@ -477,7 +491,6 @@ function createTeam() {
     // TODO: Check for null/empty values
     let playerName = document.getElementById('name').value;
     let teamName = document.getElementById('team').value;
-    console.log(`Creating a team ${teamName} as ${playerName}`);
 
     sendMessage(ws, MESSAGE_TYPE.CLIENT.CREATE_TEAM, { as: playerName, team: teamName }, id);
 }
@@ -545,6 +558,8 @@ function updateTimerBar() {
 }
 
 function updateUI() {
+
+    console.info('Updating UI');
 
     if (gameState.init) {
         return;
@@ -683,6 +698,10 @@ function updateUI() {
         }
     } else if (gameState.scene === 'game') {
         let _team = getTeamByName(team);
+
+        if (!_team) {
+            return;
+        }
 
         pregameContainer.hidden = true;
         gameContainer.hidden = false;
@@ -874,6 +893,10 @@ function updateUI() {
     } else if (gameState.scene === 'answer') {
         let _team = getTeamByName(team);
 
+        if (!_team) {
+            return;
+        }
+
         pregameContainer.hidden = true;
         gameContainer.hidden = true;
         finish.hidden = true;
@@ -891,7 +914,7 @@ function updateUI() {
         }
 
         answerText.innerHTML = gameState.activeQuestion.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.activeQuestion.answer];
-        remainingAfter.innerHTML = numberWithCommas(_team.remainingMoney);
+        remainingAfter.innerHTML = numberWithCommas(_team.score);
     } else if (gameState.scene === 'scores') {
         pregameContainer.hidden = true;
         gameContainer.hidden = true;
@@ -903,7 +926,7 @@ function updateUI() {
         timerBarInterval = -1;
 
         let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th>Change</th><th></th></tr></thead><tbody>';
-        gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
+        // gameState.teams.sort((a, b) => b.score - a.score);
         for (let i = 0; i < gameState.teams.length; i++) {
             let scoreDidChange = gameState.teams[i].lastChange !== 0;
             let changeIconHtml = '';
@@ -930,13 +953,13 @@ function updateUI() {
             }
 
             let fastestFingerIconHtml = '';
-            if (gameState.teams[i].teamName === gameState.fastestTeam) {
+            if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeam) {
                 fastestFingerIconHtml = '<i class="bi bi-lightning-charge red" title="Clumsiest thumbs"></i>';
             }
-            if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
+            if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                 fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
             }
-            scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
+            scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].score)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
@@ -959,6 +982,11 @@ function updateUI() {
         }
 
         let _team = getTeamByName(team);
+        
+        if (!_team) {
+            return;
+        }
+
         achievementsEl.innerHTML = '';
         for (const achievement of _team.achievements) {
             achievementsEl.innerHTML += `<div><img src="${ACHIEVEMENT_DATA[achievement].imagePath}" /><p>${ACHIEVEMENT_DATA[achievement].title}</p><p>${ACHIEVEMENT_DATA[achievement].description}</p></div>`;

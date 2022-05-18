@@ -292,7 +292,7 @@ function updateUI() {
             options.className = 'options hidden';
 
             let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th>Change</th><th></th></tr></thead><tbody>';
-            gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney);
+            // gameState.teams.sort((a, b) => b.score - a.score);
             for (let i = 0; i < gameState.teams.length; i++) {
                 let scoreDidChange = gameState.teams[i].lastChange !== 0;
                 let changeIconHtml = '';
@@ -325,7 +325,7 @@ function updateUI() {
                 if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                     fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
                 }
-                scoresTableHtml += `<tr class="${gameState.teams[i].remainingMoney === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].remainingMoney)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
+                scoresTableHtml += `<tr class="${gameState.teams[i].score === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].score)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
             }
             scoresTableHtml + '</tbody>';
             scoresTable.innerHTML = scoresTableHtml;

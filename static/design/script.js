@@ -55,6 +55,7 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                 document.getElementById('quiznumhints').value = content.numHints;
                 document.getElementById('quizincrementeachround').value = content.incrementEachRound;
                 document.getElementById('quizsecondsperquestion').value = content.secondsPerQuestion;
+                document.getElementById('quizbonusvalue').value = content.bonusValue;
 
                 document.getElementById('accordion').innerHTML = '';
                 numQuestions = content.questions.length;
@@ -408,6 +409,7 @@ document.getElementById('savequiz').addEventListener('click', () => {
             "numHints": +document.getElementById('quiznumhints').value,
             "incrementEachRound": +document.getElementById('quizincrementeachround').value,
             "secondsPerQuestion": +document.getElementById('quizsecondsperquestion').value,
+            "bonusValue": +document.getElementById('quizbonusvalue').value,
             questions: parseQuestions()
         };
     
@@ -449,6 +451,14 @@ async function validateQuiz() {
         allGood = false;
     } else {
         elIncrementEachRound.classList = 'form-control';
+    }
+
+    const elBonusValue = document.getElementById('quizbonusvalue');
+    if (elBonusValue.value < 0) {
+        elBonusValue.classList = 'form-control is-invalid';
+        allGood = false;
+    } else {
+        elBonusValue.classList = 'form-control';
     }
 
     const elSecondsPerQuestion = document.getElementById('quizsecondsperquestion');

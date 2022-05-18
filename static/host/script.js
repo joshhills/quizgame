@@ -309,9 +309,9 @@ function updateUI() {
     }
 
     let numTeamsWithActiveHints = gameState.teams.reduce((p, t) => p + (t.activeHint ? 1 : 0), 0);
-    let leaderboardHTML = `<tr><th>Name</th><th>Money Remaining</th><th>Locked In (${numTeamsLockedIn})</th><th>Hints Remaining</th><th>Active Hints (${numTeamsWithActiveHints})</th></tr>`;
+    let leaderboardHTML = `<tr><th>Name</th><th>Score</th><th>Locked In (${numTeamsLockedIn})</th><th>Hints Remaining</th><th>Active Hints (${numTeamsWithActiveHints})</th></tr>`;
     for (let team of gameState.teams.sort((a, b) => b.remainingMoney - a.remainingMoney)) {
-        leaderboardHTML += `<tr><td>${team.teamName}</td><td>£${numberWithCommas(team.remainingMoney)}</td><td>${team.lockedIn ? '<span class="bi bi-check-circle"/>' : ''}</td><td>${team.remainingHints}</td><td>${team.activeHint ? JSON.stringify(team.activeHint.sort((a,b) => a.localeCompare(b))) : ''}</td></tr>`;
+        leaderboardHTML += `<tr><td>${team.teamName}</td><td>£${numberWithCommas(team.score)}</td><td>${team.lockedIn ? '<span class="bi bi-check-circle"/>' : ''}</td><td>${team.remainingHints}</td><td>${team.activeHint ? JSON.stringify(team.activeHint.sort((a,b) => a.localeCompare(b))) : ''}</td></tr>`;
     }
     leaderboard.innerHTML = leaderboardHTML;
 

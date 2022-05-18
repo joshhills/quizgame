@@ -157,7 +157,9 @@ export const LOG_TYPE = {
     ADD: 'add',
     MINUS: 'minus',
     LOCK: 'lock',
-    RESET: 'resetAllocation'
+    HINT: 'hint',
+    RESET: 'resetAllocation',
+    JOIN: 'join'
 };
 
 /**
@@ -219,12 +221,13 @@ export function handleMessage(ws, data, typeMap, callback) {
         if (!config) {
             console.warn(`No config registered for message type: ${parsedData.messageType}`);
 
-            if (callback) {
-                return callback();
-            }
-            else {
-                return;
-            }
+            // if (callback) {
+            //     return callback();
+            // }
+            // else {
+            //     return;
+            // }
+            return;
         }
 
         let handler = config.handler;
@@ -303,7 +306,7 @@ export function handleMessage(ws, data, typeMap, callback) {
         console.warn('No message in payload');
     }
 
-    if (callback) {
+    if (parsedData.messageType !== MESSAGE_TYPE.SERVER.PONG && callback) {
         return callback();
     }
 }
