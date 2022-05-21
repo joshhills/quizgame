@@ -21,7 +21,8 @@ let id = null,
 
 // Get element references
 
-let notification = document.getElementById('notification'),
+let loader = document.getElementById('loader'),
+    notification = document.getElementById('notification'),
     questionnumber = document.getElementById('questionnumber'),
     question = document.getElementById('question'),
     options = document.getElementById('options'),
@@ -339,6 +340,9 @@ function updateUI() {
             scoresTable.innerHTML = scoresTableHtml;
         }
     }
+    
+    // Have received updates from server so it has 'loaded'
+    loader.hidden = true;
 }
 
 function numberWithCommas(x, prependPoundSymbol = false) {

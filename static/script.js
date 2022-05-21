@@ -41,7 +41,8 @@ function connect() {
 connect();
 
 // Get elements
-var pregameContainer = document.getElementById('pregame'),
+var loader = document.getElementById('loader'),
+    pregameContainer = document.getElementById('pregame'),
     gameContainer = document.getElementById('game'),
     inProgMessage = document.getElementById('inprogmessage'),
     inProgJoinTeam = document.getElementById('inprogjointeam'),
@@ -1014,6 +1015,8 @@ function updateUI() {
             achievementsEl.innerHTML += `<div><img src="${ACHIEVEMENT_DATA[achievement].imagePath}" /><p>${ACHIEVEMENT_DATA[achievement].title}</p><p>${ACHIEVEMENT_DATA[achievement].description}</p></div>`;
         }
     }
+
+    loader.hidden = true;
 }
 
 function assertTeam() {

@@ -493,7 +493,7 @@ function handleProgressState() {
 }
 
 function handleLockIn(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -512,7 +512,7 @@ function handleLockIn(data) {
 }
 
 function handleResetAllocation(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -535,7 +535,7 @@ function handleResetAllocation(data) {
 }
 
 function handleAddOption(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -622,7 +622,8 @@ function handleCreateTeam(data) {
             currentGainStreak: 0,
             lastPlace: null,
             placesMoved: 0,
-            achievements: []
+            achievements: [],
+            numEmotesUsed: 0
         }
     );
 
@@ -642,7 +643,7 @@ function handleRemoveNotify() {
 }
 
 function handleTeamChat(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -829,7 +830,8 @@ function handleJoinSolo(data) {
             currentGainStreak: 0,
             lastPlace: null,
             placesMoved: 0,
-            achievements: []
+            achievements: [],
+            numEmotesUsed: 0
         }
     );
 
@@ -919,7 +921,7 @@ function handleToggleReady(data) {
 }
 
 function handleAddRemaining(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -959,7 +961,7 @@ function handleRemoveAll(data) {
 }
 
 function handleMinusOption(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -1042,7 +1044,15 @@ function handleToggleAllocations() {
 }
 
 function handleEmote(data) {
+    
     if (data.emote) {
+        
+        // Get player's team based on their ID
+        let team = getTeamById(data.id.id);
+        
+        // Increment their emotes used...
+        team.numEmotesUsed++;
+
         // Only send to spectator
         broadcast(MESSAGE_TYPE.SERVER.EMOTE,
             { emote: data.emote }, { clientArray: spectators, predicate: (c) => c.isSpectator });
@@ -1050,7 +1060,7 @@ function handleEmote(data) {
 }
 
 function handleUseHint(data) {
-    if (scene !== GAME_STATE.GAME) {
+    if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
@@ -1345,6 +1355,9 @@ function computeAchievements() {
     let highestNumTurnsWentAllIn = -1;
     let prospectiveHighestNumTurnsWentAllIn = [];
 
+    let highestNumEmotes = -1;
+    let prospectiveHighestNumEmotes = [];
+
     for (let team of teams) {
 
         // Compute winner
@@ -1415,6 +1428,13 @@ function computeAchievements() {
             } else if (historicData.globalData.teams[team.teamName].numTurnsWentAllIn === highestNumTurnsWentAllIn) {
                 prospectiveHighestNumTurnsWentAllIn.push(team.teamName);
             }
+
+            if (team.numEmotes > 0 &&
+                team.numEmotes > highestNumEmotes) {
+                prospectiveHighestNumEmotes = [team.teamName];
+            } else if (team.numEmotes === highestNumEmotes) {
+                prospectiveHighestNumEmotes.push(team.teamName);
+            }
         }
     }
 
@@ -1446,6 +1466,11 @@ function computeAchievements() {
     for (const team of prospectiveHighestNumTurnsWentAllIn) {
         let _team = getTeamByName(team);
         _team.achievements.push(ACHIEVEMENT.MOST_ALL_INS);
+    }
+
+    for (const team of prospectiveHighestNumEmotes) {
+        let _team = getTeamByName(team);
+        _team.achievements.push(ACHIEVEMENT.MOST_EMOTES_USED);
     }
 
     console.log(JSON.stringify(historicData));
