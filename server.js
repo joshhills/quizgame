@@ -114,6 +114,7 @@ let spectators = [],
     activeQuestion = null,
     activeQuestionIndex = 0,
     teams = null,
+    achievements = {},
     winners = null,
     showImage = false,
     showAllocations = false,
@@ -142,6 +143,7 @@ function reset() {
     activeQuestion = null;
     activeQuestionIndex = 0;
     teams = [];
+    achievements = {};
     winners = null;
     historicData = {};
     showImage = false;
@@ -198,7 +200,8 @@ function broadcastGameState(options = {}) {
         fastestTime: fastestTime,
         fastestTeam: fastestTeam,
         fastestTimeCorrect: fastestTimeCorrect,
-        fastestTeamCorrect: fastestTeamCorrect
+        fastestTeamCorrect: fastestTeamCorrect,
+        achievements: achievements
     };
 
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, { state: gameState }, options);
@@ -360,7 +363,7 @@ function handleProgressState() {
 
             // Tally global data
             if (team.activeHint !== null) {
-                historicData.globalData.teams[team.teamName].numTurnsUsedHints ++;
+                historicData.globalData.teams[team.teamName].numTurnsUsedHints++;
             }
             if (wasKnockedOut) {
                 historicData.globalData.teams[team.teamName].numTimesKnockedOut++;
@@ -1047,6 +1050,8 @@ function handleEmote(data) {
     
     if (data.emote) {
         
+        console.log(data);
+
         // Get player's team based on their ID
         let team = getTeamById(data.id.id);
         
@@ -1196,7 +1201,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true, rate: { hits: 2, perMs: 1000 } } },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 2000 } } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 10 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
@@ -1355,8 +1360,8 @@ function computeAchievements() {
     let highestNumTurnsWentAllIn = -1;
     let prospectiveHighestNumTurnsWentAllIn = [];
 
-    let highestNumEmotes = -1;
-    let prospectiveHighestNumEmotes = [];
+    let highestNumEmotesUsed = -1;
+    let prospectiveHighestNumEmotesUsed = [];
 
     for (let team of teams) {
 
@@ -1429,15 +1434,24 @@ function computeAchievements() {
                 prospectiveHighestNumTurnsWentAllIn.push(team.teamName);
             }
 
-            if (team.numEmotes > 0 &&
-                team.numEmotes > highestNumEmotes) {
-                prospectiveHighestNumEmotes = [team.teamName];
-            } else if (team.numEmotes === highestNumEmotes) {
-                prospectiveHighestNumEmotes.push(team.teamName);
+            if (team.numEmotesUsed > 0 &&
+                team.numEmotesUsed > highestNumEmotesUsed) {
+                prospectiveHighestNumEmotesUsed = [team.teamName];
+            } else if (team.numEmotesUsed === highestNumEmotesUsed) {
+                prospectiveHighestNumEmotesUsed.push(team.teamName);
             }
         }
     }
 
+    // Store global achievements for host view
+    achievements[ACHIEVEMENT.MOST_KNOCKED_OUT] = prospectiveHighestNumTimesKnockedOut;
+    achievements[ACHIEVEMENT.MOST_CLUMSY_FINGERS] = prospectiveHighestNumTurnsSloppiestFinger;
+    achievements[ACHIEVEMENT.MOST_FASTEST_FINGERS] = prospectiveHighestNumTurnsFastestFinger;
+    achievements[ACHIEVEMENT.HIGHEST_GAINS] = prospectiveHighestTotalMoneyGained;
+    achievements[ACHIEVEMENT.HIGHEST_LOSSES] = prospectiveHighestTotalMoneyLost;
+    achievements[ACHIEVEMENT.MOST_ALL_INS] = prospectiveHighestNumTurnsWentAllIn;
+    achievements[ACHIEVEMENT.MOST_EMOTES_USED] = prospectiveHighestNumEmotesUsed;
+    
     for (const team of prospectiveHighestNumTimesKnockedOut) {
         let _team = getTeamByName(team);
         _team.achievements.push(ACHIEVEMENT.MOST_KNOCKED_OUT);
@@ -1468,7 +1482,7 @@ function computeAchievements() {
         _team.achievements.push(ACHIEVEMENT.MOST_ALL_INS);
     }
 
-    for (const team of prospectiveHighestNumEmotes) {
+    for (const team of prospectiveHighestNumEmotesUsed) {
         let _team = getTeamByName(team);
         _team.achievements.push(ACHIEVEMENT.MOST_EMOTES_USED);
     }

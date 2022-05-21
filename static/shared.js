@@ -180,6 +180,7 @@ export const LOG_TYPE = {
  * 
  */
 export function sendMessage(ws, type, obj, id, onError) {
+
     let blobStr = formatMessage(type, obj, id);
 
     if (onError && ws.readyState !== 1) {
@@ -203,6 +204,7 @@ export function formatMessage(type, obj, id) {
     if (id) {
         obj.id = id;
     }
+
     return JSON.stringify(obj);
 }
 

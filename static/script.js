@@ -260,6 +260,7 @@ chatMessage.addEventListener('keyup', (e) => {
 });
 
 useHintButton.addEventListener('click', () => {
+
     notifier.confirm(
         'Are you sure you want to use a hint?<br/>This will remove two incorrect answers at random.',
         () => sendMessage(ws, MESSAGE_TYPE.CLIENT.USE_HINT, {}, id),
@@ -552,7 +553,7 @@ function removeAll(optionChar) {
 }
 
 function sendReaction(reaction) {
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.EMOTE, { emote: reaction });
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.EMOTE, { emote: reaction }, id);
 }
 
 /* === End Sender Functions === */
@@ -1016,6 +1017,7 @@ function updateUI() {
         }
     }
 
+    // Have received updates from server so it has 'loaded'
     loader.hidden = true;
 }
 
