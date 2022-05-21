@@ -212,7 +212,15 @@ function updateUI() {
         if (gameState.scene === GAME_STATE.PREGAME) {
             options.className = 'options hidden';
             question.hidden = false;
-            question.innerHTML = 'Waiting for quiz to start...';
+
+            if (gameState.quizName) {
+                question.innerHTML = `Waiting for '${gameState.quizName}' to start...<br/><br/>`;
+            } else {
+                question.innerHTML = 'Waiting for game to start...<br/><br/>';
+            }
+
+            question.innerHTML += `${gameState.teams.length} team${gameState.teams.length === 1 ? '' : 's'} waiting`;
+
         } else {
             options.className = 'options';
         }
@@ -249,10 +257,10 @@ function updateUI() {
                 t1o2allocation.style.opacity = 1;
                 t1o3allocation.style.opacity = 1;
                 t1o4allocation.style.opacity = 1;
-                t1o1allocation.innerHTML = `£${numberWithCommas(gameState.optionATotalAllocationThisRound)} spent (${optionATotalAllocationPercentage}%)`;
-                t1o2allocation.innerHTML = `£${numberWithCommas(gameState.optionBTotalAllocationThisRound)} spent (${optionBTotalAllocationPercentage}%)`;
-                t1o3allocation.innerHTML = `£${numberWithCommas(gameState.optionCTotalAllocationThisRound)} spent (${optionCTotalAllocationPercentage}%)`;
-                t1o4allocation.innerHTML = `£${numberWithCommas(gameState.optionDTotalAllocationThisRound)} spent (${optionDTotalAllocationPercentage}%)`;
+                t1o1allocation.innerHTML = `${numberWithCommas(gameState.optionATotalAllocationThisRound, true)} spent (${optionATotalAllocationPercentage}%)`;
+                t1o2allocation.innerHTML = `${numberWithCommas(gameState.optionBTotalAllocationThisRound, true)} spent (${optionBTotalAllocationPercentage}%)`;
+                t1o3allocation.innerHTML = `${numberWithCommas(gameState.optionCTotalAllocationThisRound, true)} spent (${optionCTotalAllocationPercentage}%)`;
+                t1o4allocation.innerHTML = `${numberWithCommas(gameState.optionDTotalAllocationThisRound, true)} spent (${optionDTotalAllocationPercentage}%)`;
             }
 
         } else {
@@ -285,7 +293,7 @@ function updateUI() {
             scoresContainer.hidden = false;
             gameContainer.className = 'game scores';
             questionnumber.innerHTML = 'Scores';
-            question.innerHTML = `£${numberWithCommas(gameState.totalLostThisRound)} was lost. £${numberWithCommas(gameState.totalGainedThisRound)} was gained.`;
+            question.innerHTML = `${numberWithCommas(gameState.totalLostThisRound, true)} was lost. ${numberWithCommas(gameState.totalGainedThisRound, true)} was gained.`;
             if (gameState.teamsKnockedOutThisRound.length > 0) {
                 question.innerHTML += ` ${gameState.teamsKnockedOutThisRound.length} team${gameState.teamsKnockedOutThisRound.length !== 1 ? 's' : ''} lost it all.`;
             }
@@ -319,13 +327,13 @@ function updateUI() {
                 }
 
                 let fastestFingerIconHtml = '';
-                if (gameState.teams[i].teamName === gameState.fastestTeam) {
+                if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeam) {
                     fastestFingerIconHtml = '<i class="bi bi-lightning-charge red" title="Clumsiest thumbs"></i>';
                 }
-                if (gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
+                if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                     fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
                 }
-                scoresTableHtml += `<tr class="${gameState.teams[i].score === 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].score)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}</td></tr>`;
+                scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>${numberWithCommas(gameState.teams[i].score, true)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
             }
             scoresTableHtml + '</tbody>';
             scoresTable.innerHTML = scoresTableHtml;
@@ -333,8 +341,13 @@ function updateUI() {
     }
 }
 
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function numberWithCommas(x, prependPoundSymbol = false) {
+    const sign = x >= 0 ? '' : '-';
+    let absX = Math.abs(x);
+    const formatted = absX.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    return prependPoundSymbol ?
+        sign + '£' + formatted : sign + formatted;
 }
 
 function getRandomInclusive(min, max) {

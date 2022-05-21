@@ -21,6 +21,7 @@ const notifier = new AWN({
     }
 });
 let lastAlert = null,
+    lastWarn = null,
     lastInfo = null;
 
 // Connect to server
@@ -132,7 +133,8 @@ var pregameContainer = document.getElementById('pregame'),
     infoModalOpen = document.getElementById('infomodalopen'),
     helpButton = document.getElementById('helpbutton'),
     achievementsEl = document.getElementById('achievements'),
-    logHint = document.getElementById('loghint');
+    logHint = document.getElementById('loghint'),
+    remainingBreakdown = document.getElementById('remainingbreakdown');
 
 function updateJoinButtons() {
     const playerName = document.getElementById('name').value;
@@ -317,7 +319,7 @@ function handleConnectionId(data) {
 function handleStateChange(data) {
 
     if (gameState.scene === GAME_STATE.SCORES && data.state.scene === GAME_STATE.GAME) {
-        while (log.firstChild !== log.lastChild) {
+        while (log.children.length > 1) {
             log.removeChild(log.firstChild);
         }
     }
@@ -340,7 +342,7 @@ function handleReset() {
     team = null;
     solo = null;
     ready = false;
-    while (log.firstChild !== log.lastChild) {
+    while (log.children.length > 1) {
         log.removeChild(log.firstChild);
     }
     currentErrorMessage = '';
@@ -360,6 +362,15 @@ function handleErrorMessage(data) {
     }
 
     lastAlert = notifier.alert(currentErrorMessage, {durations: {alert: 0}});
+}
+
+function handleRateLimit(data) {
+
+    if (lastWarn && lastWarn.parentElement) {
+        notifier.container.removeChild(lastWarn);
+    }
+
+    lastWarn = notifier.warning(data.message, {durations: {warning: data.timeout || 0}});
 }
 
 function handleNotify(data) {
@@ -443,7 +454,10 @@ function addMessageToLog(logType, subject, message) {
         icon = 'bi-person-plus';
     }
 
-    console.log(message);
+    // Limit the number of log messages supported at a given time...
+    if (log.children.length > 50) {
+        log.removeChild(log.children[log.children.length - 2]);
+    }
 
     log.innerHTML = `<div class="logmessage ${logType}">
         <i class="bi ${icon}"></i> <span class="logmessagesubject">${subject} </span>${message}
@@ -470,6 +484,7 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
     [MESSAGE_TYPE.SERVER.RESET]: { handler: handleReset },
     [MESSAGE_TYPE.SERVER.LOG]: { handler: handleLog },
     [MESSAGE_TYPE.SERVER.ERROR_MESSAGE]: { handler: handleErrorMessage },
+    [MESSAGE_TYPE.SERVER.RATE_LIMIT]: { handler: handleRateLimit },
     [MESSAGE_TYPE.SERVER.NOTIFY]: { handler: handleNotify },
     [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
     [MESSAGE_TYPE.SERVER.TEAM_CHAT]: { handler: handleChatMessage }
@@ -748,17 +763,17 @@ function updateUI() {
 
         logHint.innerHTML = `Playing as team '${_team.teamName}' with ${_team.members.map(tm => tm.name).join(', ')}. Messages will appear below...`;
 
-        remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn());
+        remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn(), true);
 
         optionA.innerHTML = gameState.activeQuestion.options.a;
         optionB.innerHTML = gameState.activeQuestion.options.b;
         optionC.innerHTML = gameState.activeQuestion.options.c;
         optionD.innerHTML = gameState.activeQuestion.options.d;
 
-        allocatedA.innerHTML = numberWithCommas(_team.optionsAllocated['a']);
-        allocatedB.innerHTML = numberWithCommas(_team.optionsAllocated['b']);
-        allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c']);
-        allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d']);
+        allocatedA.innerHTML = numberWithCommas(_team.optionsAllocated['a'], true);
+        allocatedB.innerHTML = numberWithCommas(_team.optionsAllocated['b'], true);
+        allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c'], true);
+        allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d'], true);
 
         removeAllA.disabled = _team.optionsAllocated['a'] === 0;
         removeAllB.disabled = _team.optionsAllocated['b'] === 0;
@@ -914,7 +929,14 @@ function updateUI() {
         }
 
         answerText.innerHTML = gameState.activeQuestion.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.activeQuestion.answer];
-        remainingAfter.innerHTML = numberWithCommas(_team.score);
+        
+        if (_team.lastWagered === 0) {
+            remainingBreakdown.innerHTML = 'You skipped this question'
+        } else {
+            remainingBreakdown.innerHTML = `You wagered ${numberWithCommas(_team.lastWagered, true)}, lost ${numberWithCommas(_team.lastLost, true)} and gained ${numberWithCommas(_team.lastGained, true)}`;
+        }
+
+        remainingAfter.innerHTML = numberWithCommas(_team.score, true);
     } else if (gameState.scene === 'scores') {
         pregameContainer.hidden = true;
         gameContainer.hidden = true;
@@ -959,7 +981,7 @@ function updateUI() {
             if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                 fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
             }
-            scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>£${numberWithCommas(gameState.teams[i].score)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
+            scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>${numberWithCommas(gameState.teams[i].score, true)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
@@ -1019,6 +1041,11 @@ setInterval(() => {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
 }, 5000);
 
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function numberWithCommas(x, prependPoundSymbol = false) {
+    const sign = x >= 0 ? '' : '-';
+    let absX = Math.abs(x);
+    const formatted = absX.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    return prependPoundSymbol ?
+        sign + '£' + formatted : sign + formatted;
 }

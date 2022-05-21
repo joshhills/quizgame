@@ -295,6 +295,9 @@ function handleProgressState() {
                     losses += team.optionsAllocated[option];
                 }
             }
+            team.lastGained = winnings;
+            team.lastLost = losses;
+
             team.score -= losses;
             team.score += winnings;
 
@@ -490,6 +493,11 @@ function handleProgressState() {
 }
 
 function handleLockIn(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
     let team = getTeamByName(sanitizeHTML(data.team));
 
     team.lockedIn = true;
@@ -504,6 +512,11 @@ function handleLockIn(data) {
 }
 
 function handleResetAllocation(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
     let team = getTeamByName(sanitizeHTML(data.team));
 
     team.optionsAllocated = {
@@ -522,6 +535,11 @@ function handleResetAllocation(data) {
 }
 
 function handleAddOption(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
     let team = getTeamByName(sanitizeHTML(data.team));
 
     if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
@@ -616,14 +634,18 @@ function handleCreateTeam(data) {
 function handleNotify(data) {
     const message = data.message;
 
-    broadcast(MESSAGE_TYPE.SERVER.NOTIFY, { message: message });
+    broadcast(MESSAGE_TYPE.SERVER.NOTIFY, { message: message }, { clientArray: clients.concat(spectators) });
 }
 
 function handleRemoveNotify() {
-    broadcast(MESSAGE_TYPE.SERVER.REMOVE_NOTIFY);
+    broadcast(MESSAGE_TYPE.SERVER.REMOVE_NOTIFY, {}, { clientArray: clients });
 }
 
 function handleTeamChat(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
     
     let tws = getClientById(wss, data.id.id);
 
@@ -897,6 +919,11 @@ function handleToggleReady(data) {
 }
 
 function handleAddRemaining(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
     let team = getTeamByName(sanitizeHTML(data.team)); 
     
     if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
@@ -932,6 +959,11 @@ function handleRemoveAll(data) {
 }
 
 function handleMinusOption(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
     let step = getDenomination(sanitizeHTML(data.team));
     let team = getTeamByName(sanitizeHTML(data.team));
     if (team.optionsAllocated[data.option] != 0) {
@@ -1018,6 +1050,10 @@ function handleEmote(data) {
 }
 
 function handleUseHint(data) {
+    if (scene !== GAME_STATE.GAME) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
     
     const tws = getClientById(wss, data.id.id);
 
@@ -1135,7 +1171,7 @@ wss.on('connection', (ws, req) => {
     // Note: This isn't secure per-se, operates on good-faith basis
     if (isHost) {
         ws.isHost = true;
-        hosts = hosts.push(ws);;
+        hosts.push(ws);;
     }
 
     if (!isHost && !isSpectator) {
@@ -1150,22 +1186,22 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true, rate: { hits: 2, perMs: 1000 } } },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 } } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 2000 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
         [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: { handler: handleAddRemaining },
         [MESSAGE_TYPE.CLIENT.REMOVE_ALL]: { handler: handleRemoveAll },
         [MESSAGE_TYPE.CLIENT.MINUS_OPTION]: { handler: handleMinusOption },
-        [MESSAGE_TYPE.CLIENT.RESET]: { handler: handleReset },
+        [MESSAGE_TYPE.CLIENT.RESET]: { handler: handleReset, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.KICK]: { handler: handleKick },
-        [MESSAGE_TYPE.CLIENT.NOTIFY]: { handler: handleNotify },
+        [MESSAGE_TYPE.CLIENT.NOTIFY]: { handler: handleNotify, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 } } },
         [MESSAGE_TYPE.CLIENT.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
         [MESSAGE_TYPE.CLIENT.TEAM_CHAT]: { handler: handleTeamChat, rateLimit: { rate: { hits: 2, perMs: 1500 } } },
-        [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage },
-        [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage, rateLimit: { atomic: true } },
+        [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } },
-        [MESSAGE_TYPE.CLIENT.USE_HINT]: { handler: handleUseHint, rateLimit: { rate: { hits: 1, perMs: 5000 } } }
+        [MESSAGE_TYPE.CLIENT.USE_HINT]: { handler: handleUseHint, rateLimit: { atomic: true, rate: { hits: 1, perMs: 5000 } } }
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });

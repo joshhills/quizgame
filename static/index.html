@@ -420,7 +420,9 @@
             }
             .logmessage.add,
             .logmessage.minus,
-            .logmessage.reset {
+            .logmessage.reset,
+            .logmessage.hint,
+            .logmessage.join {
                 color: grey;
             }
             .logmessage.lock {
@@ -500,14 +502,14 @@
                     <img src="" class="imagehint" id="preimage"/>
                 </div>
                 <div>
-                    <h4>£<span id="remaining"></span> remaining</h4>
+                    <h4><span id="remaining"></span> remaining</h4>
                 </div>
                 <div class="options">
                     <div class="option" id="optionabox">
                         <!-- <p>A</p> -->
                         <p class="optiontext" id="optiona"></p>
                         <div class="optioncontrols">
-                            <p class="allocation">£<span id="allocateda">0</span></p>
+                            <p class="allocation"><span id="allocateda">0</span></p>
                             <button class="moneycontrol" id="removealla"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusa"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="adda"><i class="bi bi-chevron-up"></i></button>
@@ -518,7 +520,7 @@
                         <!-- <p>B</p> -->
                         <p class="optiontext" id="optionb"></p>
                         <div class="optioncontrols">
-                            <p class="allocation">£<span id="allocatedb">0</span></p>
+                            <p class="allocation"><span id="allocatedb">0</span></p>
                             <button class="moneycontrol" id="removeallb"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusb"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="addb"><i class="bi bi-chevron-up"></i></button>
@@ -529,7 +531,7 @@
                         <!-- <p>C</p> -->
                         <p class="optiontext" id="optionc"></p>
                         <div class="optioncontrols">
-                            <p class="allocation">£<span id="allocatedc">0</span></p>
+                            <p class="allocation"><span id="allocatedc">0</span></p>
                             <button class="moneycontrol" id="removeallc"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusc"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="addc"><i class="bi bi-chevron-up"></i></button>
@@ -540,7 +542,7 @@
                         <!-- <p>D</p> -->
                         <p class="optiontext" id="optiond"></p>
                         <div class="optioncontrols">
-                            <p class="allocation">£<span id="allocatedd">0</span></p>
+                            <p class="allocation"><span id="allocatedd">0</span></p>
                             <button class="moneycontrol" id="removealld"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusd"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="addd"><i class="bi bi-chevron-up"></i></button>
@@ -579,7 +581,8 @@
                 <h2>The answer was...</h2>
                 <h2><span id="answertext"></span></h2>
                 <img src="" class="imagehint" id="postimage"/>
-                <p>Your new score is £<span id="remainingafter"></span></p>
+                <p><span id="remainingbreakdown"></span>.</p>
+                <p>Your new score is <span id="remainingafter"></span></p>
                 <div class="reactions">
                     <button id="laugh2"><span class="emote laugh"></span></button>
                     <button id="cry2"><span class="emote cry"></span></button>

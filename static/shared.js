@@ -14,6 +14,7 @@ export const MESSAGE_TYPE = {
         RESET: 'reset',
         LOG: 'log',
         ERROR_MESSAGE: 'errorMessage',
+        RATE_LIMIT: 'rateLimit',
         NOTIFY: 'notify',
         REMOVE_NOTIFY: 'removeNotify',
         TEAM_CHAT: 'teamChat',
@@ -76,44 +77,45 @@ export const SHOW_ALLOCATIONS_TIMER_MS = 8000;
 // Game achievements
 export const ACHIEVEMENT = {
     WINNER: 'winner', 
-    FIVE_IN_A_ROW: 'fiveInARow', //
-    TEN_IN_A_ROW: 'tenInARow', //
-    FIFTEEN_IN_A_ROW: 'fifteenInARow', //
-    ALL_CORRECT: 'allCorrect', //
+    FIVE_IN_A_ROW: 'fiveInARow',
+    TEN_IN_A_ROW: 'tenInARow',
+    FIFTEEN_IN_A_ROW: 'fifteenInARow',
+    ALL_CORRECT: 'allCorrect',
     MOST_FASTEST_FINGERS: 'mostFastestFingers',
     MOST_CLUMSY_FINGERS: 'mostClumsyFingers',
     HIGHEST_GAINS: 'highestGains',
     HIGHEST_LOSSES: 'highestLosses',
     MOST_ALL_INS: 'mostAllIns',
     MOST_KNOCKED_OUT: 'mostKnockedOut',
-    NO_HINTS_USED: 'noHintsUsed' //
+    NO_HINTS_USED: 'noHintsUsed',
+    MOST_EMOTES_USED: 'mostEmotesUsed'
 }
 
 export const ACHIEVEMENT_DATA = {
     [ACHIEVEMENT.WINNER]: {
         title: 'Winner',
         description: 'You won the quiz',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/WinnerIcon.png'
     },
     [ACHIEVEMENT.FIVE_IN_A_ROW]: {
         title: 'Five In A Row',
         description: 'You gained money five times in a row',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/FiveInARowIcon.png'
     },
     [ACHIEVEMENT.TEN_IN_A_ROW]: {
         title: 'Ten In A Row',
         description: '',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/TenInARowIcon.png'
     },
     [ACHIEVEMENT.FIFTEEN_IN_A_ROW]: {
         title: 'Fifteen In A Row',
         description: 'You won the quiz!',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/FifteenInARow.png'
     },
     [ACHIEVEMENT.ALL_CORRECT]: {
         title: 'Star Pupil',
         description: 'You gained money on all questions',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/StarPupilIcon.png'
     },
     [ACHIEVEMENT.MOST_FASTEST_FINGERS]: {
         title: 'Fastest Fingers',
@@ -149,6 +151,11 @@ export const ACHIEVEMENT_DATA = {
         title: 'No Help Needed',
         description: 'You never used any hints',
         imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+    },
+    [ACHIEVEMENT.MOST_EMOTES_USED]: {
+        title: 'Most Emotional',
+        description: 'You sent the most emotes to spectators',
+        imagePath: '/quiz/images/achievements/MostEmotionalIcon.png'
     }
 }
 
@@ -299,8 +306,9 @@ export function handleMessage(ws, data, typeMap, callback) {
         }
 
         if (rateLimited) {
-            // TODO: Make rate limiting its own thing
-            sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Woah, slow down!" });
+            let timeout = RATE_LIMIT_TIMEOUT;
+
+            sendMessage(ws, MESSAGE_TYPE.SERVER.RATE_LIMIT, { message: "Woah, slow down!", timeout: RATE_LIMIT_TIMEOUT });
         }
     } else {
         console.warn('No message in payload');

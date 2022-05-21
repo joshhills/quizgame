@@ -1,11 +1,35 @@
 import { MESSAGE_TYPE, GAME_STATE, sendMessage, handleMessage } from '../shared.js';
 
+// Constants
+const ERROR_TIMEOUT_MS = 3000;
+
+// Initialize notification handling
+const notifier = new AWN({
+    durations: {
+        error: ERROR_TIMEOUT_MS
+    },
+    maxNotifications: 5,
+    icons: {
+        prefix: '<i class="bi bi-',
+        suffix: '"></i>',
+        tip: 'chat-dots',
+        info: 'info-circle',
+        success: 'check-circle',
+        warning: 'slash-circle',
+        alert: 'exclamation-circle',
+        confirm: 'check-circle'
+    }
+});
+let lastAlert = null,
+    lastWarn = null,
+    currentErrorMessage = null;
+
 // Connect to server
 
 let ws;
 
 function connect() {
-    ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/quiz');
+    ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/quiz?host=true');
 }
 
 connect();
@@ -118,9 +142,7 @@ function handleConnectionId(data) {
     id = data;
 
     setInterval(() => {
-        console.log('Sending ping');
-
-        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
     }, 5000);
 }
 
@@ -130,11 +152,37 @@ function handleStateChange(data) {
     rawGameState.innerHTML = JSON.stringify(gameState, null, 4);
 }
 
+function handleErrorMessage(data) {
+    if (currentErrorMessage && data.message === currentErrorMessage && !(lastAlert && !lastAlert.parentElement)) {
+        // Skip duplicate errors
+        return;
+    }
+
+    currentErrorMessage = data.message;
+
+    if (lastAlert && lastAlert.parentElement) {
+        notifier.container.removeChild(lastAlert);
+    }
+
+    lastAlert = notifier.alert(currentErrorMessage, {durations: {alert: 0}});
+}
+
+function handleRateLimit(data) {
+
+    if (lastWarn && lastWarn.parentElement) {
+        notifier.container.removeChild(lastWarn);
+    }
+
+    lastWarn = notifier.warning(data.message, {durations: {warning: data.timeout || 0}});
+}
+
 // Register event handlers
 ws.onmessage = (msg) => handleMessage(ws, msg.data, {
     [MESSAGE_TYPE.SERVER.PONG]: { handler: handlePong },
     [MESSAGE_TYPE.SERVER.CONNECTION_ID]: { handler: handleConnectionId },
-    [MESSAGE_TYPE.SERVER.STATE_CHANGE]: { handler: handleStateChange }
+    [MESSAGE_TYPE.SERVER.STATE_CHANGE]: { handler: handleStateChange },
+    [MESSAGE_TYPE.SERVER.ERROR_MESSAGE]: { handler: handleErrorMessage },
+    [MESSAGE_TYPE.SERVER.RATE_LIMIT]: { handler: handleRateLimit }
 }, updateUI);
 
 /* === End Handler Functions === */
@@ -204,6 +252,18 @@ function updateUI() {
         progressState.disabled = true;
     } else {
         progressState.disabled = false;
+    }
+
+    if (gameState.scene === 'pregame') {
+        progressState.innerHTML = 'Start quiz';
+    } else if (gameState.scene === 'game') {
+        progressState.innerHTML = 'Show answer';
+    } else if (gameState.scene === 'answer') {
+        progressState.innerHTML = 'Show scores';
+    } else if (gameState.scene === 'scores') {
+        progressState.innerHTML = 'Next question';
+    } else if (gameState.scene === 'finish') {
+        progressState.innerHTML = 'Quiz finished';
     }
     
     if (gameState.showImage) {
