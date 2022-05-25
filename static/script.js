@@ -32,7 +32,7 @@ function connect() {
     id = JSON.parse(window.localStorage.getItem('id'));
 
     if (id !== null) {
-        ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `/quiz?id=${id.id}`);
+        ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `/quiz?id=${id}`);
     } else {
         ws = new WebSocket(location.origin.replace(/^http/, 'ws') + '/quiz');
     }
@@ -306,19 +306,20 @@ let timerBarInterval = -1;
 /* === Begin Handler functions === */
 
 // Handle a pong from the server
-function handlePong() {
+function handlePong(ws) {
     console.log('Received pong');
 }
 
 // Handle receiving an Id
-function handleConnectionId(data) {
-    id = data;
+function handleConnectionId(ws, data) {
+
+    id = data.id;
 
     window.localStorage.setItem('id', JSON.stringify(id));
 }
 
 // Handle the state of the game changing
-function handleStateChange(data) {
+function handleStateChange(ws, data) {
 
     if (gameState.scene === GAME_STATE.SCORES && data.state.scene === GAME_STATE.GAME) {
         while (log.children.length > 1) {
@@ -330,16 +331,16 @@ function handleStateChange(data) {
     team = assertTeam();
 }
 
-function handleAcknowledgeName(data) {
+function handleAcknowledgeName(ws, data) {
     playerName = data.name;
     solo = data.solo ? true : false;
 }
 
-function handleAcknowledgeReady(data) {
+function handleAcknowledgeReady(ws, data) {
     ready = data.ready;
 }
 
-function handleReset() {
+function handleReset(ws) {
     playerName = null;
     team = null;
     solo = null;
@@ -351,7 +352,7 @@ function handleReset() {
     currentNotification = null;
 }
 
-function handleErrorMessage(data) {
+function handleErrorMessage(ws, data) {
     if (currentErrorMessage && data.message === currentErrorMessage && !(lastAlert && !lastAlert.parentElement)) {
         // Skip duplicate errors
         return;
@@ -366,7 +367,7 @@ function handleErrorMessage(data) {
     lastAlert = notifier.alert(currentErrorMessage, {durations: {alert: 0}});
 }
 
-function handleRateLimit(data) {
+function handleRateLimit(ws, data) {
 
     if (lastWarn && lastWarn.parentElement) {
         notifier.container.removeChild(lastWarn);
@@ -375,7 +376,7 @@ function handleRateLimit(data) {
     lastWarn = notifier.warning(data.message, {durations: {warning: data.timeout || 0}});
 }
 
-function handleNotify(data) {
+function handleNotify(ws, data) {
     if (currentNotification && data.message === currentNotification && !(lastInfo && !lastInfo.parentElement)) {
         // Skip duplicate notifications
         return;
@@ -390,7 +391,7 @@ function handleNotify(data) {
     lastInfo = notifier.info(currentNotification, {durations: {info: 0}});
 }
 
-function handleRemoveNotify() {
+function handleRemoveNotify(ws) {
     currentNotification = null;
 
     if (lastInfo && lastInfo.parentElement) {
@@ -398,15 +399,13 @@ function handleRemoveNotify() {
     }
 }
 
-function handleChatMessage(data) {
+function handleChatMessage(ws, data) {
     // log.innerHTML = `${data.name} said: ${data.message}\n` + log.innerHTML;
 
     addMessageToLog(LOG_TYPE.CHAT, `${data.name}: `, data.message);
 }
 
-function handleLog(data) {
-
-    console.log('recieved log message');
+function handleLog(ws, data) {
     
     // TODO: Remove this check
     const _team = getTeamByName(team);
@@ -935,7 +934,7 @@ function updateUI() {
         if (_team.lastWagered === 0) {
             remainingBreakdown.innerHTML = 'You skipped this question'
         } else {
-            remainingBreakdown.innerHTML = `You wagered ${numberWithCommas(_team.lastWagered, true)}, lost ${numberWithCommas(_team.lastLost, true)} and gained ${numberWithCommas(_team.lastGained, true)}`;
+            remainingBreakdown.innerHTML = `You wagered ${numberWithCommas(_team.lastWagered, true)}, lost ${numberWithCommas(_team.lastLost, true)}, and gained ${numberWithCommas(_team.lastGained, true)}`;
         }
 
         remainingAfter.innerHTML = numberWithCommas(_team.score, true);
@@ -949,7 +948,7 @@ function updateUI() {
         clearInterval(timerBarInterval);
         timerBarInterval = -1;
 
-        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th>Change</th><th></th></tr></thead><tbody>';
+        let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Score</th><th>Change</th><th></th></tr></thead><tbody>';
         // gameState.teams.sort((a, b) => b.score - a.score);
         for (let i = 0; i < gameState.teams.length; i++) {
             let scoreDidChange = gameState.teams[i].lastChange !== 0;
@@ -998,7 +997,7 @@ function updateUI() {
         timerBarInterval = -1;
 
         if (gameState.winners.length === 0) {
-            winnerText.innerHTML = 'Nobody won x-(';
+            winnerText.innerHTML = 'Nobody won!';
         } else if (gameState.winners.length > 1) {
             winnerText.innerHTML = 'You were one of multiple winners!';
         } else {
@@ -1024,7 +1023,7 @@ function updateUI() {
 function assertTeam() {
     for (let team of gameState.teams) {
         for (let tm of team.members) {
-            if (tm.id === id.id) {
+            if (tm.id === id) {
                 return team.teamName;
             }
         }
@@ -1043,7 +1042,7 @@ function moneyRemainingThisTurn() {
 }
 
 setInterval(() => {
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
 }, 5000);
 
 function numberWithCommas(x, prependPoundSymbol = false) {

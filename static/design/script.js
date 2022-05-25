@@ -53,7 +53,7 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                 document.getElementById('quizstartingmoney').value = content.startingMoney;
                 document.getElementById('quizallowhints').value = content.allowHints;
                 document.getElementById('quiznumhints').value = content.numHints;
-                document.getElementById('quizincrementeachround').value = content.incrementEachRound;
+                // document.getElementById('quizincrementeachround').value = content.incrementEachRound;
                 document.getElementById('quizsecondsperquestion').value = content.secondsPerQuestion;
                 document.getElementById('quizbonusvalue').value = content.bonusValue;
 
@@ -407,7 +407,7 @@ document.getElementById('savequiz').addEventListener('click', () => {
             "startingMoney": +document.getElementById('quizstartingmoney').value,
             "allowHints": document.getElementById('quizallowhints').value === "on" ? true : false,
             "numHints": +document.getElementById('quiznumhints').value,
-            "incrementEachRound": +document.getElementById('quizincrementeachround').value,
+            // "incrementEachRound": +document.getElementById('quizincrementeachround').value,
             "secondsPerQuestion": +document.getElementById('quizsecondsperquestion').value,
             "bonusValue": +document.getElementById('quizbonusvalue').value,
             questions: parseQuestions()
@@ -445,13 +445,13 @@ async function validateQuiz() {
         elNumHints.classList = 'form-control';
     }
 
-    const elIncrementEachRound = document.getElementById('quizincrementeachround');
-    if (elIncrementEachRound.value < 0) {
-        elIncrementEachRound.classList = 'form-control is-invalid';
-        allGood = false;
-    } else {
-        elIncrementEachRound.classList = 'form-control';
-    }
+    // const elIncrementEachRound = document.getElementById('quizincrementeachround');
+    // if (elIncrementEachRound.value < 0) {
+    //     elIncrementEachRound.classList = 'form-control is-invalid';
+    //     allGood = false;
+    // } else {
+    //     elIncrementEachRound.classList = 'form-control';
+    // }
 
     const elBonusValue = document.getElementById('quizbonusvalue');
     if (elBonusValue.value < 0) {

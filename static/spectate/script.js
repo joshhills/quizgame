@@ -49,12 +49,12 @@ let loader = document.getElementById('loader'),
 /* === Begin Handler functions === */
 
 // Handle a pong from the server
-function handlePong() {
+function handlePong(ws) {
     console.log('Received pong');
 }
 
-function handleConnectionId(data) {
-    id = data;
+function handleConnectionId(ws, data) {
+    id = data.id;
 
     setInterval(() => {
         console.log('Sending ping');
@@ -64,27 +64,27 @@ function handleConnectionId(data) {
 }
 
 // Handle the state of the game changing
-function handleStateChange(data) {
+function handleStateChange(ws, data) {
     gameState = data.state;
 }
 
-function handleReset() {
+function handleReset(ws) {
     emoteSideFlip = true;
 }
 
-function handleNotify(data) {
+function handleNotify(ws, data) {
     currentNotification = data.message;
     notification.innerHTML = currentNotification;
     notification.hidden = false;
 }
 
-function handleRemoveNotify() {
+function handleRemoveNotify(ws) {
     currentNotification = null;
     notification.innerHTML = '';
     notification.hidden = true;
 }
 
-function handleEmote(data) {
+function handleEmote(ws, data) {
 
     if (numEmojies >= MAX_EMOJIS) {
         return;
@@ -275,7 +275,7 @@ function updateUI() {
 
             if (gameState.winners.length === 0) {
                 questionnumber.innerHTML = "Oh dear...";
-                question.innerHTML = 'Everybody went bankrupt!';
+                question.innerHTML = 'Nobody won!';
             } else if (gameState.winners.length === 1) {
                 questionnumber.innerHTML = "WINNER";
                 question.innerHTML = gameState.winners[0];
@@ -300,7 +300,7 @@ function updateUI() {
             }
             options.className = 'options hidden';
 
-            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Money</th><th>Change</th><th></th></tr></thead><tbody>';
+            let scoresTableHtml = '<thead><tr><th></th><th>Team</th><th>Score</th><th>Change</th><th></th></tr></thead><tbody>';
             // gameState.teams.sort((a, b) => b.score - a.score);
             for (let i = 0; i < gameState.teams.length; i++) {
                 let scoreDidChange = gameState.teams[i].lastChange !== 0;

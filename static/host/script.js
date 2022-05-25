@@ -134,25 +134,25 @@ toggleAllocations.addEventListener('click', () => {
 /* === Begin Handler functions === */
 
 // Handle a pong from the server
-function handlePong() {
+function handlePong(ws) {
     console.log('Received pong');
 }
 
-function handleConnectionId(data) {
-    id = data;
+function handleConnectionId(ws, data) {
+    id = data.id;
 
     setInterval(() => {
-        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
     }, 5000);
 }
 
 // Handle the state of the game changing
-function handleStateChange(data) {
+function handleStateChange(ws, data) {
     gameState = data.state;
     rawGameState.innerHTML = JSON.stringify(gameState, null, 4);
 }
 
-function handleErrorMessage(data) {
+function handleErrorMessage(ws, data) {
     if (currentErrorMessage && data.message === currentErrorMessage && !(lastAlert && !lastAlert.parentElement)) {
         // Skip duplicate errors
         return;
@@ -167,7 +167,7 @@ function handleErrorMessage(data) {
     lastAlert = notifier.alert(currentErrorMessage, {durations: {alert: 0}});
 }
 
-function handleRateLimit(data) {
+function handleRateLimit(ws, data) {
 
     if (lastWarn && lastWarn.parentElement) {
         notifier.container.removeChild(lastWarn);

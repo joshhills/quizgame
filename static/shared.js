@@ -120,37 +120,37 @@ export const ACHIEVEMENT_DATA = {
     [ACHIEVEMENT.MOST_FASTEST_FINGERS]: {
         title: 'Fastest Fingers',
         description: 'You locked in the fastest and gained money, the most amount of times',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/FastestFingersIcon.png'
     },
     [ACHIEVEMENT.MOST_CLUMSY_FINGERS]: {
         title: 'Clumsiest Thumbs',
         description: 'You locked in the fastest and lost money, the most amount of times',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/ClumsiestThumbsIcon.png'
     },
     [ACHIEVEMENT.HIGHEST_GAINS]: {
         title: 'On The Up',
         description: 'You gained the most money overall',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/OnTheUpIcon.png'
     },
     [ACHIEVEMENT.HIGHEST_LOSSES]: {
         title: 'Biggest Loser',
         description: 'You lost the most money overall',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/BiggestLoserIcon.png'
     },
     [ACHIEVEMENT.MOST_ALL_INS]: {
         title: 'Riskiest Strategy',
         description: 'You went all-in on a single answer the most amount of times',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/RiskiestStrategyIcon.png'
     },
     [ACHIEVEMENT.MOST_KNOCKED_OUT]: {
         title: 'Hard Knocks',
         description: 'You lost all your money the most amount of times',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/HardKnocksIcon.png'
     },
     [ACHIEVEMENT.NO_HINTS_USED]: {
         title: 'No Help Needed',
         description: 'You never used any hints',
-        imagePath: '/quiz/images/achievements/placeholder-achievement.png'
+        imagePath: '/quiz/images/achievements/NoHelpNeededIcon.png'
     },
     [ACHIEVEMENT.MOST_EMOTES_USED]: {
         title: 'Most Emotional',
@@ -293,10 +293,10 @@ export function handleMessage(ws, data, typeMap, callback) {
                         RateLimitCache[rateLimitKey].atomicLocked = true;
                     }
 
-                    handler(parsedData);
+                    handler(ws, parsedData);
                 }
             } else {
-                handler(parsedData);
+                handler(ws, parsedData);
             }
 
             // Release the lock

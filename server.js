@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, getClientById, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT, sanitizeHTML, LOG_TYPE } from './static/shared.js';
+import { MESSAGE_TYPE, GAME_STATE, sendMessage, formatMessage, handleMessage, MAX_TEAM_SIZE, QUESTION_BUFFER_TIME_MS, SHOW_ALLOCATIONS_TIMER_MS, ACHIEVEMENT, sanitizeHTML, LOG_TYPE } from './static/shared.js';
 
 import express from 'express';
 import fetch from 'node-fetch';
@@ -207,7 +207,7 @@ function broadcastGameState(options = {}) {
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, { state: gameState }, options);
 }
 
-function handleProgressState() {
+function handleProgressState(ws) {
 
     if (state === GAME_STATE.PREGAME && teams.length > 0 && questions.length > 0) {
         state = GAME_STATE.GAME;
@@ -218,7 +218,7 @@ function handleProgressState() {
         if (secondsPerQuestion > 0) {
             clearTimeout(advanceTimer);
             advanceTimer = setTimeout(() => {
-                handleProgressState();
+                handleProgressState(ws);
             }, secondsPerQuestion * 1000 + QUESTION_BUFFER_TIME_MS);
         }
 
@@ -451,7 +451,7 @@ function handleProgressState() {
             if (secondsPerQuestion > 0) {
                 clearTimeout(advanceTimer);
                 advanceTimer = setTimeout(() => {
-                    handleProgressState();
+                    handleProgressState(ws);
                 }, secondsPerQuestion * 1000 + QUESTION_BUFFER_TIME_MS);
             }
 
@@ -495,7 +495,13 @@ function handleProgressState() {
     broadcastGameState();
 }
 
-function handleLockIn(data) {
+function handleLockIn(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
@@ -507,14 +513,20 @@ function handleLockIn(data) {
     team.lockedInTime = Date.now();
     
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: ws.id,
         type: LOG_TYPE.LOCK
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
-function handleResetAllocation(data) {
+function handleResetAllocation(ws, data) {
+    
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
@@ -530,14 +542,20 @@ function handleResetAllocation(data) {
     };
 
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: ws.id,
         type: LOG_TYPE.RESET
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
-function handleAddOption(data) {
+function handleAddOption(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
@@ -556,7 +574,7 @@ function handleAddOption(data) {
     }
 
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: ws.id,
         type: LOG_TYPE.ADD,
         option: data.option
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
@@ -564,33 +582,36 @@ function handleAddOption(data) {
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
-function handleCreateTeam(data) {
+function handleCreateTeam(ws, data) {
 
-    let tws = getClientById(wss, data.id.id);
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
 
     let teamName = sanitizeHTML(data.team);
     let playerName = sanitizeHTML(data.as);
 
     if (!teamName || /^\s*$/.test(teamName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty team name!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty team name!" });
         return;
     }
 
     if (!playerName || /^\s*$/.test(playerName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty player name!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team with an empty player name!" });
         return;
     }
 
     // Does team already exist?
     for (let team of teams) {
         if (teamName === team.teamName) {
-            handleJoinTeam(data);
+            handleJoinTeam(ws, data);
             return;
         }
     }
 
     if (state !== GAME_STATE.PREGAME) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team while quiz in progress" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot create a team while quiz in progress" });
         return;
     }
 
@@ -601,7 +622,7 @@ function handleCreateTeam(data) {
             members: [
                 {
                     name: playerName,
-                    id: data.id.id,
+                    id: ws.id,
                     ready: false
                 }
             ],
@@ -630,35 +651,39 @@ function handleCreateTeam(data) {
         }
     );
 
-    sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName });
+    sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
     broadcastGameState();
 }
 
-function handleNotify(data) {
+function handleNotify(ws, data) {
     const message = data.message;
 
     broadcast(MESSAGE_TYPE.SERVER.NOTIFY, { message: message }, { clientArray: clients.concat(spectators) });
 }
 
-function handleRemoveNotify() {
+function handleRemoveNotify(ws) {
     broadcast(MESSAGE_TYPE.SERVER.REMOVE_NOTIFY, {}, { clientArray: clients });
 }
 
-function handleTeamChat(data) {
+function handleTeamChat(ws, data) {
+
+    if (!ws) {
+        console.warn('Received message without websocket client object');
+        return;
+    }
+    
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
     }
-    
-    let tws = getClientById(wss, data.id.id);
 
     // Find the team the player is on...
     let team = null;
     let player = null;
     for (let _team of teams) {
         for (let tm of _team.members) {
-            if (tm.id === data.id.id) {
+            if (tm.id === ws.id) {
                 team = _team;
                 player = tm;
                 break;
@@ -671,7 +696,7 @@ function handleTeamChat(data) {
     }
 
     if (!team) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to message!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to message!" });
         return;
     }
 
@@ -686,27 +711,30 @@ function handleTeamChat(data) {
     );
 }
 
-function handleJoinTeam(data) {
+function handleJoinTeam(ws, data) {
 
-    let tws = getClientById(wss, data.id.id);
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
     
     let teamName = sanitizeHTML(data.team);
     let playerName = sanitizeHTML(data.as);
 
     if (!teamName || /^\s*$/.test(teamName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty name!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty name!" });
         return;
     }
 
     if (!playerName || /^\s*$/.test(playerName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty player name!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a team with an empty player name!" });
         return;
     }
 
     // Check to see if this player is already part of another game...
     for (let i = 0; i < teams.length; i++) {
         for (let j = 0; j < teams[i].members.length; j++) {
-            if (teams[i].members[j].id === data.id.id) {
+            if (teams[i].members[j].id === data.id) {
                 // They are, so remove them from the team
                 teams[i].members.splice(j, 1);
 
@@ -726,24 +754,24 @@ function handleJoinTeam(data) {
 
             // Check max team size
             if (team.members.length === MAX_TEAM_SIZE) {
-                sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Team '${team.teamName}' is full!` });
+                sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Team '${team.teamName}' is full!` });
                 return;
             }
 
             team.members.push({
                 name: playerName,
-                id: data.id.id,
+                id: data.id,
                 ready: false
             });
 
-            sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as) });
+            sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as), solo: false });
 
             broadcastGameState();
 
             // If game is in progress, inform team members explicitly
             if (state === GAME_STATE.GAME) {
                 broadcast(MESSAGE_TYPE.SERVER.LOG, {
-                    id: data.id.id,
+                    id: data.id,
                     type: LOG_TYPE.JOIN
                 }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
             }
@@ -752,29 +780,33 @@ function handleJoinTeam(data) {
         }
     }
 
-    sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Team not found" });
+    sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Team not found" });
 }
 
-function handleJoinSolo(data) {
+function handleJoinSolo(ws, data) {
 
-    let tws = getClientById(wss, data.id.id);
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     let teamName = sanitizeHTML(data.as);
 
     if (state !== GAME_STATE.PREGAME) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a quiz in progress as a solo player" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join a quiz in progress as a solo player" });
         return;
     }
 
     if (!teamName || /^\s*$/.test(teamName)) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot play solo with an empty player name!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot play solo with an empty player name!" });
         return;
     }
 
     // Ensure this person isn't already in a solo team already
     for (let team of teams) {
         for (let tm of team.members) {
-            if (tm.id === data.id.id) {
-                sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join your own solo team twice!" });
+            if (tm.id === data.id) {
+                sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join your own solo team twice!" });
                 return;
             }
         }
@@ -809,7 +841,7 @@ function handleJoinSolo(data) {
             members: [
                 {
                     name: sanitizeHTML(data.as),
-                    id: data.id.id,
+                    id: data.id,
                     ready: false
                 }
             ],
@@ -839,21 +871,24 @@ function handleJoinSolo(data) {
     );
 
     if (didRename) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${sanitizeHTML(data.as)}'` });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${sanitizeHTML(data.as)}'` });
     }
-    sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as), solo: true });
+    sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as), solo: true });
     broadcastGameState();
 }
 
-function handleLeaveTeam(data) {
+function handleLeaveTeam(ws, data) {
 
-    let tws = getClientById(wss, data.id.id);
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
 
     // Find the team the player is on...
     let team = null;
     for (let _team of teams) {
         for (let tm of _team.members) {
-            if (tm.id === data.id.id) {
+            if (tm.id === data.id) {
                 team = _team;
                 break;
             }
@@ -865,14 +900,14 @@ function handleLeaveTeam(data) {
     }
 
     if (!team) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to leave" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to leave" });
         return;
     }
 
     // Check to see if this player is already part of another game...
     for (let i = 0; i < teams.length; i++) {
         for (let j = 0; j < teams[i].members.length; j++) {
-            if (teams[i].members[j].id === data.id.id) {
+            if (teams[i].members[j].id === data.id) {
                 // They are, so remove them from the team
                 teams[i].members.splice(j, 1);
 
@@ -887,21 +922,24 @@ function handleLeaveTeam(data) {
     }
 
     // Reset that person's client
-    sendMessage(tws, MESSAGE_TYPE.SERVER.RESET, {});
+    sendMessage(ws, MESSAGE_TYPE.SERVER.RESET, {});
     broadcastGameState();
     return;
 }
 
-function handleToggleReady(data) {
+function handleToggleReady(ws, data) {
 
-    let tws = getClientById(wss, data.id.id);
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
 
     // Find team of player
     let found = false;
     let newReady = null;
     for (let team of teams) {
         for (let tm of team.members) {
-            if (tm.id === data.id.id) {
+            if (tm.id === data.id) {
                 tm.ready = !tm.ready;
                 newReady = tm.ready;
                 found = true;
@@ -915,15 +953,21 @@ function handleToggleReady(data) {
     
     
     if (!found) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to ready up in" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to ready up in" });
         return;
     }
 
-    sendMessage(tws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_READY, { ready: newReady });
+    sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_READY, { ready: newReady });
     broadcastGameState();
 }
 
-function handleAddRemaining(data) {
+function handleAddRemaining(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
@@ -941,7 +985,7 @@ function handleAddRemaining(data) {
     }
 
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: data.id,
         type: LOG_TYPE.ADD,
         option: data.option
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
@@ -949,13 +993,19 @@ function handleAddRemaining(data) {
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
-function handleRemoveAll(data) {
+function handleRemoveAll(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     let team = getTeamByName(sanitizeHTML(data.team)); 
 
     team.optionsAllocated[data.option] = 0;
 
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: data.id,
         type: LOG_TYPE.MINUS,
         option: data.option
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
@@ -963,7 +1013,13 @@ function handleRemoveAll(data) {
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
-function handleMinusOption(data) {
+function handleMinusOption(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
@@ -976,7 +1032,7 @@ function handleMinusOption(data) {
     }
     
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: data.id,
         type: LOG_TYPE.MINUS,
         option: data.option
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
@@ -984,13 +1040,13 @@ function handleMinusOption(data) {
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
 
-function handleReset() {
+function handleReset(ws) {
     reset();
     broadcast(MESSAGE_TYPE.SERVER.RESET);
     broadcastGameState();
 }
 
-function handleKick(data) {
+function handleKick(ws, data) {
     let idToSwap = data.kick;
     let teamIx = null;
     let ix = null;
@@ -1031,14 +1087,14 @@ function handleKick(data) {
     broadcastGameState();
 }
 
-function handleToggleImage() {
+function handleToggleImage(ws) {
     showImage = !showImage;
 
     broadcastGameState({ clientArray: spectators.concat(hosts),
         predicate: (c) => c.isHost || c.isSpectator });
 }
 
-function handleToggleAllocations() {
+function handleToggleAllocations(ws) {
     showAllocations = !showAllocations;
 
     // Only send to spectator and host
@@ -1046,14 +1102,17 @@ function handleToggleAllocations() {
         predicate: (c) => c.isHost || c.isSpectator });
 }
 
-function handleEmote(data) {
-    
+function handleEmote(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (data.emote) {
         
-        console.log(data);
-
         // Get player's team based on their ID
-        let team = getTeamById(data.id.id);
+        let team = getTeamById(data.id);
         
         // Increment their emotes used...
         team.numEmotesUsed++;
@@ -1064,24 +1123,28 @@ function handleEmote(data) {
     }
 }
 
-function handleUseHint(data) {
+function handleUseHint(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
-    }
-    
-    const tws = getClientById(wss, data.id.id);
+    } 
 
     // Get player's team based on their ID
-    const team = getTeamById(data.id.id);
+    const team = getTeamById(data.id);
 
     if (team.lockedIn) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
         return;
     }
 
     if (team.activeHint) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You already have a hint" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You already have a hint" });
         return;
     }
 
@@ -1091,12 +1154,12 @@ function handleUseHint(data) {
     }
 
     if (!allowHints) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Hints are not enabled for this game!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Hints are not enabled for this game!" });
         return;
     }
 
     if (team.hintsRemaining <= 0) {
-        sendMessage(tws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "No more hints remaining!" });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "No more hints remaining!" });
         return;
     }
 
@@ -1117,7 +1180,7 @@ function handleUseHint(data) {
 
     // Send log message to the team
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
-        id: data.id.id,
+        id: data.id,
         type: LOG_TYPE.HINT
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
@@ -1145,15 +1208,21 @@ function handleClose() {
     }
 }
   
-function handlePing(data) {
-    let tws = getClientById(wss, data.id.id);
-    sendMessage(tws, MESSAGE_TYPE.SERVER.PONG, {});
+function handlePing(ws, data) {
+    
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
+    sendMessage(ws, MESSAGE_TYPE.SERVER.PONG, {});
 }
 
 // Handle connection and register listeners
 wss.on('connection', (ws, req) => {
 
     let preId = url.parse(req.url, true).query.id;
+
     let isSpectator = url.parse(req.url, true).query.spectate;
     let isHost = url.parse(req.url, true).query.host;
     let found = false;
@@ -1173,7 +1242,10 @@ wss.on('connection', (ws, req) => {
     if (found) {
         ws.id = preId;
 
-        sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: player.name });
+        // Figure out what kind of team the person belonged to
+        const team = getTeamById(preId);
+
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: player.name, solo: team.solo });
     } else {
         ws.id = uuid.v4();
     }
@@ -1386,7 +1458,7 @@ function computeAchievements() {
         }
         
         // Compute hints
-        if (historicData.globalData.teams[team.teamName].numTurnsUsedHints === 0) {
+        if (allowHints && historicData.globalData.teams[team.teamName].numTurnsUsedHints === 0) {
             team.achievements.push(ACHIEVEMENT.NO_HINTS_USED);
         }
 
