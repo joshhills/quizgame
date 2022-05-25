@@ -551,6 +551,8 @@ function handleResetAllocation(ws, data) {
 
 function handleAddOption(ws, data) {
 
+    console.log('Adding to option...');
+
     if (!ws || !data.id) {
         console.warn('Received message from null client or client with no ID');
         return;

@@ -11,7 +11,7 @@
 
             function getRandomName() {
                 var result           = '';
-                var characters       = 'ABCDEFG';
+                var characters       = 'ABCD';
                 var charactersLength = characters.length;
                 for ( var i = 0; i < 16; i++ ) {
                     result += characters.charAt(Math.floor(Math.random() * 
@@ -43,6 +43,7 @@
                             };
 
                             setInterval(() => {
+                                console.log(ws.id);
                                 ws.send(JSON.stringify({"messageType": "ping", "id": ws.id }));
                             }, 5000);
 
@@ -50,12 +51,36 @@
                         }},
                         'stateChange': { handler: (ws, data) => {
                             
+                            if (data.state.scene === 'game') {
+                                let teamName = null;
+
+                                // Get current team...
+                                for (let team of data.state.teams) {
+                                    for (let tm of team.members) {
+                                        if (tm.id === ws.id) {
+                                            teamName = team.teamName;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Send a chat message...
+                                ws.send(JSON.stringify({"message":getRandomName(),"messageType":"teamChat","id": ws.id}));
+
+                                // Add money to a random option...
+                                let options = ['a', 'b', 'c', 'd'];
+                                let option = options[Math.floor(Math.random() * options.length)];
+                                ws.send(JSON.stringify({"team":teamName,"option":option,"messageType":"addOption","id": ws.id}));
+
+                                // Use a hint
+                                ws.send(JSON.stringify({"messageType":"useHint","id":ws.id}));
+                            }
                         }},
                         'ackname': { handler: (ws, data) => ws.playerName = data.playerName }
                     };
 
                     let config = handlers[parsedData.messageType];
-                    if (config.handler) {
+                    if (config && config.handler) {
                         config.handler(ws, parsedData);
                     }
                 };
