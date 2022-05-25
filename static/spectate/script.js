@@ -296,7 +296,7 @@ function updateUI() {
             questionnumber.innerHTML = 'Scores';
             question.innerHTML = `${numberWithCommas(gameState.totalLostThisRound, true)} was lost. ${numberWithCommas(gameState.totalGainedThisRound, true)} was gained.`;
             if (gameState.teamsKnockedOutThisRound.length > 0) {
-                question.innerHTML += ` ${gameState.teamsKnockedOutThisRound.length} team${gameState.teamsKnockedOutThisRound.length !== 1 ? 's' : ''} lost it all.`;
+                question.innerHTML += ` ${gameState.teamsKnockedOutThisRound.length} team${gameState.teamsKnockedOutThisRound.length !== 1 ? 's' : ''} went into the red.`;
             }
             options.className = 'options hidden';
 

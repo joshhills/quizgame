@@ -72,6 +72,7 @@ let rawGameState = document.getElementById('rawgamestate'),
     stateFinish = document.getElementById('statefinish'),
     noQuizLoaded = document.getElementById('noquizloaded'),
     winnersEl = document.getElementById('winners'),
+    achievementsEl = document.getElementById('achievements'),
     knockoutsEl = document.getElementById('knockouts'),
     additionalInfo = document.getElementById('additionalinfo');
 
@@ -241,10 +242,12 @@ function updateUI() {
         stateFinish.hidden = false;
 
         if (gameState.winners && gameState.winners.length > 1) {
-            winnersEl.innerHTML = `There were multiple winners: ${JSON.stringify(gameState.winners)}`;
+            winnersEl.innerHTML = `There were multiple winners: ${gameState.winners.join(', ')}`;
         } else if (gameState.winners && gameState.winners.length === 1) {
-            winnersEl.innerHTML = `Winner: ${JSON.stringify(gameState.winners)}`;
+            winnersEl.innerHTML = `Winner: ${gameState.winners[0]}`;
         }
+
+        achievementsEl.innerHTML = `Achievements: ${JSON.stringify(gameState.achievements)}`;
     }
 
     // Update button states

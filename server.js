@@ -114,6 +114,7 @@ let spectators = [],
     activeQuestion = null,
     activeQuestionIndex = 0,
     teams = null,
+    teamIndex = null,
     achievements = {},
     winners = null,
     showImage = false,
@@ -143,6 +144,7 @@ function reset() {
     activeQuestion = null;
     activeQuestionIndex = 0;
     teams = [];
+    teamIndex = {};
     achievements = {};
     winners = null;
     historicData = {};
@@ -241,8 +243,11 @@ function handleProgressState(ws) {
             teams: {},
             allocations: {}
         };
-        historicData.globalData = {
-            teams: {}
+
+        if (!historicData.globalData) {
+            historicData.globalData = {
+                teams: {}
+            }
         }
         
         // Compute total allocations for this round
@@ -310,7 +315,7 @@ function handleProgressState(ws) {
 
             let wasKnockedOut = false;
             // Compute those who were knocked out this round
-            if (wasAlive && team.score < 0) {
+            if (wasAlive && team.score <= 0) {
                 teamsKnockedOutThisRound.push(team.teamName);
                 wasKnockedOut = true;
             }
@@ -349,6 +354,7 @@ function handleProgressState(ws) {
 
             // Init global data
             if (!historicData.globalData.teams[team.teamName]) {
+                console.log(`initting global data for team ${team.teamName}`);
                 historicData.globalData.teams[team.teamName] = {
                     numTurnsUsedHints: 0,
                     numTimesKnockedOut: 0,
@@ -509,6 +515,15 @@ function handleLockIn(ws, data) {
 
     let team = getTeamByName(sanitizeHTML(data.team));
 
+    if (!team) {
+        return;
+    }
+
+    if (team.lockedIn) {
+        console.warn('Attempting to lock in a team that is already locked in');
+        return;
+    }
+
     team.lockedIn = true;
     team.lockedInTime = Date.now();
     
@@ -534,6 +549,10 @@ function handleResetAllocation(ws, data) {
 
     let team = getTeamByName(sanitizeHTML(data.team));
 
+    if (!team) {
+        return;
+    }
+
     team.optionsAllocated = {
         a: 0,
         b: 0,
@@ -551,8 +570,6 @@ function handleResetAllocation(ws, data) {
 
 function handleAddOption(ws, data) {
 
-    console.log('Adding to option...');
-
     if (!ws || !data.id) {
         console.warn('Received message from null client or client with no ID');
         return;
@@ -563,15 +580,25 @@ function handleAddOption(ws, data) {
         return;
     }
 
-    let team = getTeamByName(sanitizeHTML(data.team));
+    let teamNameSanitized = sanitizeHTML(data.team);
+    let team = getTeamByName(teamNameSanitized);
 
-    if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
+    if (!team || team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
         return;
     }
 
-    let step = getDenomination(sanitizeHTML(data.team));
-    if (moneyRemainingThisTurn(sanitizeHTML(data.team)) >= step) {
+    const mr = moneyRemainingThisTurn(team);
+
+    // Don't add money when it's ready
+    if (mr === 0) {
+        console.warn('Attempted to add money but none remaining');
+        return;
+    }
+
+    let step = getDenomination(team);
+
+    if (mr >= step) {
         team.optionsAllocated[data.option] += step;
     }
 
@@ -618,40 +645,42 @@ function handleCreateTeam(ws, data) {
     }
 
     // Otherwise, create and add it
-    teams.push(
-        {
-            teamName: teamName,
-            members: [
-                {
-                    name: playerName,
-                    id: ws.id,
-                    ready: false
-                }
-            ],
-            remainingMoney: startingMoney,
-            score: 0,
-            optionsAllocated: {
-                a: 0,
-                b: 0,
-                c: 0,
-                d: 0
-            },
-            lockedIn: false,
-            lockedInTime: null,
-            solo: false,
-            remainingHints: numHints,
-            activeHint: null,
-            lastChange: null,
-            lastMoney: null,
-            lastWagered: null,
-            lastAllIn: false,
-            currentGainStreak: 0,
-            lastPlace: null,
-            placesMoved: 0,
-            achievements: [],
-            numEmotesUsed: 0
-        }
-    );
+    let newTeam = {
+        teamName: teamName,
+        members: [
+            {
+                name: playerName,
+                id: ws.id,
+                ready: false,
+                team: teamName
+            }
+        ],
+        remainingMoney: startingMoney,
+        score: 0,
+        optionsAllocated: {
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0
+        },
+        lockedIn: false,
+        lockedInTime: null,
+        solo: false,
+        remainingHints: numHints,
+        activeHint: null,
+        lastChange: null,
+        lastMoney: null,
+        lastWagered: null,
+        lastAllIn: false,
+        currentGainStreak: 0,
+        lastPlace: null,
+        placesMoved: 0,
+        achievements: [],
+        numEmotesUsed: 0
+    };
+
+    teams.push(newTeam);
+    teamIndex[teamName] = newTeam;
 
     sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
@@ -733,15 +762,21 @@ function handleJoinTeam(ws, data) {
         return;
     }
 
-    // Check to see if this player is already part of another game...
+    // Check to see if this player is already part of another team...
+    let didLeaveTeamForAnotherOne = false;
     for (let i = 0; i < teams.length; i++) {
         for (let j = 0; j < teams[i].members.length; j++) {
             if (teams[i].members[j].id === data.id) {
-                // They are, so remove them from the team
+                didLeaveTeamForAnotherOne = true;
+                // Found the player's team, remove reference from their object
+                teams[i].members[j].team = null;
+
+                // Then remove them from the team
                 teams[i].members.splice(j, 1);
 
                 // If the team is now empty, remove it
                 if (teams[i].members.length === 0) {
+                    delete teamIndex[teams[i].teamName];
                     teams.splice(i, 1);
                 }
 
@@ -757,6 +792,11 @@ function handleJoinTeam(ws, data) {
             // Check max team size
             if (team.members.length === MAX_TEAM_SIZE) {
                 sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Team '${team.teamName}' is full!` });
+                
+                if (didLeaveTeamForAnotherOne) {
+                    broadcastGameState();
+                }
+
                 return;
             }
 
@@ -766,7 +806,7 @@ function handleJoinTeam(ws, data) {
                 ready: false
             });
 
-            sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as), solo: false });
+            sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
             broadcastGameState();
 
@@ -804,11 +844,11 @@ function handleJoinSolo(ws, data) {
         return;
     }
 
-    // Ensure this person isn't already in a solo team already
+    // Ensure this person isn't already in a team already
     for (let team of teams) {
         for (let tm of team.members) {
             if (tm.id === data.id) {
-                sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join your own solo team twice!" });
+                sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Cannot join two teams at once!" });
                 return;
             }
         }
@@ -837,45 +877,47 @@ function handleJoinSolo(ws, data) {
     }
 
     // Create a team based on their name and use it
-    teams.push(
-        {
-            teamName: teamName,
-            members: [
-                {
-                    name: sanitizeHTML(data.as),
-                    id: data.id,
-                    ready: false
-                }
-            ],
-            remainingMoney: startingMoney,
-            score: 0,
-            optionsAllocated: {
-                a: 0,
-                b: 0,
-                c: 0,
-                d: 0
-            },
-            lockedIn: false,
-            lockedInTime: null,
-            solo: true,
-            remainingHints: numHints,
-            activeHint: null,
-            lastChange: null,
-            lastMoney: null,
-            lastWagered: null,
-            lastAllIn: false,
-            currentGainStreak: 0,
-            lastPlace: null,
-            placesMoved: 0,
-            achievements: [],
-            numEmotesUsed: 0
-        }
-    );
+    let newTeam = {
+        teamName: teamName,
+        members: [
+            {
+                name: originalTeamName,
+                id: data.id,
+                ready: false,
+                team: teamName
+            }
+        ],
+        remainingMoney: startingMoney,
+        score: 0,
+        optionsAllocated: {
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0
+        },
+        lockedIn: false,
+        lockedInTime: null,
+        solo: true,
+        remainingHints: numHints,
+        activeHint: null,
+        lastChange: null,
+        lastMoney: null,
+        lastWagered: null,
+        lastAllIn: false,
+        currentGainStreak: 0,
+        lastPlace: null,
+        placesMoved: 0,
+        achievements: [],
+        numEmotesUsed: 0
+    };
+
+    teams.push(newTeam);
+    teamIndex[teamName] = newTeam;
 
     if (didRename) {
-        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${sanitizeHTML(data.as)}'` });
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${originalTeamName}'` });
     }
-    sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: sanitizeHTML(data.as), solo: true });
+    sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: originalTeamName, solo: true });
     broadcastGameState();
 }
 
@@ -886,47 +928,31 @@ function handleLeaveTeam(ws, data) {
         return;
     }
 
-    // Find the team the player is on...
-    let team = null;
-    for (let _team of teams) {
-        for (let tm of _team.members) {
-            if (tm.id === data.id) {
-                team = _team;
-                break;
-            }
-        }
-
-        if (team) {
-            break;
-        }
-    }
-
-    if (!team) {
-        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to leave" });
-        return;
-    }
-
-    // Check to see if this player is already part of another game...
     for (let i = 0; i < teams.length; i++) {
         for (let j = 0; j < teams[i].members.length; j++) {
             if (teams[i].members[j].id === data.id) {
-                // They are, so remove them from the team
+                
+                // Found the player's team, remove reference from their object
+                teams[i].members[j].team = null;
+
+                // Then remove them from the team
                 teams[i].members.splice(j, 1);
 
                 // If the team is now empty, remove it
                 if (teams[i].members.length === 0) {
+                    delete teamIndex[teams[i].teamName];
                     teams.splice(i, 1);
                 }
 
-                break;
+                // Reset that person's client and early-out
+                sendMessage(ws, MESSAGE_TYPE.SERVER.RESET, {});
+                broadcastGameState();
+                return;
             }
         }
     }
 
-    // Reset that person's client
-    sendMessage(ws, MESSAGE_TYPE.SERVER.RESET, {});
-    broadcastGameState();
-    return;
+    sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Unable to find team to leave" });
 }
 
 function handleToggleReady(ws, data) {
@@ -975,15 +1001,19 @@ function handleAddRemaining(ws, data) {
         return;
     }
 
-    let team = getTeamByName(sanitizeHTML(data.team)); 
+    let teamNameSanitized = sanitizeHTML(data.team);
+    let team = getTeamByName(teamNameSanitized); 
     
-    if (team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
+    if (!team || team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
         return;
     }
 
-    if (moneyRemainingThisTurn(sanitizeHTML(data.team)) > 0) {
-        team.optionsAllocated[data.option] += moneyRemainingThisTurn(sanitizeHTML(data.team));
+    if (moneyRemainingThisTurn(team) > 0) {
+        team.optionsAllocated[data.option] += moneyRemainingThisTurn(team);
+    } else {
+        console.warn('Attempted to add money but none remaining');
+        return;
     }
 
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
@@ -1002,9 +1032,18 @@ function handleRemoveAll(ws, data) {
         return;
     }
 
-    let team = getTeamByName(sanitizeHTML(data.team)); 
+    let team = getTeamByName(sanitizeHTML(data.team));
 
-    team.optionsAllocated[data.option] = 0;
+    if (!team) {
+        return;
+    }
+
+    if (team.optionsAllocated[data.option] !== 0) {
+        team.optionsAllocated[data.option] = 0;
+    } else {
+        console.log('Attempted to remove money but none allocated');
+        return;
+    }
 
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
         id: data.id,
@@ -1027,10 +1066,24 @@ function handleMinusOption(ws, data) {
         return;
     }
 
-    let step = getDenomination(sanitizeHTML(data.team));
-    let team = getTeamByName(sanitizeHTML(data.team));
+    let teamNameSanitized = sanitizeHTML(data.team);
+    let team = getTeamByName(teamNameSanitized);
+
+    if (!team) {
+        return;
+    }
+
+    let step = getDenomination(team);
+
+    if (!team) {
+        return;
+    }
+
     if (team.optionsAllocated[data.option] != 0) {
         team.optionsAllocated[data.option] -= step;
+    } else {
+        console.log('Attempted to remove money but none allocated');
+        return;
     }
     
     broadcast(MESSAGE_TYPE.SERVER.LOG, {
@@ -1115,6 +1168,10 @@ function handleEmote(ws, data) {
         
         // Get player's team based on their ID
         let team = getTeamById(data.id);
+
+        if (!team) {
+            return;
+        }
         
         // Increment their emotes used...
         team.numEmotesUsed++;
@@ -1139,6 +1196,10 @@ function handleUseHint(ws, data) {
 
     // Get player's team based on their ID
     const team = getTeamById(data.id);
+
+    if (!team) {
+        return;
+    }
 
     if (team.lockedIn) {
         sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
@@ -1247,6 +1308,10 @@ wss.on('connection', (ws, req) => {
         // Figure out what kind of team the person belonged to
         const team = getTeamById(preId);
 
+        if (!team) {
+            return;
+        }
+
         sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: player.name, solo: team.solo });
     } else {
         ws.id = uuid.v4();
@@ -1277,7 +1342,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true, rate: { hits: 2, perMs: 1000 } } },
         [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 10 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
-        [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation },
+        [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 }}},
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
         [MESSAGE_TYPE.CLIENT.ADD_REMAINING]: { handler: handleAddRemaining },
         [MESSAGE_TYPE.CLIENT.REMOVE_ALL]: { handler: handleRemoveAll },
@@ -1324,8 +1389,7 @@ function broadcast(type, obj = {}, options = {}) {
 }
 
 // Utility method for money denominations
-function getDenomination(teamName) {
-    const team = getTeamByName(teamName);
+function getDenomination(team) {
 
     if (team.remainingMoney < 100) {
         return 1;
@@ -1352,8 +1416,7 @@ function getDenomination(teamName) {
 }
 
 // Utility method for money remaining per turn
-function moneyRemainingThisTurn(teamName) {
-    const team = getTeamByName(teamName);
+function moneyRemainingThisTurn(team) {
 
     return team.remainingMoney
         - (team.optionsAllocated.a
@@ -1364,11 +1427,13 @@ function moneyRemainingThisTurn(teamName) {
 
 function getTeamByName(teamName) {
 
-    for (let team of teams) {
-        if (team.teamName === teamName) {
-            return team;
-        }
-    }
+    // for (let team of teams) {
+    //     if (team.teamName === teamName) {
+    //         return team;
+    //     }
+    // }
+
+    return teamIndex[teamName];
 
     console.error('Attempted to find a non-existent team!');
 }
@@ -1466,7 +1531,7 @@ function computeAchievements() {
 
         // Store totals of not a solo game
         if (teams.length > 1) {
-            if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > 0 &&
+            if (historicData.globalData.teams[team.teamName].numTimesKnockedOut > 1 &&
                 historicData.globalData.teams[team.teamName].numTimesKnockedOut > highestNumTimesKnockedOut) {
                 prospectiveHighestNumTimesKnockedOut = [team.teamName];
             } else if (historicData.globalData.teams[team.teamName].numTimesKnockedOut === highestNumTimesKnockedOut) {

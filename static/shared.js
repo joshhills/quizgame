@@ -364,6 +364,11 @@ export function sanitizeHTML(unsafe) {
     // decoder.innerHTML = unsafe;
     // return decoder.textContent;
 
+    if (!unsafe) {
+        console.warn('Attempted to sanitize null');
+        return null;
+    }
+
     return unsafe.toString()
              .replace(/&/g, "&amp;")
              .replace(/</g, "&lt;")

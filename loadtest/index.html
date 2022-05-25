@@ -22,7 +22,8 @@
 
             // Connect up to X clients
             for (let i = 0; i < NUM_PLAYERS; i++) {
-                let ws = new WebSocket('wss://joshhills.dev/quiz');
+                // let ws = new WebSocket('wss://joshhills.dev/quiz');
+                let ws = new WebSocket('ws://localhost:3000/quiz');
 
                 // Register event handlers
                 ws.onmessage = (msg) => {
@@ -43,7 +44,6 @@
                             };
 
                             setInterval(() => {
-                                console.log(ws.id);
                                 ws.send(JSON.stringify({"messageType": "ping", "id": ws.id }));
                             }, 5000);
 
@@ -52,28 +52,34 @@
                         'stateChange': { handler: (ws, data) => {
                             
                             if (data.state.scene === 'game') {
-                                let teamName = null;
 
-                                // Get current team...
-                                for (let team of data.state.teams) {
-                                    for (let tm of team.members) {
-                                        if (tm.id === ws.id) {
-                                            teamName = team.teamName;
-                                            break;
+                                if (Math.random() > 0.5) {
+                                    setTimeout(() => {
+                                        let teamName = null;
+        
+                                        // Get current team...
+                                        for (let team of data.state.teams) {
+                                            for (let tm of team.members) {
+                                                if (tm.id === ws.id) {
+                                                    teamName = team.teamName;
+                                                    break;
+                                                }
+                                            }
                                         }
-                                    }
+        
+                                        // Send a chat message...
+                                        ws.send(JSON.stringify({"message":getRandomName(),"messageType":"teamChat","id": ws.id}));
+        
+                                        // Add money to a random option...
+                                        let options = ['a', 'b', 'c', 'd'];
+                                        let option = options[Math.floor(Math.random() * options.length)];
+                                        ws.send(JSON.stringify({"team":teamName,"option":option,"messageType":"addOption","id": ws.id}));
+        
+                                        // Use a hint
+                                        ws.send(JSON.stringify({"messageType":"useHint","id":ws.id}));
+                                    }, Math.random() * 10000);
                                 }
 
-                                // Send a chat message...
-                                ws.send(JSON.stringify({"message":getRandomName(),"messageType":"teamChat","id": ws.id}));
-
-                                // Add money to a random option...
-                                let options = ['a', 'b', 'c', 'd'];
-                                let option = options[Math.floor(Math.random() * options.length)];
-                                ws.send(JSON.stringify({"team":teamName,"option":option,"messageType":"addOption","id": ws.id}));
-
-                                // Use a hint
-                                ws.send(JSON.stringify({"messageType":"useHint","id":ws.id}));
                             }
                         }},
                         'ackname': { handler: (ws, data) => ws.playerName = data.playerName }
