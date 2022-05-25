@@ -363,7 +363,8 @@ export function sanitizeHTML(unsafe) {
     // const decoder = document.createElement('div');
     // decoder.innerHTML = unsafe;
     // return decoder.textContent;
-    return unsafe
+
+    return unsafe.toString()
              .replace(/&/g, "&amp;")
              .replace(/</g, "&lt;")
              .replace(/>/g, "&gt;")

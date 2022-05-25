@@ -1,0 +1,71 @@
+<html>
+    <body>
+        <p>Load Test</p>
+        
+        <script>
+            console.log('hello');
+
+            const NUM_PLAYERS = 100;
+            
+            let clients = [];
+
+            function getRandomName() {
+                var result           = '';
+                var characters       = 'ABCDEFG';
+                var charactersLength = characters.length;
+                for ( var i = 0; i < 16; i++ ) {
+                    result += characters.charAt(Math.floor(Math.random() * 
+                        charactersLength));
+                }
+                return result;
+            }
+
+            // Connect up to X clients
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                let ws = new WebSocket('wss://joshhills.dev/quiz');
+
+                // Register event handlers
+                ws.onmessage = (msg) => {
+
+                    let parsedData = JSON.parse(msg.data);
+
+                    let handlers = {
+                        'pong': { handler: () => {} },
+                        'id': { handler: (ws, data) => {
+                            // Set ID on this websocket
+                            ws.id = data.id;
+                            
+                            let joinReq = {
+                                "as": getRandomName(),
+                                "team": Math.round(i / 5),
+                                "messageType": "createTeam",
+                                "id": ws.id
+                            };
+
+                            setInterval(() => {
+                                ws.send(JSON.stringify({"messageType": "ping", "id": ws.id }));
+                            }, 5000);
+
+                            ws.send(JSON.stringify(joinReq));
+                        }},
+                        'stateChange': { handler: (ws, data) => {
+                            
+                        }},
+                        'ackname': { handler: (ws, data) => ws.playerName = data.playerName }
+                    };
+
+                    let config = handlers[parsedData.messageType];
+                    if (config.handler) {
+                        config.handler(ws, parsedData);
+                    }
+                };
+            }
+            
+            // Register listener for ID so they can join the game as solo players with random names
+
+            // Register listener for game state change so they can vote on questions
+
+
+        </script>
+    </body>
+</html>
