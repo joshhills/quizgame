@@ -151,7 +151,7 @@ function handleConnectionId(ws, data) {
     id = data.id;
 
     setInterval(() => {
-        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id), (reason) => handleErrorMessage({ message: reason });
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id), (reason) => handleErrorMessage(ws, { message: reason });
     }, 5000);
 }
 
