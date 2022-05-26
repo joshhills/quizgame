@@ -203,7 +203,8 @@ function broadcastGameState(options = {}) {
         fastestTeam: fastestTeam,
         fastestTimeCorrect: fastestTimeCorrect,
         fastestTeamCorrect: fastestTeamCorrect,
-        achievements: achievements
+        achievements: achievements,
+        now: Date.now()
     };
 
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, { state: gameState }, options);
@@ -354,7 +355,6 @@ function handleProgressState(ws) {
 
             // Init global data
             if (!historicData.globalData.teams[team.teamName]) {
-                console.log(`initting global data for team ${team.teamName}`);
                 historicData.globalData.teams[team.teamName] = {
                     numTurnsUsedHints: 0,
                     numTimesKnockedOut: 0,
@@ -531,6 +531,10 @@ function handleLockIn(ws, data) {
         id: ws.id,
         type: LOG_TYPE.LOCK
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
+
+    // Send locked-in emote to spectate
+    broadcast(MESSAGE_TYPE.SERVER.EMOTE,
+        { emote: 'lock' }, { clientArray: spectators, predicate: (c) => c.isSpectator });
 
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
@@ -803,7 +807,8 @@ function handleJoinTeam(ws, data) {
             team.members.push({
                 name: playerName,
                 id: data.id,
-                ready: false
+                ready: false,
+                team: teamName
             });
 
             sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
@@ -1247,6 +1252,10 @@ function handleUseHint(ws, data) {
         type: LOG_TYPE.HINT
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 
+    // Send hint emote to spectate
+    broadcast(MESSAGE_TYPE.SERVER.EMOTE,
+        { emote: 'hint' }, { clientArray: spectators, predicate: (c) => c.isSpectator });
+
     // Broadcast the state to the team and the host
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
@@ -1278,7 +1287,7 @@ function handlePing(ws, data) {
         return;
     }
 
-    sendMessage(ws, MESSAGE_TYPE.SERVER.PONG, {});
+    sendMessage(ws, MESSAGE_TYPE.SERVER.PONG, { now: Date.now() });
 }
 
 // Handle connection and register listeners

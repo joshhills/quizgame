@@ -205,24 +205,30 @@
                 width: 3.5rem;
                 margin: auto;
                 background-image: url('./images/emote-spritesheet.png');
-                background-size: 25rem;
+                background-size: 24.5rem;
                 /* For debugging */
                 /* border: 2px solid; */
                 /* border-radius: 500px; */
                 /* background-color: white;    */
             }
 
-            .emote.laugh {
-                background-position: 198px 230px;
+            .emote.hint {
+                background-position: 56px 0px;
             }
-            .emote.cry {
-                background-position: 66px 230px;
-            }
-            .emote.shock {
-                background-position: 132px 230px;
+            .emote.lock {
+                background-position: 0px 0px;
             }
             .emote.love {
-                background-position: 264px 230px;
+                background-position: 324px 0px;
+            }
+            .emote.laugh {
+                background-position: 257px 0px;
+            }
+            .emote.shock {
+                background-position: 190px 0px;
+            }
+            .emote.cry {
+                background-position: 122px 0px;
             }
 
             .styledtable {
@@ -578,7 +584,7 @@
                     <br/>
                     <button id="reset"><i class="bi bi-arrow-clockwise"></i> Reset</button>
                     <button id="usehint"><i class="bi bi-lightbulb"></i> Use Hint (<span id="numhintsremaining">0</span>)</button>
-                    <button class="redalert" id="lockin"><i class="bi bi-lightning-charge"></i> Lock In</button>
+                    <button class="redalert" id="lockin"><i class="bi bi-lock"></i> Lock In</button>
                     <button id="infomodalopen"><i class="bi bi-question-circle"></i> Help</button>
                     <br/><br/>
                 </div>

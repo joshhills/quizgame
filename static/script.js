@@ -303,11 +303,20 @@ var id = null,
 
 let timerBarInterval = -1;
 
+let offset = 0;
+
+function syncTime(serverTime) {
+    // Average between old and new offset
+    offset = ((serverTime - Date.now()) + offset) / 2;
+}
+
 /* === Begin Handler functions === */
 
 // Handle a pong from the server
-function handlePong(ws) {
-    console.log('Received pong');
+function handlePong(ws, data) {
+    if (data.now) {
+        syncTime(data.now);
+    }
 }
 
 // Handle receiving an Id
@@ -320,6 +329,11 @@ function handleConnectionId(ws, data) {
 
 // Handle the state of the game changing
 function handleStateChange(ws, data) {
+
+    // Sync with server time
+    if (data.now) {
+        syncTime(data.now);
+    }
 
     if (gameState.scene === GAME_STATE.SCORES && data.state.scene === GAME_STATE.GAME) {
         while (log.children.length > 1) {
@@ -345,6 +359,11 @@ function handleReset(ws) {
     team = null;
     solo = null;
     ready = false;
+    offset = 0;
+    gameState = {
+        scene: GAME_STATE.PREGAME,
+        init: true
+    };
     while (log.children.length > 1) {
         log.removeChild(log.firstChild);
     }
@@ -559,10 +578,13 @@ function sendReaction(reaction) {
 
 function getTimerBarWidth() {
     const now = Date.now();
-    const secondsElapsed = (now - gameState.activeQuestion.timeBegan) / 1000;
+    const secondsElapsed = ((now + offset) - gameState.activeQuestion.timeBegan) / 1000;
     let percentOfLimit = 100 - ((secondsElapsed / gameState.secondsPerQuestion) * 100);
     if (percentOfLimit < 0) {
         percentOfLimit = 0;
+    }
+    if (percentOfLimit > 100) {
+        percentOfLimit = 100;
     }
     return percentOfLimit;
 }
@@ -762,6 +784,7 @@ function updateUI() {
         // }
         // teamMembers.innerHTML = teamMembersHTML;
 
+        console.log(logHint.innerHTML);
         logHint.innerHTML = `Playing as team '${_team.teamName}' with ${_team.members.map(tm => tm.name).join(', ')}. Messages will appear below...`;
 
         remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn(), true);

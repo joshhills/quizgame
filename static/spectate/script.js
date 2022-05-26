@@ -17,8 +17,14 @@ let id = null,
     currentNotification = null,
     emoteSideFlip = true,
     numEmojies = 0,
-    timerBarInterval = -1;
+    timerBarInterval = -1,
+    offset = 0;
 
+function syncTime(serverTime) {
+    // Average between old and new offset
+    offset = ((serverTime - Date.now()) + offset) / 2;
+}
+    
 // Get element references
 
 let loader = document.getElementById('loader'),
@@ -49,8 +55,10 @@ let loader = document.getElementById('loader'),
 /* === Begin Handler functions === */
 
 // Handle a pong from the server
-function handlePong(ws) {
-    console.log('Received pong');
+function handlePong(ws, data) {
+    if (data.now) {
+        syncTime(data.now);
+    }
 }
 
 function handleConnectionId(ws, data) {
@@ -65,11 +73,18 @@ function handleConnectionId(ws, data) {
 
 // Handle the state of the game changing
 function handleStateChange(ws, data) {
+
+    // Sync with server time
+    if (data.now) {
+        syncTime(data.now);
+    }
+
     gameState = data.state;
 }
 
 function handleReset(ws) {
     emoteSideFlip = true;
+    offset = 0;
 }
 
 function handleNotify(ws, data) {
@@ -115,8 +130,8 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
     [MESSAGE_TYPE.SERVER.PONG]: { handler: handlePong },
     [MESSAGE_TYPE.SERVER.CONNECTION_ID]: { handler: handleConnectionId },
     [MESSAGE_TYPE.SERVER.STATE_CHANGE]: { handler: handleStateChange },
-    [MESSAGE_TYPE.SERVER.NOTIFY]: { handler: handleNotify },
-    [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
+    // [MESSAGE_TYPE.SERVER.NOTIFY]: { handler: handleNotify },
+    // [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
     [MESSAGE_TYPE.SERVER.RESET]: { handler: handleReset },
     [MESSAGE_TYPE.SERVER.EMOTE]: { handler: handleEmote }
 }, updateUI);
@@ -125,10 +140,13 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
 
 function getTimerBarWidth() {
     const now = Date.now();
-    const secondsElapsed = (now - gameState.activeQuestion.timeBegan) / 1000;
+    const secondsElapsed = ((now + offset) - gameState.activeQuestion.timeBegan) / 1000;
     let percentOfLimit = 100 - ((secondsElapsed / gameState.secondsPerQuestion) * 100);
     if (percentOfLimit < 0) {
         percentOfLimit = 0;
+    }
+    if (percentOfLimit > 100) {
+        percentOfLimit = 100;
     }
     return percentOfLimit;
 }

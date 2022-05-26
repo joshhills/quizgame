@@ -22,7 +22,13 @@ const notifier = new AWN({
 });
 let lastAlert = null,
     lastWarn = null,
-    currentErrorMessage = null;
+    currentErrorMessage = null,
+    offset = 0;
+
+function syncTime(serverTime) {
+    // Average between old and new offset
+    offset = ((serverTime - Date.now()) + offset) / 2;
+}
 
 // Connect to server
 
@@ -135,8 +141,10 @@ toggleAllocations.addEventListener('click', () => {
 /* === Begin Handler functions === */
 
 // Handle a pong from the server
-function handlePong(ws) {
-    console.log('Received pong');
+function handlePong(ws, data) {
+    if (data.now) {
+        syncTime(data.now);
+    }
 }
 
 function handleConnectionId(ws, data) {
@@ -149,6 +157,12 @@ function handleConnectionId(ws, data) {
 
 // Handle the state of the game changing
 function handleStateChange(ws, data) {
+
+    // Sync with server time
+    if (data.now) {
+        syncTime(data.now);
+    }
+
     gameState = data.state;
     rawGameState.innerHTML = JSON.stringify(gameState, null, 4);
 }
@@ -190,7 +204,7 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
 
 function getSecondsLeftInQuestion() {
     const now = Date.now();
-    const secondsElapsed = Math.round((now - gameState.activeQuestion.timeBegan) / 1000);
+    const secondsElapsed = Math.round(((now + offset) - gameState.activeQuestion.timeBegan) / 1000);
     let secondsRemaining = gameState.secondsPerQuestion - secondsElapsed;
     if (secondsRemaining < 0) {
         secondsRemaining = 0;
