@@ -22,8 +22,8 @@
 
             // Connect up to X clients
             for (let i = 0; i < NUM_PLAYERS; i++) {
-                // let ws = new WebSocket('wss://joshhills.dev/quiz');
-                let ws = new WebSocket('ws://localhost:3000/quiz');
+                let ws = new WebSocket('wss://joshhills.dev/quiz');
+                // let ws = new WebSocket('ws://localhost:3000/quiz');
 
                 // Register event handlers
                 ws.onmessage = (msg) => {

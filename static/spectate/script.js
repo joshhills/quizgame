@@ -67,7 +67,7 @@ function handleConnectionId(ws, data) {
     setInterval(() => {
         console.log('Sending ping');
 
-        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
     }, 5000);
 }
 

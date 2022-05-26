@@ -1065,7 +1065,7 @@ function moneyRemainingThisTurn() {
 }
 
 setInterval(() => {
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage({ message: reason }));
 }, 5000);
 
 function numberWithCommas(x, prependPoundSymbol = false) {

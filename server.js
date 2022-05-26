@@ -1349,7 +1349,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true, rate: { hits: 2, perMs: 1000 } } },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 10 } } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 }}},
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
