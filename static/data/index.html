@@ -1,0 +1,1970 @@
+<html>
+    <head>
+        <!-- Primary Meta Tags -->
+       <title>Wager Up - Data</title>
+       <meta name="title" content="Wager Up - Data">
+       <meta name="description" content="Data from the interactive quiz game with a twist">
+
+        <!-- PWA -->
+        <link rel="apple-touch-icon" sizes="180x180" href="/quiz/images/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/quiz/images/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/quiz/images/favicon-16x16.png">
+        <link rel="manifest" href="/quiz/images/site.webmanifest">
+        <link rel="mask-icon" href="/quiz/images/safari-pinned-tab.svg" color="#753838">
+        <link rel="shortcut icon" href="/quiz/images/favicon.ico">
+        <meta name="msapplication-TileColor" content="#753838">
+        <meta name="msapplication-config" content="/quiz/images/browserconfig.xml">
+        <meta name="theme-color" content="#753838">
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://joshhills.dev/quiz/data">
+        <meta property="og:title" content="Wager Up - Data">
+        <meta property="og:description" content="Data from the interactive quiz game with a twist">
+        <meta property="og:image" content="https://joshhills.dev/quiz/images/wager-up-social.jpeg">
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://joshhills.dev/quiz/data">
+        <meta property="twitter:title" content="Wager Up - Data">
+        <meta property="twitter:description" content="Data from the interactive quiz game with a twist">
+        <meta property="twitter:image" content="https://joshhills.dev/quiz/images/wager-up-social.jpeg">
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+        <style>
+            @font-face {
+                font-family: 'Varela';
+                src: URL('../varela.ttf') format('truetype');
+            }
+
+            body {
+                font-family: 'Varela';
+
+                background: rgb(117,56,56);
+                background: radial-gradient(circle at bottom, rgba(117,56,56,1) 0%, rgba(66,48,48,1) 33%, rgba(28,29,31,1) 70%);
+
+                background-position-y: bottom;
+                background-repeat: no-repeat;
+                padding: 2rem;
+            }
+
+            .container {
+                text-align: center;
+                color: white;
+                max-width: 1024px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            canvas {
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>
+                Wager Up - Firesprite - 26/05/2022
+            </h1>
+
+            <canvas id="team-chart" height="200"></canvas>
+            <canvas id="global-chart" height="200"></canvas>
+        </div>
+
+        <script>
+            Chart.defaults.color = 'white';
+            Chart.defaults.font.family = 'Varela';
+
+            function numberWithCommas(x, prependPoundSymbol = false) {
+                const sign = x >= 0 ? '' : '-';
+                let absX = Math.abs(x);
+                const formatted = absX.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                return prependPoundSymbol ?
+                    sign + '£' + formatted : sign + formatted;
+            }         
+
+            function getRandomColor() {
+                var letters = '0123456789ABCDEF'.split('');
+                var color = '#';
+                for (var i = 0; i < 6; i++ ) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            function produceCharts(data) {
+                const teamChart = document.getElementById('team-chart');
+                const globalChart = document.getElementById('global-chart');
+
+                let labels = ['Start'];
+                const numTurns = Object.keys(data.perTurn).length;
+                for (let i = 0; i < numTurns; i++) {
+                    labels.push(`Question ${i+1}`);
+                }
+                
+                let teamChartDatasets = [];
+                let globalChartData = [0];
+                const numTeams = Object.keys(data.perTurn["0"].teams).length;
+                
+                for (let i = 0; i < numTeams; i++) {
+
+                    let teamName = Object.keys(data.perTurn["0"].teams)[i];
+                    let dataset = [0];
+                    let pointStyles = ['circle'];
+                    let pointRadii = [3];
+
+                    for (let j = 0; j < numTurns; j++) {
+                        let breakdown = data.perTurn[Object.keys(data.perTurn)[j]].teams[teamName];
+                        dataset.push(breakdown.after);
+                        pointStyles.push(breakdown.usedHint ? 'crossRot' : 'circle');
+                        pointRadii.push(breakdown.usedHint ? 6 : 3);
+
+                        if (globalChartData[j+1] === undefined || globalChartData[j+1] === null) {
+                            globalChartData[j+1] = 0;
+                        }
+                        globalChartData[j+1] += breakdown.change;
+                    }
+
+                    teamChartDatasets.push({
+                        label: teamName,
+                        data: dataset,
+                        tension: 0.1,
+                        fill: false,
+                        borderColor: getRandomColor(),
+                        pointStyle: pointStyles,
+                        radius: pointRadii
+                    });
+                }
+
+                const teamChartDataset = {
+                    labels: labels,
+                    datasets: teamChartDatasets
+                };
+
+                new Chart(teamChart, {
+                    type: 'line',
+                    data: teamChartDataset,
+                    options: {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Team Performance Per Round',
+                                padding: {
+                                    top: 10,
+                                    bottom: 10
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    // Include a dollar sign in the ticks
+                                    callback: function(value, index, ticks) {
+                                        return '   ' + numberWithCommas(value, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                new Chart(globalChart, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Overall Score Change',
+                            data: globalChartData,
+                            tension: 0.1,
+                            fill: false,
+                            borderColor: '#ea3c3b'
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Global Performance Per Round',
+                                padding: {
+                                    top: 10,
+                                    bottom: 10
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    // Include a dollar sign in the ticks
+                                    callback: function(value, index, ticks) {
+                                        return '   ' + numberWithCommas(value, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const data = {
+                "perTurn":{
+                    "0":{
+                        "teams":{
+                            "AziProdPosse":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":0,
+                            "change":50000,
+                            "after":50000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":0,
+                            "optionCTotalAllocation":450000,
+                            "optionDTotalAllocation":0,
+                            "allTotalAllocation":450000
+                        }
+                    },
+                    "1":{
+                        "teams":{
+                            "AziProdPosse":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":0,
+                            "optionCTotalAllocation":450000,
+                            "optionDTotalAllocation":0,
+                            "allTotalAllocation":450000
+                        }
+                    },
+                    "2":{
+                        "teams":{
+                            "AziProdPosse":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":0,
+                            "optionCTotalAllocation":450000,
+                            "optionDTotalAllocation":0,
+                            "allTotalAllocation":450000
+                        }
+                    },
+                    "3":{
+                        "teams":{
+                            "AziProdPosse":{
+                            "before":150000,
+                            "change":25000,
+                            "after":175000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":150000,
+                            "change":30000,
+                            "after":180000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":150000,
+                            "change":-50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":150000,
+                            "change":-5000,
+                            "after":145000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":150000,
+                            "change":20000,
+                            "after":170000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":150000,
+                            "change":40000,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":150000,
+                            "change":50000,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":150000,
+                            "change":-50000,
+                            "after":100000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":150000,
+                            "change":-50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":195000,
+                            "optionBTotalAllocation":55000,
+                            "optionCTotalAllocation":40000,
+                            "optionDTotalAllocation":90000,
+                            "allTotalAllocation":380000
+                        }
+                    },
+                    "4":{
+                        "teams":{
+                            "MoreSensibleName":{
+                            "before":200000,
+                            "change":0,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":190000,
+                            "change":-50000,
+                            "after":140000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":180000,
+                            "change":0,
+                            "after":180000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":175000,
+                            "change":10000,
+                            "after":185000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":170000,
+                            "change":-30000,
+                            "after":140000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":145000,
+                            "change":0,
+                            "after":145000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":100000,
+                            "change":-50000,
+                            "after":50000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":100000,
+                            "change":-30000,
+                            "after":70000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":100000,
+                            "change":50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":55000,
+                            "optionBTotalAllocation":130000,
+                            "optionCTotalAllocation":40000,
+                            "optionDTotalAllocation":135000,
+                            "allTotalAllocation":360000
+                        }
+                    },
+                    "5":{
+                        "teams":{
+                            "MoreSensibleName":{
+                            "before":200000,
+                            "change":50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":185000,
+                            "change":50000,
+                            "after":235000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":180000,
+                            "change":50000,
+                            "after":230000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":150000,
+                            "change":50000,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":145000,
+                            "change":25000,
+                            "after":170000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":140000,
+                            "change":50000,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":140000,
+                            "change":50000,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":70000,
+                            "change":50000,
+                            "after":120000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":50000,
+                            "change":50000,
+                            "after":100000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":0,
+                            "optionCTotalAllocation":0,
+                            "optionDTotalAllocation":425000,
+                            "allTotalAllocation":425000
+                        }
+                    },
+                    "6":{
+                        "teams":{
+                            "MoreSensibleName":{
+                            "before":250000,
+                            "change":-50000,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":235000,
+                            "change":-50000,
+                            "after":185000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":230000,
+                            "change":-50000,
+                            "after":180000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":200000,
+                            "change":-50000,
+                            "after":150000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":190000,
+                            "change":0,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":190000,
+                            "change":-50000,
+                            "after":140000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":170000,
+                            "change":-10000,
+                            "after":160000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":120000,
+                            "change":-50000,
+                            "after":70000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":100000,
+                            "change":-30000,
+                            "after":70000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":25000,
+                            "optionBTotalAllocation":260000,
+                            "optionCTotalAllocation":30000,
+                            "optionDTotalAllocation":75000,
+                            "allTotalAllocation":390000
+                        }
+                    },
+                    "7":{
+                        "teams":{
+                            "MoreSensibleName":{
+                            "before":200000,
+                            "change":50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":190000,
+                            "change":50000,
+                            "after":240000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":185000,
+                            "change":50000,
+                            "after":235000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":180000,
+                            "change":50000,
+                            "after":230000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":160000,
+                            "change":10000,
+                            "after":170000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":150000,
+                            "change":50000,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":140000,
+                            "change":50000,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":70000,
+                            "change":-40000,
+                            "after":30000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":70000,
+                            "change":50000,
+                            "after":120000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":30000,
+                            "optionBTotalAllocation":365000,
+                            "optionCTotalAllocation":0,
+                            "optionDTotalAllocation":15000,
+                            "allTotalAllocation":410000
+                        }
+                    },
+                    "8":{
+                        "teams":{
+                            "MoreSensibleName":{
+                            "before":250000,
+                            "change":50000,
+                            "after":300000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":240000,
+                            "change":50000,
+                            "after":290000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":235000,
+                            "change":50000,
+                            "after":285000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":230000,
+                            "change":-50000,
+                            "after":180000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":200000,
+                            "change":50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":190000,
+                            "change":50000,
+                            "after":240000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":170000,
+                            "change":50000,
+                            "after":220000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":120000,
+                            "change":-30000,
+                            "after":90000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":30000,
+                            "change":-50000,
+                            "after":-20000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":true
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":50000,
+                            "optionBTotalAllocation":0,
+                            "optionCTotalAllocation":300000,
+                            "optionDTotalAllocation":80000,
+                            "allTotalAllocation":430000
+                        }
+                    },
+                    "9":{
+                        "teams":{
+                            "MoreSensibleName":{
+                            "before":300000,
+                            "change":-50000,
+                            "after":250000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":290000,
+                            "change":50000,
+                            "after":340000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":285000,
+                            "change":50000,
+                            "after":335000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":250000,
+                            "change":0,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":240000,
+                            "change":-30000,
+                            "after":210000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":220000,
+                            "change":0,
+                            "after":220000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":180000,
+                            "change":50000,
+                            "after":230000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":90000,
+                            "change":50000,
+                            "after":140000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-20000,
+                            "change":-50000,
+                            "after":-70000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":215000,
+                            "optionBTotalAllocation":60000,
+                            "optionCTotalAllocation":30000,
+                            "optionDTotalAllocation":55000,
+                            "allTotalAllocation":360000
+                        }
+                    },
+                    "10":{
+                        "teams":{
+                            "Sleepy Heads":{
+                            "before":340000,
+                            "change":50000,
+                            "after":390000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":335000,
+                            "change":50000,
+                            "after":385000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":250000,
+                            "change":50000,
+                            "after":300000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":250000,
+                            "change":-20000,
+                            "after":230000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":230000,
+                            "change":50000,
+                            "after":280000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":220000,
+                            "change":-10000,
+                            "after":210000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":210000,
+                            "change":50000,
+                            "after":260000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":140000,
+                            "change":20000,
+                            "after":160000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-70000,
+                            "change":-20000,
+                            "after":-90000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":15000,
+                            "optionBTotalAllocation":40000,
+                            "optionCTotalAllocation":25000,
+                            "optionDTotalAllocation":300000,
+                            "allTotalAllocation":380000
+                        }
+                    },
+                    "11":{
+                        "teams":{
+                            "Sleepy Heads":{
+                            "before":390000,
+                            "change":50000,
+                            "after":440000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":385000,
+                            "change":-50000,
+                            "after":335000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":300000,
+                            "change":50000,
+                            "after":350000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":280000,
+                            "change":-20000,
+                            "after":260000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":260000,
+                            "change":50000,
+                            "after":310000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":230000,
+                            "change":50000,
+                            "after":280000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":210000,
+                            "change":10000,
+                            "after":220000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":160000,
+                            "change":-50000,
+                            "after":110000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-90000,
+                            "change":-50000,
+                            "after":-140000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":25000,
+                            "optionBTotalAllocation":110000,
+                            "optionCTotalAllocation":225000,
+                            "optionDTotalAllocation":50000,
+                            "allTotalAllocation":410000
+                        }
+                    },
+                    "12":{
+                        "teams":{
+                            "Sleepy Heads":{
+                            "before":440000,
+                            "change":-10000,
+                            "after":430000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":350000,
+                            "change":-50000,
+                            "after":300000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":335000,
+                            "change":-5000,
+                            "after":330000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":310000,
+                            "change":-15000,
+                            "after":295000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":280000,
+                            "change":50000,
+                            "after":330000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":260000,
+                            "change":-50000,
+                            "after":210000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":220000,
+                            "change":-10000,
+                            "after":210000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":110000,
+                            "change":50000,
+                            "after":160000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-140000,
+                            "change":50000,
+                            "after":-90000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":180000,
+                            "optionBTotalAllocation":85000,
+                            "optionCTotalAllocation":35000,
+                            "optionDTotalAllocation":50000,
+                            "allTotalAllocation":350000
+                        }
+                    },
+                    "13":{
+                        "teams":{
+                            "Sleepy Heads":{
+                            "before":430000,
+                            "change":50000,
+                            "after":480000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":330000,
+                            "change":-50000,
+                            "after":280000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":330000,
+                            "change":50000,
+                            "after":380000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":300000,
+                            "change":50000,
+                            "after":350000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":295000,
+                            "change":50000,
+                            "after":345000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":210000,
+                            "change":40000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":210000,
+                            "change":50000,
+                            "after":260000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":160000,
+                            "change":50000,
+                            "after":210000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-90000,
+                            "change":-50000,
+                            "after":-140000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":105000,
+                            "optionCTotalAllocation":345000,
+                            "optionDTotalAllocation":0,
+                            "allTotalAllocation":450000
+                        }
+                    },
+                    "14":{
+                        "teams":{
+                            "Sleepy Heads":{
+                            "before":480000,
+                            "change":-30000,
+                            "after":450000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":380000,
+                            "change":50000,
+                            "after":430000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":350000,
+                            "change":-50000,
+                            "after":300000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":345000,
+                            "change":-50000,
+                            "after":295000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":280000,
+                            "change":50000,
+                            "after":330000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":260000,
+                            "change":50000,
+                            "after":310000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":250000,
+                            "change":50000,
+                            "after":300000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":210000,
+                            "change":-20000,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-140000,
+                            "change":-50000,
+                            "after":-190000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":210000,
+                            "optionBTotalAllocation":0,
+                            "optionCTotalAllocation":210000,
+                            "optionDTotalAllocation":0,
+                            "allTotalAllocation":420000
+                        }
+                    },
+                    "15":{
+                        "teams":{
+                            "Sleepy Heads":{
+                            "before":450000,
+                            "change":-20000,
+                            "after":430000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Banana":{
+                            "before":430000,
+                            "change":50000,
+                            "after":480000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":330000,
+                            "change":-50000,
+                            "after":280000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":310000,
+                            "change":5000,
+                            "after":315000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":300000,
+                            "change":-50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":300000,
+                            "change":-50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":295000,
+                            "change":-50000,
+                            "after":245000,
+                            "usedHint":true,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":190000,
+                            "change":0,
+                            "after":190000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-190000,
+                            "change":-50000,
+                            "after":-240000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":65000,
+                            "optionBTotalAllocation":50000,
+                            "optionCTotalAllocation":85000,
+                            "optionDTotalAllocation":185000,
+                            "allTotalAllocation":385000
+                        }
+                    },
+                    "16":{
+                        "teams":{
+                            "Banana":{
+                            "before":480000,
+                            "change":20000,
+                            "after":500000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":430000,
+                            "change":0,
+                            "after":430000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":315000,
+                            "change":-10000,
+                            "after":305000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":280000,
+                            "change":-50000,
+                            "after":230000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":250000,
+                            "change":-50000,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":250000,
+                            "change":-50000,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":245000,
+                            "change":50000,
+                            "after":295000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":190000,
+                            "change":50000,
+                            "after":240000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-240000,
+                            "change":20000,
+                            "after":-220000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":100000,
+                            "optionCTotalAllocation":115000,
+                            "optionDTotalAllocation":195000,
+                            "allTotalAllocation":410000
+                        }
+                    },
+                    "17":{
+                        "teams":{
+                            "Banana":{
+                            "before":500000,
+                            "change":25000,
+                            "after":525000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":430000,
+                            "change":0,
+                            "after":430000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":305000,
+                            "change":5000,
+                            "after":310000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":295000,
+                            "change":-50000,
+                            "after":245000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":240000,
+                            "change":10000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":230000,
+                            "change":-50000,
+                            "after":180000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":200000,
+                            "change":50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":200000,
+                            "change":0,
+                            "after":200000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-220000,
+                            "change":-10000,
+                            "after":-230000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":10000,
+                            "optionBTotalAllocation":180000,
+                            "optionCTotalAllocation":140000,
+                            "optionDTotalAllocation":50000,
+                            "allTotalAllocation":380000
+                        }
+                    },
+                    "18":{
+                        "teams":{
+                            "Banana":{
+                            "before":525000,
+                            "change":30000,
+                            "after":555000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":430000,
+                            "change":50000,
+                            "after":480000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":310000,
+                            "change":-5000,
+                            "after":305000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":250000,
+                            "change":50000,
+                            "after":300000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":250000,
+                            "change":50000,
+                            "after":300000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":245000,
+                            "change":50000,
+                            "after":295000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":200000,
+                            "change":50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":180000,
+                            "change":50000,
+                            "after":230000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-230000,
+                            "change":50000,
+                            "after":-180000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":0,
+                            "optionBTotalAllocation":5000,
+                            "optionCTotalAllocation":5000,
+                            "optionDTotalAllocation":385000,
+                            "allTotalAllocation":395000
+                        }
+                    },
+                    "19":{
+                        "teams":{
+                            "Banana":{
+                            "before":555000,
+                            "change":20000,
+                            "after":575000,
+                            "usedHint":true,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "Sleepy Heads":{
+                            "before":480000,
+                            "change":-40000,
+                            "after":440000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "lowercase miles":{
+                            "before":305000,
+                            "change":50000,
+                            "after":355000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Charlie":{
+                            "before":300000,
+                            "change":-50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "MoreSensibleName":{
+                            "before":300000,
+                            "change":-50000,
+                            "after":250000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Pachimaris":{
+                            "before":295000,
+                            "change":-50000,
+                            "after":245000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "Matt J":{
+                            "before":250000,
+                            "change":-10000,
+                            "after":240000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            },
+                            "AziProdPosse":{
+                            "before":230000,
+                            "change":-50000,
+                            "after":180000,
+                            "usedHint":false,
+                            "wentAllIn":true,
+                            "wasKnockedOut":false
+                            },
+                            "AlexZ":{
+                            "before":-180000,
+                            "change":-50000,
+                            "after":-230000,
+                            "usedHint":false,
+                            "wentAllIn":false,
+                            "wasKnockedOut":false
+                            }
+                        },
+                        "allocations":{
+                            "optionATotalAllocation":15000,
+                            "optionBTotalAllocation":90000,
+                            "optionCTotalAllocation":55000,
+                            "optionDTotalAllocation":250000,
+                            "allTotalAllocation":410000
+                        }
+                    }
+                },
+                "globalData":{
+                    "teams":{
+                        "AziProdPosse":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":0,
+                            "numTurnsFastestFinger":1,
+                            "totalMoneyGained":535000,
+                            "totalMoneyLost":355000,
+                            "longestGainStreak":1,
+                            "numTurnsWentAllIn":17
+                        },
+                        "Matt J":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":1,
+                            "numTurnsFastestFinger":6,
+                            "totalMoneyGained":605000,
+                            "totalMoneyLost":365000,
+                            "longestGainStreak":1,
+                            "numTurnsWentAllIn":12
+                        },
+                        "Charlie":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":1,
+                            "numTurnsFastestFinger":0,
+                            "totalMoneyGained":580000,
+                            "totalMoneyLost":330000,
+                            "longestGainStreak":3,
+                            "numTurnsWentAllIn":12
+                        },
+                        "lowercase miles":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":0,
+                            "numTurnsFastestFinger":3,
+                            "totalMoneyGained":420000,
+                            "totalMoneyLost":65000,
+                            "longestGainStreak":1,
+                            "numTurnsWentAllIn":7
+                        },
+                        "Pachimaris":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":0,
+                            "numTurnsFastestFinger":2,
+                            "totalMoneyGained":595000,
+                            "totalMoneyLost":350000,
+                            "longestGainStreak":1,
+                            "numTurnsWentAllIn":16
+                        },
+                        "Sleepy Heads":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":0,
+                            "numTurnsFastestFinger":0,
+                            "totalMoneyGained":715000,
+                            "totalMoneyLost":275000,
+                            "longestGainStreak":1,
+                            "numTurnsWentAllIn":11
+                        },
+                        "MoreSensibleName":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":0,
+                            "numTurnsFastestFinger":3,
+                            "totalMoneyGained":625000,
+                            "totalMoneyLost":375000,
+                            "longestGainStreak":2,
+                            "numTurnsWentAllIn":19
+                        },
+                        "AlexZ":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":1,
+                            "numTurnsSloppiestFinger":3,
+                            "numTurnsFastestFinger":0,
+                            "totalMoneyGained":385000,
+                            "totalMoneyLost":615000,
+                            "longestGainStreak":1,
+                            "numTurnsWentAllIn":12
+                        },
+                        "Banana":{
+                            "numTurnsUsedHints":3,
+                            "numTimesKnockedOut":0,
+                            "numTurnsSloppiestFinger":1,
+                            "numTurnsFastestFinger":4,
+                            "totalMoneyGained":740000,
+                            "totalMoneyLost":165000,
+                            "longestGainStreak":9,
+                            "numTurnsWentAllIn":14
+                        }
+                    }
+                }
+            };
+
+            produceCharts(data);
+        </script>
+    </body>
+</html>

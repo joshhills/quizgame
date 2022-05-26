@@ -784,8 +784,9 @@ function updateUI() {
         // }
         // teamMembers.innerHTML = teamMembersHTML;
 
-        console.log(logHint.innerHTML);
-        logHint.innerHTML = `Playing as team '${_team.teamName}' with ${_team.members.map(tm => tm.name).join(', ')}. Messages will appear below...`;
+        let newLogHint = `Playing as team '${_team.teamName}' with ${_team.members.map(tm => tm.name).join(', ')}. Messages will appear below...`;
+        logHint.innerHTML = newLogHint;
+        // console.log(logHint.innerHTML);
 
         remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn(), true);
 

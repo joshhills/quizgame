@@ -513,7 +513,7 @@ function handleLockIn(ws, data) {
         return;
     }
 
-    let team = getTeamByName(sanitizeHTML(data.team));
+    let team = getTeamByName(ws.team);
 
     if (!team) {
         return;
@@ -551,7 +551,7 @@ function handleResetAllocation(ws, data) {
         return;
     }
 
-    let team = getTeamByName(sanitizeHTML(data.team));
+    let team = getTeamByName(ws.team);
 
     if (!team) {
         return;
@@ -584,8 +584,7 @@ function handleAddOption(ws, data) {
         return;
     }
 
-    let teamNameSanitized = sanitizeHTML(data.team);
-    let team = getTeamByName(teamNameSanitized);
+    let team = getTeamByName(ws.team);
 
     if (!team || team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
@@ -1006,8 +1005,7 @@ function handleAddRemaining(ws, data) {
         return;
     }
 
-    let teamNameSanitized = sanitizeHTML(data.team);
-    let team = getTeamByName(teamNameSanitized); 
+    let team = getTeamByName(ws.team); 
     
     if (!team || team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
@@ -1037,7 +1035,7 @@ function handleRemoveAll(ws, data) {
         return;
     }
 
-    let team = getTeamByName(sanitizeHTML(data.team));
+    let team = getTeamByName(ws.team);
 
     if (!team) {
         return;
@@ -1071,8 +1069,7 @@ function handleMinusOption(ws, data) {
         return;
     }
 
-    let teamNameSanitized = sanitizeHTML(data.team);
-    let team = getTeamByName(teamNameSanitized);
+    let team = getTeamByName(ws.team);
 
     if (!team) {
         return;
@@ -1349,7 +1346,7 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.CREATE_TEAM]: { handler: handleCreateTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.LEAVE_TEAM]: { handler: handleLeaveTeam, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_READY]: { handler: handleToggleReady, rateLimit: { atomic: true, rate: { hits: 2, perMs: 1000 } } },
-        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 } } },
+        [MESSAGE_TYPE.CLIENT.PROGRESS_STATE]: { handler: handleProgressState, rateLimit: { atomic: true, rate: { hits: 1, perMs: 10 } } },
         [MESSAGE_TYPE.CLIENT.LOCK_IN]: { handler: handleLockIn },
         [MESSAGE_TYPE.CLIENT.RESET_ALLOCATION]: { handler: handleResetAllocation, rateLimit: { atomic: true, rate: { hits: 1, perMs: 1000 }}},
         [MESSAGE_TYPE.CLIENT.ADD_OPTION]: { handler: handleAddOption },
