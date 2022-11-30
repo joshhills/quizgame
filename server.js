@@ -810,6 +810,8 @@ function handleJoinTeam(ws, data) {
                 team: teamName
             });
 
+            ws.team = teamName;
+
             sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
             broadcastGameState();
@@ -917,6 +919,7 @@ function handleJoinSolo(ws, data) {
 
     teams.push(newTeam);
     teamIndex[teamName] = newTeam;
+    ws.team = teamName;
 
     if (didRename) {
         sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${originalTeamName}'` });
@@ -1433,15 +1436,13 @@ function moneyRemainingThisTurn(team) {
 
 function getTeamByName(teamName) {
 
-    // for (let team of teams) {
-    //     if (team.teamName === teamName) {
-    //         return team;
-    //     }
-    // }
+    let team = teamIndex[teamName];
 
-    return teamIndex[teamName];
+    if (!team) {
+        console.error('Attempted to find a non-existent team!');
+    }
 
-    console.error('Attempted to find a non-existent team!');
+    return team
 }
 
 function getTeamById(id) {
