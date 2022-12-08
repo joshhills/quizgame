@@ -215,7 +215,7 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                 
                 document.getElementById('quizname').value = content.name;
                 document.getElementById('quizstartingmoney').value = content.startingMoney;
-                document.getElementById('quizallowhints').value = content.allowHints;
+                document.getElementById('quizallowhints').checked = content.allowHints;
                 document.getElementById('quiznumhints').value = content.numHints;
                 // document.getElementById('quizincrementeachround').value = content.incrementEachRound;
                 document.getElementById('quizsecondsperquestion').value = content.secondsPerQuestion;
@@ -479,7 +479,7 @@ document.getElementById('savequiz').addEventListener('click', () => {
         const exportObj = {
             "name": quizName,
             "startingMoney": +document.getElementById('quizstartingmoney').value,
-            "allowHints": document.getElementById('quizallowhints').value === "on" ? true : false,
+            "allowHints": document.getElementById('quizallowhints').checked,
             "numHints": +document.getElementById('quiznumhints').value,
             // "incrementEachRound": +document.getElementById('quizincrementeachround').value,
             "secondsPerQuestion": +document.getElementById('quizsecondsperquestion').value,
