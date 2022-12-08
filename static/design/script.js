@@ -95,31 +95,40 @@ document.getElementById('loadquiz').addEventListener('click', () => {
                                     </div>
                                     <!-- Options -->
                                     <div class="mb-3">
+                                        <label class="form-label">Question Type</label><br/>
+                                        <input type="radio" id="multiplechoice-${j}" name="questiontype-${j}" ${content.questions[i].questionType === 'multipleChoice' ? 'checked' : ''}"> <label class="form-label">Multiple Choice</label><br/>
+                                        <input type="radio" id="freetext-${j}" name="questiontype-${j}" ${content.questions[i].questionType === 'freeText' ? 'checked' : ''}> <label class="form-label">Free Text</label><br/>
+                                        <div id="numchoicescontainer-${j}">
+                                            <label class="form-label">Number of options</label> <input type="number" class="form-control" id="numchoices-${i}" min="2" max="4" value="${content.questions[i].numChoices ? content.questions[i].numChoices : 4}"/>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3" id="questionoptioncontainera-${j}">
                                         <label class="form-label">Option A</label>
                                         <input type="text" class="form-control" placeholder="A Text" id="questionoptiona-${j}" value="${content.questions[i].options.a ? deQuote(content.questions[i].options.a) : ''}" />
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-3" id="questionoptioncontainerb-${j}">
                                         <label class="form-label">Option B</label>
                                         <input type="text" class="form-control" placeholder="B Text" id="questionoptionb-${j}" value="${content.questions[i].options.b ? deQuote(content.questions[i].options.b) : ''}" />
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-3" id="questionoptioncontainerc-${j}">
                                         <label class="form-label">Option C</label>
                                         <input type="text" class="form-control" placeholder="C Text" id="questionoptionc-${j}" value="${content.questions[i].options.c ? deQuote(content.questions[i].options.c) : ''}" />
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-3" id="questionoptioncontainerd-${j}">
                                         <label class="form-label">Option D</label>
                                         <input type="text" class="form-control" placeholder="D Text" id="questionoptiond-${j}" value="${content.questions[i].options.d ? deQuote(content.questions[i].options.d) : ''}" />
                                     </div>
                                     <!-- Answer -->
                                     <div class="mb-3">
-                                        <label class="form-label">Answer</label>
-                                        <select class="form-select" id="questionanswer-${j}">
+                                        <label class="form-label">Answer(s)</label>
+                                        <select class="form-select" id="questionanswermultiplechoice-${j}">
                                             <option selected value="none">Choose an answer</option>
-                                            <option value="a" ${content.questions[i].answer === 'a' ? 'selected' : ''}>A</option>
-                                            <option value="b" ${content.questions[i].answer === 'b' ? 'selected' : ''}>B</option>
-                                            <option value="c" ${content.questions[i].answer === 'c' ? 'selected' : ''}>C</option>
-                                            <option value="d" ${content.questions[i].answer === 'd' ? 'selected' : ''}>D</option>
+                                            <option value="a" id="questionanswermultiplechoiceoptiona-${j}" ${content.questions[i].answer === 'a' ? 'selected' : ''}>A</option>
+                                            <option value="b" id="questionanswermultiplechoiceoptionb-${j}" ${content.questions[i].answer === 'b' ? 'selected' : ''}>B</option>
+                                            <option value="c" id="questionanswermultiplechoiceoptionc-${j}" ${content.questions[i].answer === 'c' ? 'selected' : ''}>C</option>
+                                            <option value="d" id="questionanswermultiplechoiceoptiond-${j}" ${content.questions[i].answer === 'd' ? 'selected' : ''}>D</option>
                                         </select>
+                                        <textarea class="form-control" id="questionanswerfreetext-${j}" rows="3" placeholder="One answer per each newline e.g.\nanswer1\nanswer 2">${content.questions[i].answersFreeText}</textarea>
                                     </div>
                                     <!-- Pre Image -->
                                     <div class="mb-3">
@@ -256,33 +265,42 @@ document.getElementById('addquestion').addEventListener('click', () => {
                         <label class="form-label">Additional Info</label>
                         <textarea class="form-control" rows="3" placeholder="Write some optional, additional info here for the host" id="questionadditionaltext-${i}"></textarea>
                     </div>
-                    <!-- Options -->
                     <div class="mb-3">
+                        <label class="form-label">Question Type</label><br/>
+                        <input type="radio" id="multiplechoice-${i}" name="questiontype-${i}" checked> <label class="form-label">Multiple Choice</label><br/>
+                        <input type="radio" id="freetext-${i}" name="questiontype-${i}"> <label class="form-label">Free Text</label><br/>
+                        <div id="numchoicescontainer-${i}">
+                            <label class="form-label">Number of options</label> <input type="number" class="form-control" id="numchoices-${i}" min="2" max="4" value="4"/>
+                        </div>
+                    </div>
+                    <!-- Options -->
+                    <div class="mb-3" id="questionoptioncontainera-${i}">
                         <label class="form-label">Option A</label>
                         <input type="text" class="form-control" placeholder="A Text" id="questionoptiona-${i}" />
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="questionoptioncontainerb-${i}">
                         <label class="form-label">Option B</label>
                         <input type="text" class="form-control" placeholder="B Text" id="questionoptionb-${i}" />
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="questionoptioncontainerc-${i}">
                         <label class="form-label">Option C</label>
                         <input type="text" class="form-control" placeholder="C Text" id="questionoptionc-${i}" />
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="questionoptioncontainerd-${i}">
                         <label class="form-label">Option D</label>
                         <input type="text" class="form-control" placeholder="D Text" id="questionoptiond-${i}" />
                     </div>
                     <!-- Answer -->
                     <div class="mb-3">
-                        <label class="form-label">Answer</label>
-                        <select class="form-select" id="questionanswer-${i}">
+                        <label class="form-label">Answer(s)</label>
+                        <select class="form-select" id="questionanswermultiplechoice-${i}">
                             <option selected value="none">Choose an answer</option>
-                            <option value="a">A</option>
-                            <option value="b">B</option>
-                            <option value="c">C</option>
-                            <option value="d">D</option>
+                            <option value="a" id="questionanswermultiplechoiceoptiona-${i}">A</option>
+                            <option value="b" id="questionanswermultiplechoiceoptionb-${i}">B</option>
+                            <option value="c" id="questionanswermultiplechoiceoptionc-${i}">C</option>
+                            <option value="d" id="questionanswermultiplechoiceoptiond-${i}">D</option>
                         </select>
+                        <textarea hidden class="form-control" id="questionanswerfreetext-${i}" rows="3" placeholder="One answer per each newline e.g.\nanswer1\nanswer 2"></textarea>
                     </div>
                     <!-- Pre Image -->
                     <div class="mb-3">
@@ -379,11 +397,78 @@ document.getElementById('addquestion').addEventListener('click', () => {
             e.target.classList = 'form-control';
         }
     });
-    document.getElementById(`questionanswer-${i}`).addEventListener('input', (e) => {
+    document.getElementById(`questionanswermultiplechoice-${i}`).addEventListener('input', (e) => {
         if (e.target.value === 'none') {
             e.target.classList = 'form-select is-invalid';
         } else {
             e.target.classList = 'form-select';
+        }
+    });
+    document.getElementById(`questionanswerfreetext-${i}`).addEventListener('input', (e) => {
+        if (isBlank(e.target.value)) {
+            e.target.classList = 'form-control is-invalid';
+        } else {
+            e.target.classList = 'form-control';
+        }
+    });
+    document.getElementById(`multiplechoice-${i}`).addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.getElementById(`questionanswermultiplechoice-${i}`).hidden = false;
+            document.getElementById(`questionanswerfreetext-${i}`).hidden = true;
+
+            document.getElementById(`numchoices-${i}`).hidden = false;
+            document.getElementById(`questionoptioncontainera-${i}`).hidden = false;
+            document.getElementById(`questionoptioncontainerb-${i}`).hidden = false;
+            
+            let numOptions = +document.getElementById(`numchoices-${i}`).value;
+            if (numOptions > 2) {
+                document.getElementById(`questionoptioncontainerc-${i}`).hidden = false;
+            }
+            if (numOptions > 3) {
+                document.getElementById(`questionoptioncontainerd-${i}`).hidden = false;
+            }
+        }
+    });
+    document.getElementById(`freetext-${i}`).addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.getElementById(`questionanswerfreetext-${i}`).hidden = false;
+            document.getElementById(`questionanswermultiplechoice-${i}`).hidden = true;
+
+            document.getElementById(`numchoices-${i}`).hidden = true;
+            document.getElementById(`questionoptioncontainera-${i}`).hidden = true;
+            document.getElementById(`questionoptioncontainerb-${i}`).hidden = true;
+            document.getElementById(`questionoptioncontainerc-${i}`).hidden = true;
+            document.getElementById(`questionoptioncontainerd-${i}`).hidden = true;
+        }
+    });
+    document.getElementById(`numchoices-${i}`).addEventListener('change', (e) => {
+        if (e.target.value) {
+            let numOptions = +e.target.value || 4;
+
+            if (numOptions < 2 || numOptions > 4) {
+                e.target.classList = 'form-control is-invalid';
+            } else {
+                e.target.classList = 'form-control';
+            }
+
+            document.getElementById(`questionoptioncontainerc-${i}`).hidden = true;
+            document.getElementById(`questionoptioncontainerd-${i}`).hidden = true;
+            document.getElementById(`questionanswermultiplechoiceoptionc-${i}`).hidden = true;
+            document.getElementById(`questionanswermultiplechoiceoptiond-${i}`).hidden = true;
+
+            let currentAnswer = document.getElementById(`questionanswermultiplechoice-${i}`).value;
+            if (numOptions < 3 && currentAnswer === 'c' || numOptions < 4 && currentAnswer === 'd') {
+                document.getElementById(`questionanswermultiplechoice-${i}`).value = 'none';
+            }
+
+            if (numOptions > 2) {
+                document.getElementById(`questionoptioncontainerc-${i}`).hidden = false;
+                document.getElementById(`questionanswermultiplechoiceoptionc-${i}`).hidden = false;
+            }
+            if (numOptions > 3) {
+                document.getElementById(`questionoptioncontainerd-${i}`).hidden = false;
+                document.getElementById(`questionanswermultiplechoiceoptiond-${i}`).hidden = false;
+            }
         }
     });
 });
@@ -474,11 +559,16 @@ async function validateQuiz() {
         const i = Array.from(accordion.children)[j].dataset.uid;
 
         const elQuestionText = document.getElementById(`questiontext-${i}`);
+        const elNumOptions = document.getElementById(`numchoices-${i}`);
+        const multipleChoice = document.getElementById(`multiplechoice-${i}`).checked;
+        const freeText = document.getElementById(`freetext-${i}`).checked;
+        const numOptions = +elNumOptions.value;
         const elOptionA = document.getElementById(`questionoptiona-${i}`);
         const elOptionB = document.getElementById(`questionoptionb-${i}`);
         const elOptionC = document.getElementById(`questionoptionc-${i}`);
         const elOptionD = document.getElementById(`questionoptiond-${i}`);
-        const elAnswer = document.getElementById(`questionanswer-${i}`);
+        const elAnswer = document.getElementById(`questionanswermultiplechoice-${i}`);
+        const elAnswerFreeText = document.getElementById(`questionanswerfreetext-${i}`);
         const elPreImageUrl = document.getElementById(`questionpreimage-${i}`);
         const elPostImageUrl = document.getElementById(`questionpostimage-${i}`);
 
@@ -489,42 +579,51 @@ async function validateQuiz() {
             elQuestionText.classList = 'form-control';
         }
 
-        if (isBlank(elOptionA.value)) {
+        if (multipleChoice && isBlank(elOptionA.value)) {
             elOptionA.classList = 'form-control is-invalid';
             allGood = false;
         } else {
             elOptionA.classList = 'form-control';
         }
 
-        if (isBlank(elOptionB.value)) {
+        if (multipleChoice && isBlank(elOptionB.value)) {
             elOptionB.classList = 'form-control is-invalid';
             allGood = false;
         } else {
             elOptionB.classList = 'form-control';
         }
 
-        if (isBlank(elOptionC.value)) {
+        if (multipleChoice && numOptions > 2 && isBlank(elOptionC.value)) {
             elOptionC.classList = 'form-control is-invalid';
             allGood = false;
         } else {
             elOptionC.classList = 'form-control';
         }
 
-        if (isBlank(elOptionD.value)) {
+        if (multipleChoice && numOptions > 3 && isBlank(elOptionD.value)) {
             elOptionD.classList = 'form-control is-invalid';
             allGood = false;
         } else {
             elOptionD.classList = 'form-control';
         }
 
-        if (elAnswer.value !== 'a'
+        if (multipleChoice && (elAnswer.value !== 'a'
             && elAnswer.value !== 'b'
             && elAnswer.value !== 'c'
-            && elAnswer.value !== 'd') {
+            && elAnswer.value !== 'd') ||
+            (numOptions < 3 && elAnswer.value === 'c') ||
+            (numOptions < 4 && elAnswer.value === 'd')) {
             elAnswer.classList = 'form-select is-invalid';
             allGood = false;
         } else {
             elAnswer.classList = 'form-select';
+        }
+
+        if (freeText && isBlank(elAnswerFreeText.value)) {
+            elAnswerFreeText.classList = 'form-control is-invalid';
+            allGood = false;
+        } else {
+            elAnswerFreeText.classList = 'form-control';
         }
 
         if (!isBlank(elPreImageUrl.value)) {
@@ -554,7 +653,7 @@ function isBlank(str) {
 }
 
 function cleanString(str) {
-    return str;
+    return str.trim();
 }
 
 function parseQuestions() {
@@ -564,19 +663,36 @@ function parseQuestions() {
         
         const i = Array.from(accordion.children)[j].dataset.uid;
         
-        questions.push({
+        let question = {
             "text": cleanString(document.getElementById(`questiontext-${i}`).value),
             "additionalText": cleanString(document.getElementById(`questionadditionaltext-${i}`).value),
-            "options": {
-                "a": cleanString(document.getElementById(`questionoptiona-${i}`).value),
-                "b": cleanString(document.getElementById(`questionoptionb-${i}`).value),
-                "c": cleanString(document.getElementById(`questionoptionc-${i}`).value),
-                "d": cleanString(document.getElementById(`questionoptiond-${i}`).value)
-            },
-            "answer": document.getElementById(`questionanswer-${i}`).value,
             "preImageUrl": document.getElementById(`questionpreimage-${i}`).value,
             "postImageUrl": document.getElementById(`questionpostimage-${i}`).value
-        });
+        }
+
+        if (document.getElementById(`multiplechoice-${i}`).checked) {
+            question["questionType"] = "multipleChoice";
+            question["numOptions"] = +document.getElementById(`numchoices-${i}`).value;
+            let options = {
+                "a": cleanString(document.getElementById(`questionoptiona-${i}`).value),
+                "b": cleanString(document.getElementById(`questionoptionb-${i}`).value)
+            };
+            if (question["numOptions"] > 2) {
+                options["c"] = cleanString(document.getElementById(`questionoptionc-${i}`).value);
+            }
+            if (question["numOptions"] > 3) {
+                options["d"] = cleanString(document.getElementById(`questionoptiond-${i}`).value);
+            }
+            question["options"] = options;
+            question["answer"] = document.getElementById(`questionanswermultiplechoice-${i}`).value;
+        } else if (document.getElementById(`freetext-${i}`).checked) {
+            question["questionType"] = "freeText";
+            question["answersFreeText"] = document.getElementById(`questionanswerfreetext-${i}`).value.split(/\n/).map((str) => cleanString(str)).filter(s => s.length > 0);
+        } else {
+            throw new Error(`Question ${i} missing type`);
+        }
+
+        questions.push(question);
     }
 
     return questions;
