@@ -43,7 +43,8 @@ export const MESSAGE_TYPE = {
         TOGGLE_IMAGE: 'toggleImage',
         TOGGLE_ALLOCATIONS: 'toggleAllocations',
         EMOTE: 'emote',
-        USE_HINT: 'useHint'
+        USE_HINT: 'useHint',
+        UPDATE_FREE_TEXT: 'updateFreeText'
     }
 };
 
@@ -68,7 +69,7 @@ export const REACTIONS = {
     LOVE: 'love'
 };
 
-export const MAX_TEAM_SIZE = 5;
+export const MAX_TEAM_SIZE = 4;
 
 export const QUESTION_BUFFER_TIME_MS = 3000;
 

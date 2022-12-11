@@ -166,17 +166,20 @@ function reset() {
 
 function broadcastGameState(options = {}) {
 
-    // TODO: Exclude the data from broadcast in the game state
     let _activeQuestion = null;
     if (activeQuestion) {
         _activeQuestion = {
+            round: activeQuestion.round,
             text: activeQuestion.text,
             options: activeQuestion.options,
+            numOptions: activeQuestion.numOptions,
             // Don't send answer to clients if they're mid-guessing!
             answer: state === GAME_STATE.GAME ? null : activeQuestion.answer,
+            answersFreeText: state === GAME_STATE.GAME ? null : activeQuestion.answersFreeText,
             imageUrl: state === GAME_STATE.GAME ? activeQuestion.preImageUrl : activeQuestion.postImageUrl,
             additionalText: activeQuestion.additionalText ? activeQuestion.additionalText : '',
-            timeBegan: activeQuestion.timeBegan
+            timeBegan: activeQuestion.timeBegan,
+            questionType: activeQuestion.questionType
         };
     }
 
@@ -207,7 +210,60 @@ function broadcastGameState(options = {}) {
         now: Date.now()
     };
 
+    if (state === GAME_STATE.GAME) {
+
+        let preExistingTransformation = options.transformation;
+
+        options.transformation = (ws, data) => {
+            
+            if (preExistingTransformation) {
+                data = preExistingTransformation(ws, data);
+            }
+    
+            // Filter out in-progress data from other teams (prevent digital shoulder-peeking)
+            let _teams = []
+
+            for (let team of data.state.teams) {
+                
+                // Check if it's this player's team, if so, leave alone
+                let found = false;
+                for (let member of team.members) {
+                    if (ws.id === member.id) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    _teams.push(team)
+                    continue;
+                }
+                
+                // Otherwise, add a truncated version
+                _teams.push({
+                    teamName: team.teamName,
+                    members: team.members,
+                    solo: team.solo
+                });
+
+                data.teams = _teams;
+            }
+        }
+    }
+
     broadcast(MESSAGE_TYPE.SERVER.STATE_CHANGE, { state: gameState }, options);
+}
+
+function isFreeTextAnswerCorrect(guess, acceptedAnswers) {
+
+    if (guess === undefined || guess === null || guess === '') {
+        return false;
+    }
+
+    if (guess.trim() === '') {
+        return false;
+    }
+
+    return acceptedAnswers.indexOf(guess) !== -1;
 }
 
 function handleProgressState(ws) {
@@ -263,6 +319,7 @@ function handleProgressState(ws) {
         teamsKnockedOutThisRound = [];
 
         const currentAnswer = activeQuestion.answer;
+        const currentAnswersFreeText = activeQuestion.answersFreeText;
         const currentAnswerTime = activeQuestion.timeBegan;
 
         // Make sure values are reset
@@ -298,12 +355,25 @@ function handleProgressState(ws) {
 
             // team.remainingMoney = team.optionsAllocated[questions[activeQuestionIndex].answer];
             let losses = 0;
-            let winnings = team.optionsAllocated[currentAnswer];
-            for (let option of ['a', 'b', 'c', 'd']) {
-                if (option !== currentAnswer) {
-                    losses += team.optionsAllocated[option];
+            let winnings = 0;
+            
+            if (activeQuestion.questionType === 'freeText') {
+                for (let option of ['a', 'b', 'c', 'd']) {
+                    if (isFreeTextAnswerCorrect(team.freeTextGuesses[option], currentAnswersFreeText)) {
+                        winnings += team.optionsAllocated[option];
+                    } else {
+                        losses += team.optionsAllocated[option];
+                    }
+                }
+            } else if (activeQuestion.questionType === 'multipleChoice') {
+                winnings = team.optionsAllocated[currentAnswer];
+                for (let option of ['a', 'b', 'c', 'd']) {
+                    if (option !== currentAnswer) {
+                        losses += team.optionsAllocated[option];
+                    }
                 }
             }
+
             team.lastGained = winnings;
             team.lastLost = losses;
 
@@ -479,6 +549,7 @@ function handleProgressState(ws) {
                     c: 0,
                     d: 0
                 };
+                team.freeTextGuesses = {};
                 team.lockedIn = false;
                 team.lockedInTime = null;
                 team.activeHint = null;
@@ -586,6 +657,11 @@ function handleAddOption(ws, data) {
 
     let team = getTeamByName(ws.team);
 
+    if (team.lockedIn) {
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
+        return;
+    }
+
     if (!team || team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
         return;
@@ -610,6 +686,48 @@ function handleAddOption(ws, data) {
         type: LOG_TYPE.ADD,
         option: data.option
     }, { predicate: (c) => team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
+
+    broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
+}
+
+function handleUpdateFreeText(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
+    if (state !== GAME_STATE.GAME || !activeQuestion || activeQuestion.questionType !== 'freeText') {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
+    let team = getTeamByName(ws.team);
+
+    if (team.lockedIn) {
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
+        return;
+    }
+
+    // Figure out which option the player corresponds to, as the order of objects is not guaranteed in JS
+    let teamIx = -1;
+    for (let ix = 0; ix < team.members.length; ix++) {
+        if (team.members[ix].id === ws.id) {
+            teamIx = ix;
+            break;
+        }
+    }
+    
+    if (teamIx === -1) {
+        console.error(`Attempted to update free text for ${ws.id} but could not find index in team member array`);
+        return;
+    }
+
+    let option = ['a', 'b', 'c', 'd'][teamIx];
+
+    // TODO: Sanitize length
+
+    team.freeTextGuesses[option] = data.guess;
 
     broadcastGameState({ predicate: (c) => c.isHost || team.members.map(tm => tm.id).indexOf(c.id) !== -1 });
 }
@@ -666,6 +784,7 @@ function handleCreateTeam(ws, data) {
             c: 0,
             d: 0
         },
+        freeTextGuesses: {},
         lockedIn: false,
         lockedInTime: null,
         solo: false,
@@ -684,6 +803,7 @@ function handleCreateTeam(ws, data) {
 
     teams.push(newTeam);
     teamIndex[teamName] = newTeam;
+    ws.team = teamName;
 
     sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
@@ -901,6 +1021,7 @@ function handleJoinSolo(ws, data) {
             c: 0,
             d: 0
         },
+        freeTextGuesses: {},
         lockedIn: false,
         lockedInTime: null,
         solo: true,
@@ -1010,6 +1131,11 @@ function handleAddRemaining(ws, data) {
 
     let team = getTeamByName(ws.team); 
     
+    if (team.lockedIn) {
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
+        return;
+    }
+
     if (!team || team.activeHint && team.activeHint.indexOf(data.option) !== -1) {
         // Don't add money to active hint
         return;
@@ -1041,6 +1167,11 @@ function handleRemoveAll(ws, data) {
     let team = getTeamByName(ws.team);
 
     if (!team) {
+        return;
+    }
+
+    if (team.lockedIn) {
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
         return;
     }
 
@@ -1081,6 +1212,11 @@ function handleMinusOption(ws, data) {
     let step = getDenomination(team);
 
     if (!team) {
+        return;
+    }
+
+    if (team.lockedIn) {
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You're locked in" });
         return;
     }
 
@@ -1197,7 +1333,12 @@ function handleUseHint(ws, data) {
     if (state !== GAME_STATE.GAME) {
         console.warn('Function called with incorrect state');
         return;
-    } 
+    }
+
+    if (activeQuestion.questionType !== 'multipleChoice') {
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Hints can only be used on multiple choice questions" });
+        return;
+    }
 
     // Get player's team based on their ID
     const team = getTeamById(data.id);
@@ -1321,6 +1462,8 @@ wss.on('connection', (ws, req) => {
             return;
         }
 
+        ws.team = team.teamName;
+
         sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: player.name, solo: team.solo });
     } else {
         ws.id = uuid.v4();
@@ -1364,7 +1507,8 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.TOGGLE_IMAGE]: { handler: handleToggleImage, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } },
-        [MESSAGE_TYPE.CLIENT.USE_HINT]: { handler: handleUseHint, rateLimit: { atomic: true, rate: { hits: 1, perMs: 5000 } } }
+        [MESSAGE_TYPE.CLIENT.USE_HINT]: { handler: handleUseHint, rateLimit: { atomic: true, rate: { hits: 1, perMs: 5000 } } },
+        [MESSAGE_TYPE.CLIENT.UPDATE_FREE_TEXT]: { handler: handleUpdateFreeText, rateLimit: { atomic: true }}
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });
@@ -1381,7 +1525,10 @@ wss.on('connection', (ws, req) => {
  */
 function broadcast(type, obj = {}, options = {}) {
 
-    let blobStr = formatMessage(type, obj);
+    let blobStr = "";
+    if (options.transformation === null || options.transformation === undefined) {
+        blobStr = formatMessage(type, obj);
+    }
 
     let clientArray = [];
     if (options.clientArray) {
@@ -1392,6 +1539,12 @@ function broadcast(type, obj = {}, options = {}) {
 
     clientArray.forEach((c) => {
         if (options.predicate === null || options.predicate === undefined || options.predicate(c)) {
+
+            if (options.transformation) {
+                options.transformation(c, obj);
+                blobStr = formatMessage(type, obj);
+            }
+            
             c.send(blobStr);
         }
     });
@@ -1435,11 +1588,11 @@ function moneyRemainingThisTurn(team) {
 }
 
 function getTeamByName(teamName) {
-
+    
     let team = teamIndex[teamName];
 
     if (!team) {
-        console.error('Attempted to find a non-existent team!');
+        console.error(`Attempted to find a non-existent team ${teamName}!`);
     }
 
     return team

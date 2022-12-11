@@ -328,7 +328,11 @@ function updateUI() {
     }
     
     if (gameState.scene === 'answer') {
-        lockedInPercent.innerHTML = `Answer: ${gameState.activeQuestion.answer.toUpperCase()}`;
+        if (gameState.activeQuestion.questionType === 'freeText') {
+            lockedInPercent.innerHTML = `Accepted answers: ${gameState.activeQuestion.answersFreeText.join(', ')}`;
+        } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+            lockedInPercent.innerHTML = `Answer: ${gameState.activeQuestion.answer.toUpperCase()}`;
+        }
         additionalInfo.hidden = false;
         additionalInfo.innerHTML = gameState.activeQuestion.additionalText ? gameState.activeQuestion.additionalText : '';
     } else {
@@ -353,10 +357,19 @@ function updateUI() {
         }
 
         questionname.innerHTML = `${gameState.activeQuestionIndex + 1}: ${gameState.activeQuestion.text}`;
-        optiona.innerHTML = `A: ${gameState.activeQuestion.options.a}`;
-        optionb.innerHTML = `B: ${gameState.activeQuestion.options.b}`;
-        optionc.innerHTML = `C: ${gameState.activeQuestion.options.c}`;
-        optiond.innerHTML = `D: ${gameState.activeQuestion.options.d}`;
+
+        if (gameState.activeQuestion.questionType === 'freeText') {
+            optiona.innerHTML = '';
+            optionb.innerHTML = '';
+            optionc.innerHTML = '';
+            optiond.innerHTML = '';
+        } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+            optiona.innerHTML = `A: ${gameState.activeQuestion.options.a}`;
+            optionb.innerHTML = `B: ${gameState.activeQuestion.options.b}`;
+            optionc.innerHTML = `C: ${gameState.activeQuestion.options.c}`;
+            optiond.innerHTML = `D: ${gameState.activeQuestion.options.d}`;
+        }
+        
         optionATotalAllocationThisRound.innerHTML = `£${numberWithCommas(aAllocated)} (${Math.round(aAllocated / totalMoneyToSpend * 100)}%)`;
         optionBTotalAllocationThisRound.innerHTML = `£${numberWithCommas(bAllocated)} (${Math.round(bAllocated / totalMoneyToSpend * 100)}%)`;
         optionCTotalAllocationThisRound.innerHTML = `£${numberWithCommas(cAllocated)} (${Math.round(cAllocated / totalMoneyToSpend * 100)}%)`;

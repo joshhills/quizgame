@@ -56,6 +56,14 @@ var loader = document.getElementById('loader'),
     allocatedB = document.getElementById('allocatedb'),
     allocatedC = document.getElementById('allocatedc'),
     allocatedD = document.getElementById('allocatedd'),
+    freeTextTitleA = document.getElementById('freetextallocationa'),
+    freeTextA = document.getElementById('freetexta'),
+    freeTextTitleB = document.getElementById('freetextallocationb'),
+    freeTextB = document.getElementById('freetextb'),
+    freeTextTitleC = document.getElementById('freetextallocationc'),
+    freeTextC = document.getElementById('freetextc'),
+    freeTextTitleD = document.getElementById('freetextallocationd'),
+    freeTextD = document.getElementById('freetextd'),
     optionA = document.getElementById('optiona'),
     optionB = document.getElementById('optionb'),
     optionC = document.getElementById('optionc'),
@@ -190,6 +198,11 @@ addC.addEventListener('click', () => addOption('c'));
 minusD.addEventListener('click', () => minusOption('d'));
 addD.addEventListener('click', () => addOption('d'));
 
+freeTextA.addEventListener('input', (e) => updateFreeText(e.target.value));
+freeTextB.addEventListener('input', (e) => updateFreeText(e.target.value));
+freeTextC.addEventListener('input', (e) => updateFreeText(e.target.value));
+freeTextD.addEventListener('input', (e) => updateFreeText(e.target.value));
+
 reset.addEventListener('click', () => resetState());
 lockIn.addEventListener('click', () => {
 
@@ -279,7 +292,7 @@ function openInfoModal() {
             Money wagered on right answers is added to your final score,
             but money wagered on wrong answers is deducted!
         </p>
-        <h4><i class="bi bi-lightbulb"></i> Use hints to remove incorrect answers</h4>
+        <h4><i class="bi bi-lightbulb"></i> Use hints to remove incorrect multiple-choice answers</h4>
         <h4><i class="bi bi-lock"></i> Lock in quick to win 'fastest fingers'</h4>
         <h4><i class="bi bi-chat"></i> Chat with your team and see who's doing what</h4>
         <h4><i class="bi bi-hourglass"></i> Don't run out of time!</h4>
@@ -574,6 +587,10 @@ function sendReaction(reaction) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.EMOTE, { emote: reaction }, id);
 }
 
+function updateFreeText(str) {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.UPDATE_FREE_TEXT, { guess: str }, id);
+}
+
 /* === End Sender Functions === */
 
 function getTimerBarWidth() {
@@ -790,15 +807,32 @@ function updateUI() {
 
         remaining.innerHTML = numberWithCommas(moneyRemainingThisTurn(), true);
 
-        optionA.innerHTML = gameState.activeQuestion.options.a;
-        optionB.innerHTML = gameState.activeQuestion.options.b;
-        optionC.innerHTML = gameState.activeQuestion.options.c;
-        optionD.innerHTML = gameState.activeQuestion.options.d;
+        optionA.innerHTML = gameState.activeQuestion.options?.a || '';
+        optionB.innerHTML = gameState.activeQuestion.options?.b || '';
+        optionC.innerHTML = gameState.activeQuestion.options?.c || '';
+        optionD.innerHTML = gameState.activeQuestion.options?.d || '';
 
         allocatedA.innerHTML = numberWithCommas(_team.optionsAllocated['a'], true);
         allocatedB.innerHTML = numberWithCommas(_team.optionsAllocated['b'], true);
         allocatedC.innerHTML = numberWithCommas(_team.optionsAllocated['c'], true);
         allocatedD.innerHTML = numberWithCommas(_team.optionsAllocated['d'], true);
+
+        addA.hidden = false;
+        minusA.hidden = false;
+        addRemainingA.hidden = false;
+        removeAllA.hidden = false;
+        addB.hidden = false;
+        minusB.hidden = false;
+        addRemainingB.hidden = false;
+        removeAllB.hidden = false;
+        addC.hidden = false;
+        minusC.hidden = false;
+        addRemainingC.hidden = false;
+        removeAllC.hidden = false;
+        addD.hidden = false;
+        minusD.hidden = false;
+        addRemainingD.hidden = false;
+        removeAllD.hidden = false;
 
         removeAllA.disabled = _team.optionsAllocated['a'] === 0;
         removeAllB.disabled = _team.optionsAllocated['b'] === 0;
@@ -884,7 +918,7 @@ function updateUI() {
             useHintButton.hidden = false;
             numHintsRemaining.innerHTML = _team.remainingHints;
 
-            if (_team.remainingHints && _team.activeHint === null && !_team.lockedIn) {
+            if (_team.remainingHints && _team.activeHint === null && !_team.lockedIn && gameState.activeQuestion.questionType === 'multipleChoice') {
                 useHintButton.disabled = false;
             } else {
                 useHintButton.disabled = true;
@@ -930,12 +964,224 @@ function updateUI() {
         } else {
             useHintButton.hidden = true;
         }
+
+        if (gameState.activeQuestion.questionType === 'freeText')
+        {
+            // Show input selection per question
+            optionA.hidden = true;
+            optionB.hidden = true;
+            optionC.hidden = true;
+            optionD.hidden = true;
+
+            freeTextA.hidden = false;
+            freeTextB.hidden = false;
+            freeTextC.hidden = false;
+            freeTextD.hidden = false;
+            freeTextTitleA.hidden = false;
+            freeTextTitleB.hidden = false;
+            freeTextTitleC.hidden = false;
+            freeTextTitleD.hidden = false;
+
+            allocatedA.hidden = true;
+            allocatedB.hidden = true;
+            allocatedC.hidden = true;
+            allocatedD.hidden = true;
+
+            // Disable all controls...
+            addA.hidden = true;
+            minusA.hidden = true;
+            addRemainingA.hidden = true;
+            removeAllA.hidden = true;
+            addB.hidden = true;
+            minusB.hidden = true;
+            addRemainingB.hidden = true;
+            removeAllB.hidden = true;
+            addC.hidden = true;
+            minusC.hidden = true;
+            addRemainingC.hidden = true;
+            removeAllC.hidden = true;
+            addD.hidden = true;
+            minusD.hidden = true;
+            addRemainingD.hidden = true;
+            removeAllD.hidden = true;
+
+            // Update titles and inputs with their values
+            freeTextTitleA.innerHTML = `${_team.members[0].name}'s guess`;
+            allocatedA.hidden = false;
+            addA.hidden = false;
+            minusA.hidden = false;
+            addRemainingA.hidden = false;
+            removeAllA.hidden = false;
+            if (id === _team.members[0].id) {
+                freeTextTitleA.classList = 'active';
+                freeTextA.disabled = false;
+                freeTextA.placeholder = 'Type an answer...';
+                if (freeTextA.value === '' && _team.freeTextGuesses['a']?.length > 0) {
+                    freeTextA.value = _team.freeTextGuesses['a'];
+                }
+            } else {
+                freeTextTitleA.classList = '';
+                freeTextA.disabled = true;
+                freeTextA.placeholder = '';
+                if (_team.freeTextGuesses['a'] !== undefined && _team.freeTextGuesses['a'] !== null) {
+                    freeTextA.value = _team.freeTextGuesses['a'];
+                }
+            }
+
+            if (_team.members.length > 1) {
+                freeTextTitleB.innerHTML = `${_team.members[1].name}'s guess`;
+                allocatedB.hidden = false;
+                addB.hidden = false;
+                minusB.hidden = false;
+                addRemainingB.hidden = false;
+                removeAllB.hidden = false;
+                if (id === _team.members[1].id) {
+                    freeTextTitleB.classList = 'active';
+                    freeTextB.disabled = false;
+                    freeTextB.placeholder = 'Type an answer...';
+                    if (freeTextB.value === '' && _team.freeTextGuesses['b']?.length > 0) {
+                        freeTextB.value = _team.freeTextGuesses['b'];
+                    }
+                } else {
+                    freeTextTitleB.classList = '';
+                    freeTextB.disabled = true;
+                    freeTextB.placeholder = '';
+                    if (_team.freeTextGuesses['b'] !== undefined && _team.freeTextGuesses['b'] !== null) {
+                        freeTextB.value = _team.freeTextGuesses['b'];
+                    }
+                }
+            } else {
+                freeTextTitleB.hidden = true;
+                freeTextB.hidden = true;
+            }
+
+            if (_team.members.length > 2) {
+                freeTextTitleC.innerHTML = `${_team.members[2].name}'s guess`;
+                allocatedC.hidden = false;
+                addC.hidden = false;
+                minusC.hidden = false;
+                addRemainingC.hidden = false;
+                removeAllC.hidden = false;
+                if (id === _team.members[2].id) {
+                    freeTextTitleC.classList = 'active';
+                    freeTextC.disabled = false;
+                    freeTextC.placeholder = 'Type an answer...';
+                    if (freeTextC.value === '' && _team.freeTextGuesses['c']?.length > 0) {
+                        freeTextC.value = _team.freeTextGuesses['c'];
+                    }
+                } else {
+                    freeTextTitleC.classList = '';
+                    freeTextC.disabled = true;
+                    freeTextC.placeholder = '';
+                    if (_team.freeTextGuesses['c'] !== undefined && _team.freeTextGuesses['c'] !== null) {
+                        freeTextC.value = _team.freeTextGuesses['c'];
+                    }
+                }
+            } else {
+                freeTextTitleC.hidden = true;
+                freeTextC.hidden = true;
+            }
+
+            if (_team.members.length > 3) {
+                freeTextTitleD.innerHTML = `${_team.members[3].name}'s guess`;
+                allocatedD.hidden = false;
+                addD.hidden = false;
+                minusD.hidden = false;
+                addRemainingD.hidden = false;
+                removeAllD.hidden = false;
+                if (id === _team.members[3].id) {
+                    freeTextTitleD.classList = 'active';
+                    freeTextD.disabled = false;
+                    freeTextD.placeholder = 'Type an answer...';
+                    if (freeTextD.value === '' && _team.freeTextGuesses['d']?.length > 0) {
+                        freeTextD.value = _team.freeTextGuesses['d'];
+                    }
+                } else {
+                    freeTextTitleD.classList = '';
+                    freeTextD.disabled = true;
+                    freeTextD.placeholder = '';
+                    if (_team.freeTextGuesses['d'] !== undefined && _team.freeTextGuesses['d'] !== null) {
+                        freeTextD.value = _team.freeTextGuesses['d'];
+                    }
+                }
+            } else {
+                freeTextTitleD.hidden = true;
+                freeTextD.hidden = true;
+            }
+
+            if (_team.lockedIn) {
+                freeTextA.disabled = true;
+                freeTextB.disabled = true;
+                freeTextC.disabled = true;
+                freeTextD.disabled = true;
+            }
+
+        } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+
+            optionA.hidden = false;
+            optionB.hidden = false;
+            optionC.hidden = false;
+            optionD.hidden = false;
+
+            freeTextA.hidden = true;
+            freeTextB.hidden = true;
+            freeTextC.hidden = true;
+            freeTextD.hidden = true;
+            freeTextTitleA.hidden = true;
+            freeTextTitleB.hidden = true;
+            freeTextTitleC.hidden = true;
+            freeTextTitleD.hidden = true;
+
+            let numOptions = gameState.activeQuestion.numOptions;
+
+            if (numOptions < 3) {
+                optionC.hidden = true;
+                addC.hidden = true;
+                minusC.hidden = true;
+                addRemainingC.hidden = true;
+                removeAllC.hidden = true;
+                allocatedC.hidden = true;
+            } else {
+                optionC.hidden = false;
+                addC.hidden = false;
+                minusC.hidden = false;
+                addRemainingC.hidden = false;
+                removeAllC.hidden = false;
+                allocatedC.hidden = false;
+            }
+
+            if (numOptions < 4) {
+                optionD.hidden = true;
+                addD.hidden = true;
+                minusD.hidden = true;
+                addRemainingD.hidden = true;
+                removeAllD.hidden = true;
+                allocatedD.hidden = true;
+            } else {
+                optionD.hidden = false;
+                addD.hidden = false;
+                minusD.hidden = false;
+                addRemainingD.hidden = false;
+                removeAllD.hidden = false;
+                allocatedD.hidden = false;
+            }
+
+        } else {
+            console.error(`Unexpected quesion type ${gameState.activeQuestion.questionType}`);
+        }
+
     } else if (gameState.scene === 'answer') {
         let _team = getTeamByName(team);
 
         if (!_team) {
             return;
         }
+
+        // Clear inputs in preparation for next question
+        freeTextA.value = '';
+        freeTextB.value = '';
+        freeTextC.value = '';
+        freeTextD.value = '';
 
         pregameContainer.hidden = true;
         gameContainer.hidden = true;
@@ -953,7 +1199,11 @@ function updateUI() {
             postImage.hidden = true;
         }
 
-        answerText.innerHTML = gameState.activeQuestion.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.activeQuestion.answer];
+        if (gameState.activeQuestion.questionType === 'multipleChoice') {
+            answerText.innerHTML = gameState.activeQuestion.answer.toUpperCase() + ": " + gameState.activeQuestion.options[gameState.activeQuestion.answer];
+        } else if (gameState.activeQuestion.questionType === 'freeText') {
+            answerText.innerHTML = gameState.activeQuestion.answersFreeText[0];
+        }
         
         if (_team.lastWagered === 0) {
             remainingBreakdown.innerHTML = 'You skipped this question'

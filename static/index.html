@@ -484,6 +484,17 @@
                 height: 100%;
                 z-index: 10;
             }
+            .freetextinput {
+                display: block;
+                width: 100%;
+            }
+            #freetextallocationa.active,
+            #freetextallocationb.active,
+            #freetextallocationc.active,
+            #freetextallocationd.active {
+                background-color: #009879;
+                border-radius: 15px;
+            }
         </style>
     </head>
     <body>
@@ -551,6 +562,8 @@
                         <p class="optiontext" id="optiona"></p>
                         <div class="optioncontrols">
                             <p class="allocation"><span id="allocateda">0</span></p>
+                            <p id="freetextallocationa"></p>
+                            <input class="freetextinput" id="freetexta" placeholder="Type an answer..." type="text"/>
                             <button class="moneycontrol" id="removealla"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusa"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="adda"><i class="bi bi-chevron-up"></i></button>
@@ -562,6 +575,8 @@
                         <p class="optiontext" id="optionb"></p>
                         <div class="optioncontrols">
                             <p class="allocation"><span id="allocatedb">0</span></p>
+                            <p id="freetextallocationb"></p>
+                            <input class="freetextinput" id="freetextb" placeholder="Type an answer..." type="text"/>
                             <button class="moneycontrol" id="removeallb"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusb"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="addb"><i class="bi bi-chevron-up"></i></button>
@@ -573,6 +588,8 @@
                         <p class="optiontext" id="optionc"></p>
                         <div class="optioncontrols">
                             <p class="allocation"><span id="allocatedc">0</span></p>
+                            <p id="freetextallocationc"></p>
+                            <input class="freetextinput" id="freetextc" placeholder="Type an answer..." type="text"/>
                             <button class="moneycontrol" id="removeallc"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusc"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="addc"><i class="bi bi-chevron-up"></i></button>
@@ -584,6 +601,8 @@
                         <p class="optiontext" id="optiond"></p>
                         <div class="optioncontrols">
                             <p class="allocation"><span id="allocatedd">0</span></p>
+                            <p id="freetextallocationd"></p>
+                            <input class="freetextinput" id="freetextd" placeholder="Type an answer..." type="text"/>
                             <button class="moneycontrol" id="removealld"><i class="bi bi-chevron-double-down"></i></button>
                             <button class="moneycontrol" id="minusd"><i class="bi bi-chevron-down"></i></button>
                             <button class="moneycontrol" id="addd"><i class="bi bi-chevron-up"></i></button>
