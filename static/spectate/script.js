@@ -36,6 +36,9 @@ let loader = document.getElementById('loader'),
     option2 = document.getElementById('option2'),
     option3 = document.getElementById('option3'),
     option4 = document.getElementById('option4'),
+    freeTextAnswer = document.getElementById('freetextanswer'),
+    freeTextAnswerHighlight = document.getElementById('freetextanswerhighlight'),
+    freeTextAnswerAllocation = document.getElementById('freetextanswerallocation'),
     option1text = document.getElementById('option1text'),
     option2text = document.getElementById('option2text'),
     option3text = document.getElementById('option3text'),
@@ -67,7 +70,7 @@ function handleConnectionId(ws, data) {
     setInterval(() => {
         console.log('Sending ping');
 
-        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id, (reason) => handleErrorMessage(ws, { message: reason }));
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
     }, 5000);
 }
 
@@ -186,6 +189,7 @@ function updateUI() {
         t1o2allocation.style.opacity = 0;
         t1o3allocation.style.opacity = 0;
         t1o4allocation.style.opacity = 0;
+        freeTextAnswerAllocation.style.opacity = 0;
 
         if (gameState.activeQuestion !== null) {
             questionnumber.hidden = false;
@@ -193,15 +197,35 @@ function updateUI() {
             options.className = 'options';
             option1.hidden = false;
             option2.hidden = false;
-            option3.hidden = false;
-            option4.hidden = false;
+
+            if (gameState.activeQuestion.numOptions > 2) {
+                option3.hidden = false;
+            } else {
+                option3.hidden = true;
+            }
+
+            if (gameState.activeQuestion.numOptions > 3) {
+                option4.hidden = false;
+            } else {
+                option4.hidden = true;
+            }
     
             questionnumber.innerHTML = 'Question ' + (gameState.activeQuestionIndex + 1);
             question.innerHTML = gameState.activeQuestion.text;
-            option1text.innerHTML = gameState.activeQuestion.options.a;
-            option2text.innerHTML = gameState.activeQuestion.options.b;
-            option3text.innerHTML = gameState.activeQuestion.options.c;
-            option4text.innerHTML = gameState.activeQuestion.options.d;
+
+            if (gameState.activeQuestion.questionType === 'freeText') {
+                options.className = 'options hidden';
+                option1text.innerHTML = '';
+                option2text.innerHTML = '';
+                option3text.innerHTML = '';
+                option4text.innerHTML = '';
+            } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+                option1text.innerHTML = gameState.activeQuestion.options.a;
+                option2text.innerHTML = gameState.activeQuestion.options.b;
+                option3text.innerHTML = gameState.activeQuestion.options.c;
+                option4text.innerHTML = gameState.activeQuestion.options.d;
+                options.className = 'options';
+            }
         } else {
             questionnumber.hidden = true;
             question.hidden = true;
@@ -241,7 +265,11 @@ function updateUI() {
             question.innerHTML += `${gameState.teams.length} team${gameState.teams.length === 1 ? '' : 's'} waiting`;
 
         } else {
-            options.className = 'options';
+            if (gameState.activeQuestion.questionType === 'freeText') {
+                options.className = 'options hidden';
+            } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+                options.className = 'options';
+            }
         }
     
         if (gameState.scene === GAME_STATE.ANSWER) {
@@ -250,38 +278,67 @@ function updateUI() {
             option2.className = 'false';
             option3.className = 'false';
             option4.className = 'false';
-            if (gameState.activeQuestion.answer === 'a') {
-                option1.className = 'correct';
-            } else if (gameState.activeQuestion.answer === 'b') {
-                option2.className = 'correct';
-            } else if (gameState.activeQuestion.answer === 'c') {
-                option3.className = 'correct';
-            } else if (gameState.activeQuestion.answer === 'd') {
-                option4.className = 'correct';
-            }
 
-            let optionATotalAllocationPercentage = 0,
-                optionBTotalAllocationPercentage = 0,
-                optionCTotalAllocationPercentage = 0,
-                optionDTotalAllocationPercentage = 0;
-            if (gameState.totalAllocationAllThisRound !== 0) {
-                optionATotalAllocationPercentage = Math.round((gameState.optionATotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
-                optionBTotalAllocationPercentage = Math.round((gameState.optionBTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
-                optionCTotalAllocationPercentage = Math.round((gameState.optionCTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
-                optionDTotalAllocationPercentage = Math.round((gameState.optionDTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
-            }
+            if (gameState.activeQuestion.questionType === 'freeText') {
+                options.className = 'options hidden';
+                freeTextAnswer.hidden = false;
+                freeTextAnswerHighlight.innerHTML = gameState.activeQuestion.answersFreeText[0];
+                
+                let freeTextAllocationGainedPercent = Math.round(gameState.totalGainedThisRound / gameState.totalAllocationAllThisRound * 100);
+                freeTextAnswerAllocation.innerHTML = `${numberWithCommas(gameState.totalGainedThisRound, true)} spent (${freeTextAllocationGainedPercent}%)`;
+                
+                if (gameState.showAllocations) {
+                    freeTextAnswerAllocation.style.opacity = 1;
+                }
+            } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+                options.className = 'options';
+                freeTextAnswer.hidden = true;
+                freeTextAnswerHighlight.innerHTML = '';
+                freeTextAnswerAllocation.innerHTML = '';
 
-            if (gameState.showAllocations) {
-                t1o1allocation.style.opacity = 1;
-                t1o2allocation.style.opacity = 1;
-                t1o3allocation.style.opacity = 1;
-                t1o4allocation.style.opacity = 1;
-                t1o1allocation.innerHTML = `${numberWithCommas(gameState.optionATotalAllocationThisRound, true)} spent (${optionATotalAllocationPercentage}%)`;
-                t1o2allocation.innerHTML = `${numberWithCommas(gameState.optionBTotalAllocationThisRound, true)} spent (${optionBTotalAllocationPercentage}%)`;
-                t1o3allocation.innerHTML = `${numberWithCommas(gameState.optionCTotalAllocationThisRound, true)} spent (${optionCTotalAllocationPercentage}%)`;
-                t1o4allocation.innerHTML = `${numberWithCommas(gameState.optionDTotalAllocationThisRound, true)} spent (${optionDTotalAllocationPercentage}%)`;
-            }
+                if (gameState.activeQuestion.numOptions > 2) {
+                    option3.hidden = false;
+                } else {
+                    option3.hidden = true;
+                }
+    
+                if (gameState.activeQuestion.numOptions > 3) {
+                    option4.hidden = false;
+                } else {
+                    option4.hidden = true;
+                }
 
+                if (gameState.activeQuestion.answer === 'a') {
+                    option1.className = 'correct';
+                } else if (gameState.activeQuestion.answer === 'b') {
+                    option2.className = 'correct';
+                } else if (gameState.activeQuestion.answer === 'c') {
+                    option3.className = 'correct';
+                } else if (gameState.activeQuestion.answer === 'd') {
+                    option4.className = 'correct';
+                }
+                let optionATotalAllocationPercentage = 0,
+                    optionBTotalAllocationPercentage = 0,
+                    optionCTotalAllocationPercentage = 0,
+                    optionDTotalAllocationPercentage = 0;
+                if (gameState.totalAllocationAllThisRound !== 0) {
+                    optionATotalAllocationPercentage = Math.round((gameState.optionATotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                    optionBTotalAllocationPercentage = Math.round((gameState.optionBTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                    optionCTotalAllocationPercentage = Math.round((gameState.optionCTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                    optionDTotalAllocationPercentage = Math.round((gameState.optionDTotalAllocationThisRound / gameState.totalAllocationAllThisRound) * 100);
+                }
+    
+                if (gameState.showAllocations) {
+                    t1o1allocation.style.opacity = 1;
+                    t1o2allocation.style.opacity = 1;
+                    t1o3allocation.style.opacity = 1;
+                    t1o4allocation.style.opacity = 1;
+                    t1o1allocation.innerHTML = `${numberWithCommas(gameState.optionATotalAllocationThisRound, true)} spent (${optionATotalAllocationPercentage}%)`;
+                    t1o2allocation.innerHTML = `${numberWithCommas(gameState.optionBTotalAllocationThisRound, true)} spent (${optionBTotalAllocationPercentage}%)`;
+                    t1o3allocation.innerHTML = `${numberWithCommas(gameState.optionCTotalAllocationThisRound, true)} spent (${optionCTotalAllocationPercentage}%)`;
+                    t1o4allocation.innerHTML = `${numberWithCommas(gameState.optionDTotalAllocationThisRound, true)} spent (${optionDTotalAllocationPercentage}%)`;
+                }
+            }
         } else {
             option1.className = '';
             option2.className = '';

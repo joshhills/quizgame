@@ -7,6 +7,7 @@ import pkg from 'ws';
 const { Server } = pkg;
 import * as uuid from 'uuid';
 import url from 'url';
+import * as stringSimilarity from 'string-similarity';
 
 const PORT = process.env.PORT || 3000;
 
@@ -263,7 +264,15 @@ function isFreeTextAnswerCorrect(guess, acceptedAnswers) {
         return false;
     }
 
-    return acceptedAnswers.indexOf(guess) !== -1;
+    for (let acceptedAnswer of answers) {
+        let guessClean = guess.trim().toLowerCase();
+        let answerClean = acceptedAnswer.trim().toLowerCase();
+        if (guessClean === answerClean || stringSimilarity.compareTwoStrings(guessClean, answerClean) > 0.9) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function handleProgressState(ws) {

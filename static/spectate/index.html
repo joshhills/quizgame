@@ -95,7 +95,7 @@
                 margin: 0;
             }
 
-            #question {
+            #question, #freetextanswer {
                 font-size: 2rem;
                 position: absolute;
                 top: 50%;
@@ -171,11 +171,12 @@
                 font-size: 20px;
             }
 
-            #t1o1allocation, #t1o2allocation, #t1o3allocation, #t1o4allocation {
+            #t1o1allocation, #t1o2allocation, #t1o3allocation, #t1o4allocation, #freetextanswerallocation {
                 color: yellow;
                 transition: opacity 1s;
+                font-size: 20px;
             }
-
+            
             .active {
                 border-style: solid;
             }
@@ -347,7 +348,7 @@
             #scorestable tbody tr:last-of-type {
                 border-bottom: 2px solid #ea3c3b;
             }
-            #scorestable tbody tr.active-row {
+            #scorestable tbody tr.active-row, #freetextanswerhighlight {
                 font-weight: bold;
                 color: #009879;
             }
@@ -432,6 +433,10 @@
                 </div>
                 <div id="scores">
                     <table id="scorestable"></table>
+                </div>
+                <div id="freetextanswer" hidden>
+                    The answer is... <span id="freetextanswerhighlight"></span><br/><br/>
+                    <span id="freetextanswerallocation"></span>
                 </div>
                 <div class="options" id="options">
                     <div id="option1" class="option">
