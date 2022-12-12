@@ -36,7 +36,8 @@ server.post('/quiz/upload-quiz', async (req, res) => {
                     questions = quizObj.questions || [];
                     allowHints = quizObj.allowHints || false;
                     numHints = quizObj.numHints || 0;
-                    secondsPerQuestion = quizObj.secondsPerQuestion || 0;
+                    defaultSecondsPerQuestion = quizObj.secondsPerQuestion || 0;
+                    secondsPerQuestion = defaultSecondsPerQuestion;
                     startingMoney = quizObj.startingMoney || 100;
                     incrementEachRound = quizObj.incrementEachRound || 0;
                     bonusValue = quizObj.bonusValue || 0;
@@ -102,6 +103,7 @@ const wss = new Server({ server, path: '/quiz' });
 let startingMoney  = 100;
 let allowHints = true;
 let numHints = 1;
+let defaultSecondsPerQuestion = 60;
 let secondsPerQuestion = 60;
 let incrementEachRound = 0;
 let bonusValue = 0;
@@ -264,7 +266,7 @@ function isFreeTextAnswerCorrect(guess, acceptedAnswers) {
         return false;
     }
 
-    for (let acceptedAnswer of answers) {
+    for (let acceptedAnswer of acceptedAnswers) {
         let guessClean = guess.trim().toLowerCase();
         let answerClean = acceptedAnswer.trim().toLowerCase();
         if (guessClean === answerClean || stringSimilarity.compareTwoStrings(guessClean, answerClean) > 0.9) {
