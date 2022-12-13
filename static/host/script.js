@@ -87,7 +87,11 @@ function kick(theId) {
 }
 
 progressState.addEventListener('click', () => {
-    sendMessage(ws, MESSAGE_TYPE.CLIENT.PROGRESS_STATE, {}, id);
+    let r = confirm('Are you sure you want to progress the game state?');
+    if (r) {
+        sendMessage(ws, MESSAGE_TYPE.CLIENT.PROGRESS_STATE, {}, id);
+    }
+
 });
 
 loadQuizButton.addEventListener('click', () => {
@@ -112,7 +116,7 @@ loadQuizButton.addEventListener('click', () => {
 });
 
 reset.addEventListener('click', () => {
-    let r = confirm('Are you sure?');
+    let r = confirm('Are you sure you want to reset the game?');
     if (r) {
         sendMessage(ws, MESSAGE_TYPE.CLIENT.RESET, {}, id);
     }

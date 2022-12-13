@@ -12,12 +12,15 @@ const notifier = new AWN({
     icons: {
         prefix: '<i class="bi bi-',
         suffix: '"></i>',
-        tip: 'chat-dots',
+        tip: 'emoji-wink',
         info: 'info-circle',
         success: 'check-circle',
         warning: 'slash-circle',
         alert: 'exclamation-circle',
         confirm: 'check-circle'
+    },
+    labels: {
+        tip: 'Ha-ha!'
     }
 });
 let lastAlert = null,
@@ -129,6 +132,8 @@ var loader = document.getElementById('loader'),
     cryReactButton3 = document.getElementById('cry3'),
     shockReactButton3 = document.getElementById('shock3'),
     loveReactButton3 = document.getElementById('love3'),
+    gloatButton1 = document.getElementById('gloat1'),
+    gloatButton2 = document.getElementById('gloat2'),
     preImage = document.getElementById('preimage'),
     postImage = document.getElementById('postimage'),
     useHintButton = document.getElementById('usehint'),
@@ -236,6 +241,8 @@ laughReactButton3.addEventListener('click', () => sendReaction(REACTIONS.LAUGH))
 cryReactButton3.addEventListener('click', () => sendReaction(REACTIONS.CRY));
 shockReactButton3.addEventListener('click', () => sendReaction(REACTIONS.SHOCK));
 loveReactButton3.addEventListener('click', () => sendReaction(REACTIONS.LOVE));
+gloatButton1.addEventListener('click', () => sendGloat());
+gloatButton2.addEventListener('click', () => sendGloat());
 
 showPreImageButton.addEventListener('click', () => {
     showPreImage = !showPreImage;
@@ -497,6 +504,11 @@ function addMessageToLog(logType, subject, message) {
     </div>` + log.innerHTML;
 }
 
+function handleGloat(ws, data) {
+    // TODO: Pull from a number of insults...
+    notifier.tip(`${data.playerName}${data.solo ? '' : ` of team ${data.teamName}`} is gloating about having the fastest-fingers.`, {durations: {warning: 10000}})
+}
+
 function getTeamByName(teamName) {
     for (let team of gameState.teams) {
         if (team.teamName === teamName) {
@@ -520,7 +532,8 @@ ws.onmessage = (msg) => handleMessage(ws, msg.data, {
     [MESSAGE_TYPE.SERVER.RATE_LIMIT]: { handler: handleRateLimit },
     [MESSAGE_TYPE.SERVER.NOTIFY]: { handler: handleNotify },
     [MESSAGE_TYPE.SERVER.REMOVE_NOTIFY]: { handler: handleRemoveNotify },
-    [MESSAGE_TYPE.SERVER.TEAM_CHAT]: { handler: handleChatMessage }
+    [MESSAGE_TYPE.SERVER.TEAM_CHAT]: { handler: handleChatMessage },
+    [MESSAGE_TYPE.SERVER.GLOAT]: { handler: handleGloat }
 }, updateUI);
 
 /* === End Handler Functions === */
@@ -587,6 +600,10 @@ function sendReaction(reaction) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.EMOTE, { emote: reaction }, id);
 }
 
+function sendGloat() {
+    sendMessage(ws, MESSAGE_TYPE.CLIENT.GLOAT, {}, id);
+}
+
 function updateFreeText(str) {
     sendMessage(ws, MESSAGE_TYPE.CLIENT.UPDATE_FREE_TEXT, { guess: str }, id);
 }
@@ -613,8 +630,6 @@ function updateTimerBar() {
 }
 
 function updateUI() {
-
-    console.info('Updating UI');
 
     if (gameState.init) {
         return;
@@ -1006,7 +1021,7 @@ function updateUI() {
             removeAllD.hidden = true;
 
             // Update titles and inputs with their values
-            freeTextTitleA.innerHTML = `${_team.members[0].name}'s guess`;
+            freeTextTitleA.innerHTML = `${_team.members[0].name}`;
             allocatedA.hidden = false;
             addA.hidden = false;
             minusA.hidden = false;
@@ -1029,7 +1044,7 @@ function updateUI() {
             }
 
             if (_team.members.length > 1) {
-                freeTextTitleB.innerHTML = `${_team.members[1].name}'s guess`;
+                freeTextTitleB.innerHTML = `${_team.members[1].name}`;
                 allocatedB.hidden = false;
                 addB.hidden = false;
                 minusB.hidden = false;
@@ -1056,7 +1071,7 @@ function updateUI() {
             }
 
             if (_team.members.length > 2) {
-                freeTextTitleC.innerHTML = `${_team.members[2].name}'s guess`;
+                freeTextTitleC.innerHTML = `${_team.members[2].name}`;
                 allocatedC.hidden = false;
                 addC.hidden = false;
                 minusC.hidden = false;
@@ -1083,7 +1098,7 @@ function updateUI() {
             }
 
             if (_team.members.length > 3) {
-                freeTextTitleD.innerHTML = `${_team.members[3].name}'s guess`;
+                freeTextTitleD.innerHTML = `${_team.members[3].name}`;
                 allocatedD.hidden = false;
                 addD.hidden = false;
                 minusD.hidden = false;
@@ -1206,12 +1221,15 @@ function updateUI() {
         }
         
         if (_team.lastWagered === 0) {
-            remainingBreakdown.innerHTML = 'You skipped this question'
+            remainingBreakdown.innerHTML = 'You skipped this question.'
         } else {
-            remainingBreakdown.innerHTML = `You wagered ${numberWithCommas(_team.lastWagered, true)}, lost ${numberWithCommas(_team.lastLost, true)}, and gained ${numberWithCommas(_team.lastGained, true)}`;
+            remainingBreakdown.innerHTML = `You wagered ${numberWithCommas(_team.lastWagered, true)}, lost ${numberWithCommas(_team.lastLost, true)}, and gained ${numberWithCommas(_team.lastGained, true)}.`;
         }
 
         remainingAfter.innerHTML = numberWithCommas(_team.score, true);
+
+        gloatButton2.hidden = _team.teamName !== gameState.fastestTeamCorrect || _team.didGloat;
+
     } else if (gameState.scene === 'scores') {
         pregameContainer.hidden = true;
         gameContainer.hidden = true;
@@ -1240,12 +1258,14 @@ function updateUI() {
                     changeIconHtml = `<i class="bi bi-chevron${largeChange ? '-double' : ''}-up green"></i>`;
                 }
 
-                if (gameState.teams[i].lastChange < 0) {
+                let tLastChange = gameState.teams[i].lastChange;
+
+                if (tLastChange < 0) {
                     changeClass = 'red';
-                    changeAmountHtml = `-£${numberWithCommas(Math.abs(gameState.teams[i].lastChange))}`;
+                    changeAmountHtml = `-£${numberWithCommas(Math.abs(tLastChange))}`;
                 } else {
                     changeClass = 'green';
-                    changeAmountHtml = `+£${numberWithCommas(gameState.teams[i].lastChange)}`;
+                    changeAmountHtml = `+£${numberWithCommas(tLastChange)}`;
                 }
             }
 
@@ -1256,10 +1276,14 @@ function updateUI() {
             if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                 fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
             }
-            scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>${numberWithCommas(gameState.teams[i].score, true)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
+            scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>${numberWithCommas(gameState.teams[i].score, true)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward" title="Skipped"></i>' : ''}</td></tr>`;
         }
         scoresTableHtml += '</tbody>';
         scoresTable.innerHTML = scoresTableHtml;
+
+        let _team = getTeamByName(team);
+        gloatButton1.hidden = _team.teamName !== gameState.fastestTeamCorrect || _team.didGloat;
+
     } else if (gameState.scene === 'finish') {
         pregameContainer.hidden = true;
         gameContainer.hidden = true;

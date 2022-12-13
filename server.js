@@ -516,7 +516,7 @@ function handleProgressState(ws) {
             }, SHOW_ALLOCATIONS_TIMER_MS);
         }
     } else if (state === GAME_STATE.ANSWER) {
-        showImage = false;
+        // showImage = false;
         showAllocations = false;
         state = GAME_STATE.SCORES;
         clearTimeout(advanceTimer);
@@ -565,6 +565,7 @@ function handleProgressState(ws) {
                 team.lockedInTime = null;
                 team.activeHint = null;
                 team.remainingMoney = startingMoney;
+                team.didGloat = false;
             }
 
             optionATotalAllocationThisRound = 0;
@@ -809,12 +810,14 @@ function handleCreateTeam(ws, data) {
         lastPlace: null,
         placesMoved: 0,
         achievements: [],
-        numEmotesUsed: 0
+        numEmotesUsed: 0,
+        didGloat: false
     };
 
     teams.push(newTeam);
     teamIndex[teamName] = newTeam;
     ws.team = teamName;
+    ws.playerName = playerName;
 
     sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
@@ -942,6 +945,7 @@ function handleJoinTeam(ws, data) {
             });
 
             ws.team = teamName;
+            ws.playerName = playerName;
 
             sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: playerName, solo: false });
 
@@ -1046,12 +1050,14 @@ function handleJoinSolo(ws, data) {
         lastPlace: null,
         placesMoved: 0,
         achievements: [],
-        numEmotesUsed: 0
+        numEmotesUsed: 0,
+        didGloat: false
     };
 
     teams.push(newTeam);
     teamIndex[teamName] = newTeam;
     ws.team = teamName;
+    ws.playerName = originalTeamName;
 
     if (didRename) {
         sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: `Changed your solo team name as there was already a '${originalTeamName}'` });
@@ -1334,6 +1340,41 @@ function handleEmote(ws, data) {
     }
 }
 
+function handleGloat(ws, data) {
+
+    if (!ws || !data.id) {
+        console.warn('Received message from null client or client with no ID');
+        return;
+    }
+
+    if (state !== GAME_STATE.ANSWER && state !== GAME_STATE.SCORES) {
+        console.warn('Function called with incorrect state');
+        return;
+    }
+
+    // Get player's team based on their ID
+    const team = getTeamById(data.id);
+
+    // Check team hasn't already gloated this turn
+    if (team.didGloat) {
+        console.warn('Team attempted to gloat but has already gloated');
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "Your team has already gloated" });
+        return;
+    }
+
+    // Check they have something to gloat about
+    if (ws.team !== fastestTeamCorrect) {
+        console.warn('Team attempted to gloat but has nothing to gloat about');
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "You don't have anything to gloat about..." });
+        return;
+    }
+
+    team.didGloat = true;
+
+    broadcast(MESSAGE_TYPE.SERVER.GLOAT, { playerName: ws.playerName, solo: team.solo, teamName: ws.team });
+    broadcastGameState();
+}
+
 function handleUseHint(ws, data) {
 
     if (!ws || !data.id) {
@@ -1474,6 +1515,7 @@ wss.on('connection', (ws, req) => {
         }
 
         ws.team = team.teamName;
+        ws.playerName = player.name;
 
         sendMessage(ws, MESSAGE_TYPE.SERVER.ACKNOWLEDGE_NAME, { name: player.name, solo: team.solo });
     } else {
@@ -1519,7 +1561,8 @@ wss.on('connection', (ws, req) => {
         [MESSAGE_TYPE.CLIENT.TOGGLE_ALLOCATIONS]: { handler: handleToggleAllocations, rateLimit: { atomic: true } },
         [MESSAGE_TYPE.CLIENT.EMOTE]: { handler: handleEmote, rateLimit: { rate: { hits: 4, perMs: 2000 } } },
         [MESSAGE_TYPE.CLIENT.USE_HINT]: { handler: handleUseHint, rateLimit: { atomic: true, rate: { hits: 1, perMs: 5000 } } },
-        [MESSAGE_TYPE.CLIENT.UPDATE_FREE_TEXT]: { handler: handleUpdateFreeText, rateLimit: { atomic: true }}
+        [MESSAGE_TYPE.CLIENT.UPDATE_FREE_TEXT]: { handler: handleUpdateFreeText, rateLimit: { atomic: true }},
+        [MESSAGE_TYPE.CLIENT.GLOAT]: { handler: handleGloat, rateLimit: { atomic: true, rate: { hits: 1, perMs: 20000 } }}
     }));
   
     sendMessage(ws, MESSAGE_TYPE.SERVER.CONNECTION_ID, { id: ws.id });

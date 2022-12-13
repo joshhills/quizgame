@@ -19,7 +19,8 @@ export const MESSAGE_TYPE = {
         REMOVE_NOTIFY: 'removeNotify',
         TEAM_CHAT: 'teamChat',
         EMOTE: 'emote',
-        USE_HINT: 'useHint'
+        USE_HINT: 'useHint',
+        GLOAT: 'gloat'
     },
     CLIENT: {
         PING: 'ping',
@@ -44,7 +45,8 @@ export const MESSAGE_TYPE = {
         TOGGLE_ALLOCATIONS: 'toggleAllocations',
         EMOTE: 'emote',
         USE_HINT: 'useHint',
-        UPDATE_FREE_TEXT: 'updateFreeText'
+        UPDATE_FREE_TEXT: 'updateFreeText',
+        GLOAT: 'gloat'
     }
 };
 

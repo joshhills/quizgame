@@ -68,8 +68,6 @@ function handleConnectionId(ws, data) {
     id = data.id;
 
     setInterval(() => {
-        console.log('Sending ping');
-
         sendMessage(ws, MESSAGE_TYPE.CLIENT.PING, {}, id);
     }, 5000);
 }
@@ -255,6 +253,7 @@ function updateUI() {
         if (gameState.scene === GAME_STATE.PREGAME) {
             options.className = 'options hidden';
             question.hidden = false;
+            freeTextAnswer.hidden = true;
 
             if (gameState.quizName) {
                 question.innerHTML = `Waiting for '${gameState.quizName}' to start...<br/><br/>`;
@@ -268,6 +267,7 @@ function updateUI() {
             if (gameState.activeQuestion.questionType === 'freeText') {
                 options.className = 'options hidden';
             } else if (gameState.activeQuestion.questionType === 'multipleChoice') {
+                freeTextAnswer.hidden = true;
                 options.className = 'options';
             }
         }
@@ -284,7 +284,10 @@ function updateUI() {
                 freeTextAnswer.hidden = false;
                 freeTextAnswerHighlight.innerHTML = gameState.activeQuestion.answersFreeText[0];
                 
-                let freeTextAllocationGainedPercent = Math.round(gameState.totalGainedThisRound / gameState.totalAllocationAllThisRound * 100);
+                let freeTextAllocationGainedPercent = 0;
+                if (gameState.totalAllocationAllThisRound > 0) {
+                    Math.round(gameState.totalGainedThisRound / gameState.totalAllocationAllThisRound * 100)
+                }
                 freeTextAnswerAllocation.innerHTML = `${numberWithCommas(gameState.totalGainedThisRound, true)} spent (${freeTextAllocationGainedPercent}%)`;
                 
                 if (gameState.showAllocations) {
@@ -366,6 +369,7 @@ function updateUI() {
         }
 
         if (gameState.scene === GAME_STATE.SCORES) {
+            freeTextAnswer.hidden = true;
             scoresContainer.hidden = false;
             gameContainer.className = 'game scores';
             questionnumber.innerHTML = 'Scores';
@@ -409,7 +413,7 @@ function updateUI() {
                 if (gameState.teams.length > 1 && gameState.teams[i].teamName === gameState.fastestTeamCorrect) {
                     fastestFingerIconHtml = '<i class="bi bi-lightning-charge green" title="Fastest fingers"></i>';
                 }
-                scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>${numberWithCommas(gameState.teams[i].score, true)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward"></i>' : ''}</td></tr>`;
+                scoresTableHtml += `<tr class="${gameState.teams[i].score <= 0 ? 'eliminated' : ''}"><td>${changeIconHtml} ${i + 1}</td><td>${gameState.teams[i].teamName}</td><td>${numberWithCommas(gameState.teams[i].score, true)}</td><td class="${changeClass}">${changeAmountHtml}</td><td>${gameState.teams[i].activeHint !== null ? '<i class="bi bi-lightbulb" title="Used hint"></i>': ''}${gameState.teams[i].lastAllIn ? '<i class="bi bi-exclamation-triangle" title="All in"></i>': ''}${fastestFingerIconHtml}${gameState.teams[i].lastWagered === 0 ? '<i class="bi bi-skip-forward" title="Skipped"></i>' : ''}</td></tr>`;
             }
             scoresTableHtml + '</tbody>';
             scoresTable.innerHTML = scoresTableHtml;
