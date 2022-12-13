@@ -1228,7 +1228,7 @@ function updateUI() {
 
         remainingAfter.innerHTML = numberWithCommas(_team.score, true);
 
-        gloatButton2.hidden = _team.teamName !== gameState.fastestTeamCorrect || _team.didGloat;
+        gloatButton2.hidden = gameState.teams.length < 2 || _team.teamName !== gameState.fastestTeamCorrect || _team.didGloat;
 
     } else if (gameState.scene === 'scores') {
         pregameContainer.hidden = true;
@@ -1282,7 +1282,7 @@ function updateUI() {
         scoresTable.innerHTML = scoresTableHtml;
 
         let _team = getTeamByName(team);
-        gloatButton1.hidden = _team.teamName !== gameState.fastestTeamCorrect || _team.didGloat;
+        gloatButton1.hidden = gameState.teams.length < 2 || _team.teamName !== gameState.fastestTeamCorrect || _team.didGloat;
 
     } else if (gameState.scene === 'finish') {
         pregameContainer.hidden = true;

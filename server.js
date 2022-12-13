@@ -516,7 +516,7 @@ function handleProgressState(ws) {
             }, SHOW_ALLOCATIONS_TIMER_MS);
         }
     } else if (state === GAME_STATE.ANSWER) {
-        // showImage = false;
+        showImage = false;
         showAllocations = false;
         state = GAME_STATE.SCORES;
         clearTimeout(advanceTimer);
@@ -1349,7 +1349,12 @@ function handleGloat(ws, data) {
 
     if (state !== GAME_STATE.ANSWER && state !== GAME_STATE.SCORES) {
         console.warn('Function called with incorrect state');
+        sendMessage(ws, MESSAGE_TYPE.SERVER.ERROR_MESSAGE, { message: "There are too few teams to gloat" });
         return;
+    }
+
+    if (teams.length < 2) {
+        console.warn('Too few teams to gloat!');
     }
 
     // Get player's team based on their ID
