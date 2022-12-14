@@ -286,7 +286,7 @@ function updateUI() {
                 
                 let freeTextAllocationGainedPercent = 0;
                 if (gameState.totalAllocationAllThisRound > 0) {
-                    Math.round(gameState.totalGainedThisRound / gameState.totalAllocationAllThisRound * 100)
+                    freeTextAllocationGainedPercent = Math.round(gameState.totalGainedThisRound / gameState.totalAllocationAllThisRound * 100);
                 }
                 freeTextAnswerAllocation.innerHTML = `${numberWithCommas(gameState.totalGainedThisRound, true)} spent (${freeTextAllocationGainedPercent}%)`;
                 
